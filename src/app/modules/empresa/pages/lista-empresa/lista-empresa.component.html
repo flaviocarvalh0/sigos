@@ -1,0 +1,50 @@
+<div class="container mt-4">
+  <h2>Empresas</h2>
+  <button class="btn btn-primary mb-3" (click)="novo()">Nova Empresa</button>
+
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>Razão Social</th>
+        <th>CNPJ</th>
+        <th>Ativo</th>
+        <th>Ações</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let e of empresas">
+        <td>{{ e.razao_social }}</td>
+        <td>{{ e.cnpj }}</td>
+        <td>
+          <span
+            class="badge"
+            [ngClass]="e.ativo ? 'bg-success' : 'bg-secondary'"
+          >
+            {{ e.ativo ? 'Sim' : 'Não' }}
+          </span>
+        </td>
+        <td>
+          <!-- Ações com layout responsivo -->
+          <div class="d-flex gap-2">
+            <!-- Botões com texto visíveis em telas md+ -->
+            <button class="btn btn-sm btn-warning d-none d-md-inline" (click)="editar(e.id!)">
+              Editar
+            </button>
+            <button class="btn btn-sm btn-danger d-none d-md-inline" (click)="excluir(e.id!)">
+              Excluir
+            </button>
+        
+            <!-- Ícones visíveis em telas pequenas -->
+            <button class="btn btn-sm btn-warning d-inline d-md-none" title="Editar" (click)="editar(e.id!)">
+              <i class="bi bi-pencil"></i>
+            </button>
+            <button class="btn btn-sm btn-danger d-inline d-md-none" title="Excluir" (click)="excluir(e.id!)">
+              <i class="bi bi-trash"></i>
+            </button>
+          </div>
+        </td>
+        
+      </tr>
+    </tbody>
+  </table>
+</div>

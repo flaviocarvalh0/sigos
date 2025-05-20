@@ -1,0 +1,175 @@
+<ul class="nav nav-tabs" id="clienteTabs" role="tablist">
+  <li class="nav-item" role="presentation">
+    <button class="nav-link active" id="dados-tab" data-bs-toggle="tab" data-bs-target="#dados" type="button" role="tab" aria-controls="dados" aria-selected="true">
+      Dados do Cliente
+    </button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="aparelhos-tab" data-bs-toggle="tab" data-bs-target="#aparelhos" type="button" role="tab" aria-controls="aparelhos" aria-selected="false">
+      Aparelhos
+    </button>
+  </li>
+</ul>
+<div class="tab-content pt-3" id="clienteTabsContent">
+  <div class="tab-pane fade show active" id="dados" role="tabpanel" aria-labelledby="dados-tab">
+    <div class="container mt-4">
+      <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+          <h5 class="mb-0">Cliente</h5>
+        </div>
+        <div class="card-body">
+          <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+            <div class="container py-3" style="max-width: 600px;">
+                <!-- Nome completo -->
+                <div class="mb-3">
+                  <label for="nome_completo" class="form-label">Nome Completo <span class="text-danger">*</span></label>
+                  <input id="nome_completo" type="text" class="form-control" formControlName="nome_completo" placeholder="Digite o nome completo" />
+                  <div *ngIf="form.get('nome_completo')?.touched && form.get('nome_completo')?.invalid" class="text-danger small">
+                    Nome é obrigatório e deve ter no mínimo 3 caracteres.
+                  </div>
+                </div>
+            
+                <!-- Apelido -->
+                <div class="mb-3">
+                  <label for="apelido" class="form-label">Apelido</label>
+                  <input id="apelido" type="text" class="form-control" formControlName="apelido" placeholder="Apelido (opcional)" />
+                </div>
+            
+                <!-- CPF -->
+                <div class="mb-3">
+                  <label for="cpf" class="form-label">CPF</label>
+                  <input id="cpf" type="text" class="form-control" formControlName="cpf" placeholder="000.000.000-00" mask="000.000.000-00" />
+                </div>
+            
+                <!-- CEP -->
+                <div class="mb-3">
+                  <label for="cep" class="form-label">CEP</label>
+                  <input id="cep" type="text" class="form-control" formControlName="cep" placeholder="00000-000" mask="00000-000" (blur)="onCepBlur()" />
+                  <div *ngIf="cepError" class="text-danger small mt-1">{{ cepError }}</div>
+                  <div *ngIf="loadingCep" class="text-info small mt-1">Buscando endereço...</div>
+                </div>
+    
+                <!-- Cidade -->
+                <div class="mb-3">
+                  <label for="cidade" class="form-label">Cidade</label>
+                  <input id="cidade" type="text" class="form-control" formControlName="cidade" />
+                </div>
+    
+                <!-- Logradouro -->
+                <div class="mb-3">
+                  <label for="logradouro" class="form-label">Logradouro</label>
+                  <input id="logradouro" type="text" class="form-control" formControlName="logradouro" placeholder="Rua, Avenida, etc" />
+                </div>
+            
+                <!-- Número e Complemento lado a lado -->
+                <div class="row mb-3">
+                  <div class="col-6">
+                    <label for="numero" class="form-label">Número</label>
+                    <input id="numero" type="text" class="form-control" formControlName="numero" placeholder="Número" />
+                  </div>
+                  <div class="col-6">
+                    <label for="complemento" class="form-label">Complemento</label>
+                    <input id="complemento" type="text" class="form-control" formControlName="complemento" placeholder="Apto, bloco..." />
+                  </div>
+                </div>
+            
+                <!-- Bairro e UF lado a lado -->
+                <div class="row mb-3">
+                  <div class="col-8">
+                    <label for="bairro" class="form-label">Bairro</label>
+                    <input id="bairro" type="text" class="form-control" formControlName="bairro" placeholder="Bairro" />
+                  </div>
+                  <div class="col-4">
+                    <label for="uf" class="form-label">UF</label>
+                    <input id="uf" type="text" class="form-control" formControlName="uf" placeholder="UF" maxlength="2" />
+                  </div>
+                </div>
+            
+                <!-- País -->
+                <div class="mb-3">
+                  <label for="pais" class="form-label">País</label>
+                  <input id="pais" type="text" class="form-control" formControlName="pais"/>
+                </div>
+            
+                <!-- Telefone -->
+                <div class="mb-3">
+                  <label for="telefone" class="form-label">Telefone</label>
+                  <input id="telefone" type="text" class="form-control" formControlName="telefone" placeholder="(00) 0000-0000" mask="(00) 0000-0000" />
+                </div>
+            
+                <!-- Celular -->
+                <div class="mb-3">
+                  <label for="celular" class="form-label">Celular <span class="text-danger">*</span></label>
+                  <input id="celular" type="text" class="form-control" formControlName="celular" placeholder="(00) 00000-0000" mask="(00) 00000-0000" />
+                  <div *ngIf="form.get('celular')?.touched && form.get('celular')?.invalid" class="text-danger small">
+                    Celular é obrigatório.
+                  </div>
+                </div>
+            
+                <!-- Email -->
+                <div class="mb-3">
+                  <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
+                  <input id="email" type="email" class="form-control" formControlName="email" placeholder="email@exemplo.com" />
+                  <div *ngIf="form.get('email')?.touched && form.get('email')?.invalid" class="text-danger small">
+                    E-mail é obrigatório.
+                  </div>
+                  <div *ngIf="form.get('email')?.touched && form.get('email')?.invalid" class="text-danger small">
+                    E-mail inválido.
+                  </div>
+                </div>
+            
+                <!-- Tipo de pessoa -->
+                <div class="mb-3">
+                  <label for="tipo_de_pessoa" class="form-label">Tipo de Pessoa</label>
+                  <select id="tipo_de_pessoa" class="form-select" formControlName="tipo_de_pessoa">
+                    <option value="">Selecione</option>
+                    <option value="Física">Pessoa Física</option>
+                    <option value="Jurídica">Pessoa Jurídica</option>
+                  </select>
+                </div>
+    
+                <!-- Ativo -->
+                <div class="form-check form-switch mb-3">
+                  <input class="form-check-input" type="checkbox" id="ativo" formControlName="ativo" />
+                  <label class="form-check-label" for="ativo">Ativo</label>
+                </div>
+            </div>
+            <div class="d-flex justify-content-between gap-2 mt-4">
+              <button type="submit" class="btn btn-success flex-fill">Salvar</button>
+              <button type="button" class="btn btn-secondary flex-fill" (click)="onCancelar()">Cancelar</button>
+              <button *ngIf="isEditando" type="button" class="btn btn-danger flex-fill" (click)="onExcluir()">Excluir</button>
+            </div>        
+          </form>
+        </div>
+      </div>
+    </div>
+    <!-- Toast -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+      <div id="liveToast" class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+          <div class="toast-body">
+            <!-- Mensagem do toast -->
+          </div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Fechar"></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Aba 2: Aparelhos -->
+  <div class="tab-pane fade" id="aparelhos" role="tabpanel" aria-labelledby="aparelhos-tab">
+    <!--<div *ngIf="aparelhos.length === 0" class="text-muted">Nenhum aparelho cadastrado.</div>-->
+
+    <div  class="card mb-2">
+      <div class="card-body">
+        <strong>Aparelho </strong>
+        <p>Modelo: </p>
+        <p>IMEI: </p>
+        <!--<button class="btn btn-sm btn-outline-danger" (click)="removerAparelho(i)">Remover</button>-->
+      </div>
+    </div>
+
+    <!--<button class="btn btn-primary mt-3" (click)="abrirModalAdicionarAparelho()">Adicionar Aparelho</button>-->
+  </div>
+</div>
+

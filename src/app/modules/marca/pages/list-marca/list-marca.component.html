@@ -1,0 +1,51 @@
+<div class="container mt-4">
+    <h2>Lista de Marcas</h2>
+    <button class="btn btn-primary mb-3" (click)="novoMarca()">Nova Marca</button>
+  <div class="table-responsive">
+  <div *ngIf="carregando" class="text-center">
+    <div class="spinner-border" role="status"><span class="visually-hidden">Carregando...</span></div>
+  </div>
+
+  <div *ngIf="!carregando && marcas.length === 0" class="alert alert-info">
+    Nenhuma marca cadastrada.
+  </div>
+
+  <table *ngIf="!carregando && marcas.length > 0" class="table table-bordered">
+    <thead class="table-light">
+      <tr>
+        <th>Nome</th>
+        <th style="width: 160px;">Ações</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let marca of marcas">
+        <td>{{ marca.nome }}</td>
+        <td>
+          <!-- Botões visíveis em telas md+ -->
+            <button class="btn btn-sm btn-warning me-2 d-none d-md-inline" (click)="editarMarca(marca.id!)">
+              Editar
+            </button>
+            <button class="btn btn-sm btn-danger d-none d-md-inline" (click)="excluir(marca.id!)">
+              Excluir
+            </button>
+
+            <!-- Ícones visíveis em telas pequenas (sm e xs) -->
+            <button class="btn btn-sm btn-warning me-2 d-inline d-md-none" title="Editar" (click)="editarMarca(marca.id!)">
+              <i class="bi bi-pencil"></i>
+            </button>
+            <button class="btn btn-sm btn-danger d-inline d-md-none" title="Excluir" (click)="excluir(marca.id!)">
+              <i class="bi bi-trash"></i>
+            </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+</div>
+
+<div #toast class="toast align-items-center text-bg-success border-0 position-fixed bottom-0 end-0 m-3" role="alert">
+  <div class="d-flex">
+    <div class="toast-body">Marca excluída com sucesso!</div>
+    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+  </div>
+</div>

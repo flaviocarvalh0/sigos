@@ -1,0 +1,58 @@
+<div class="d-flex flex-column vh-100">
+  <!-- NAVBAR -->
+<nav class="navbar navbar-dark bg-primary fixed-top px-3 d-flex align-items-center">
+  <span class="navbar-brand mb-0 h1">SIGOS</span>
+  <button class="btn btn-outline-light ms-3" (click)="toggleSidebar()">☰</button>
+
+  <div class="ms-auto d-flex align-items-center gap-2">
+    <button class="btn btn-light btn-sm" (click)="toggleTheme()">
+      <i [ngClass]="isDarkTheme ? 'bi bi-sun' : 'bi bi-moon'"></i>
+    </button>
+    <button *ngIf="auth.isLoggedIn()" class="btn btn-outline-light btn-sm" (click)="auth.logout()">
+      Logout
+    </button>
+  </div>
+</nav>
+
+
+  <!-- LAYOUT -->
+  <div class="d-flex flex-grow-1" style="margin-top: 56px;">
+
+    <!-- SIDEBAR -->
+    <nav class="sidebar bg-primary text-white p-3" [class.collapsed]="isSidebarCollapsed">
+      <ul class="nav flex-column">
+        <li class="nav-item mb-2">
+          <a routerLink="/clientes" routerLinkActive="active" class="nav-link text-white d-flex align-items-center">
+            <i class="bi bi-people-fill me-2"></i> Clientes
+          </a>
+        </li>
+        <li class="nav-item mb-2">
+          <a routerLink="/fornecedor" routerLinkActive="active" class="nav-link text-white d-flex align-items-center">
+            <i class="bi bi-truck me-2"></i> Fornecedores
+          </a>
+        </li>
+        <li class="nav-item mb-2">
+          <a routerLink="/empresa" routerLinkActive="active" class="nav-link text-white d-flex align-items-center">
+            <i class="bi bi-building me-2"></i> Empresa
+          </a>
+        </li>
+        <li class="nav-item mb-2">
+          <a routerLink="/aparelho" routerLinkActive="active" class="nav-link text-white d-flex align-items-center">
+            <i class="bi bi-phone-fill me-2"></i> Aparelhos
+          </a>
+        </li>
+        <li class="nav-item mb-2">
+          <a routerLink="/marca" routerLinkActive="active" class="nav-link text-white d-flex align-items-center">
+            <i class="bi bi-tag me-2"></i> Marcas
+          </a>
+        </li>
+      </ul>
+    </nav>
+
+    <!-- CONTEÚDO -->
+  <main class="main-content flex-grow-1 overflow-auto">
+    <router-outlet></router-outlet>
+  </main>
+
+  </div>
+</div>

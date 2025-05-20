@@ -1,0 +1,40 @@
+<div class="login-container d-flex justify-content-center align-items-center vh-100">
+  <div class="card login-card p-4 shadow">
+    <div class="text-center mb-4">
+      <h2 class="fw-bold text-primary">SIGOS</h2>
+      <h4 class="mb-3">Bem-vindo! Faça seu login</h4>
+    </div>
+    <form (ngSubmit)="onSubmit()">
+      <div class="mb-3">
+        <label for="username" class="form-label fw-semibold">Usuário</label>
+        <input
+          type="text"
+          id="username"
+          class="form-control form-control-lg"
+          [(ngModel)]="username"
+          name="username"
+          required
+          placeholder="Digite seu usuário"
+          autocomplete="username"
+        />
+      </div>
+      <div class="mb-3">
+        <label for="password" class="form-label fw-semibold">Senha</label>
+        <input
+          type="password"
+          id="password"
+          class="form-control form-control-lg"
+          [(ngModel)]="password"
+          name="password"
+          required
+          placeholder="Digite sua senha"
+          autocomplete="current-password"
+        />
+      </div>
+      <div *ngIf="error" class="alert alert-danger py-2">{{ error }}</div>
+      <button type="submit" class="btn btn-primary btn-lg w-100 fw-semibold">
+        Entrar
+      </button>
+    </form>
+  </div>
+</div>

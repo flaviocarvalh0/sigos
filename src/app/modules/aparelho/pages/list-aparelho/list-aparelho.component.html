@@ -1,0 +1,65 @@
+<div class="container mt-4">
+  <h4 class="mb-3">Aparelhos Cadastrados</h4>
+  <button class="btn btn-primary mb-3" (click)="novoAparelho()">Novo Aparelho</button>
+  <div *ngIf="carregando" class="text-center my-5">
+    <div class="spinner-border" role="status"></div>
+  </div>
+
+  <table *ngIf="!carregando && aparelhos.length > 0" class="table table-striped">
+    <thead>
+      <tr>
+        <th>IMEI 1</th>
+        <th>IMEI 2</th>
+        <th>Cor</th>
+        <th>Modelo</th>
+        <th>Marca</th>
+        <th>Cliente</th>
+        <th>Ações</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let ap of aparelhos">
+        <td>{{ ap.imei_1 }}</td>
+        <td>{{ ap.imei_2 }}</td>
+        <td>{{ ap.cor }}</td>
+        <td>{{ getNomeModelo(ap.id_modelo) }}</td>
+        <td>{{ getNomeMarca(ap.id_marca) }}</td>
+        <td>{{ getNomeCliente(ap.id_cliente) }}</td>
+    
+        <td>
+          <!-- Botões visíveis em telas md+ -->
+          <button class="btn btn-sm btn-warning me-2 d-none d-md-inline" (click)="editarParalho(ap.id!)">
+            Editar
+          </button>
+          <button class="btn btn-sm btn-danger d-none d-md-inline" (click)="excluir(ap.id!)">
+            Excluir
+          </button>
+
+          <!-- Ícones visíveis em telas pequenas (sm e xs) -->
+          <button class="btn btn-sm btn-warning me-2 d-inline d-md-none" title="Editar" (click)="editarParalho(ap.id!)">
+            <i class="bi bi-pencil"></i>
+          </button>
+          <button class="btn btn-sm btn-danger d-inline d-md-none" title="Excluir" (click)="excluir(ap.id!)">
+            <i class="bi bi-trash"></i>
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div *ngIf="!carregando && aparelhos.length === 0" class="alert alert-info">
+    Nenhum aparelho cadastrado.
+  </div>
+</div>
+
+
+<!-- Toast Bootstrap (referenciado via @ViewChild) -->
+<div #toast class="toast position-fixed bottom-0 end-0 p-3 text-white bg-success
+border-0" role="alert" aria-live="assertive" aria-atomic="true" style="z-index: 9999;">
+  <div class="d-flex">
+    <div class="toast-body">
+      Aparelho excluído com sucesso!
+    </div>
+    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+  </div>
+</div>

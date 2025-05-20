@@ -1,0 +1,97 @@
+<div class="container mt-4">
+  <div class="card shadow">
+    <div class="card-header bg-primary text-white">
+      <h5 class="mb-0">Cadastrar Aparelho</h5>
+    </div>
+    <div class="card-body">
+      <form [formGroup]="formAparelho" (ngSubmit)="onSubmit()" novalidate>
+
+        <!-- Dropdown Cliente -->
+        <div class="mb-3">
+          <label for="id_cliente" class="form-label">Cliente</label>
+          <select id="id_cliente" class="form-select" formControlName="id_cliente" required>
+            <option value="">Selecione um cliente</option>
+            <option *ngFor="let cliente of clientes" [value]="cliente.id">
+              {{ cliente.nome_completo }}
+            </option>
+          </select>
+          <div *ngIf="formAparelho.get('id_cliente')?.invalid && formAparelho.get('id_cliente')?.touched"
+            class="text-danger">
+            Cliente é obrigatório.
+          </div>
+        </div>
+
+        <!-- Dropdown Marca -->
+        <div class="mb-3">
+          <label for="marca" class="form-label">Marca <span class="text-danger">*</span></label>
+          <select id="marca" class="form-select" formControlName="id_marca" (change)="onMarcaChange()" required>
+            <option value="">Selecione a marca</option>
+            <option *ngFor="let marca of marcas" [value]="marca.id">
+              {{ marca.nome }}
+            </option>
+          </select>
+          <div *ngIf="formAparelho.get('id_marca')?.touched && formAparelho.get('id_marca')?.invalid"
+            class="text-danger small">
+            Marca é obrigatória.
+          </div>
+        </div>
+
+        <!-- Dropdown Modelo (filtrado por marca) -->
+        <div class="mb-3">
+          <label for="modelo" class="form-label">Modelo <span class="text-danger">*</span></label>
+          <select id="modelo" class="form-select" formControlName="id_modelo" required>
+            <option value="">Selecione o modelo</option>
+            <option *ngFor="let modelo of modelosFiltrados" [value]="modelo.id">
+              {{ modelo.nome }}
+            </option>
+          </select>
+          <div *ngIf="formAparelho.get('id_modelo')?.touched && formAparelho.get('id_modelo')?.invalid"
+            class="text-danger small">
+            Modelo é obrigatório.
+          </div>
+        </div>
+
+        <!-- IMEI 1 -->
+        <div class="mb-3">
+          <label for="imei_1" class="form-label">IMEI 1</label>
+          <input id="imei_1" type="text" class="form-control" formControlName="imei_1" placeholder="IMEI 1" />
+        </div>
+
+        <!-- IMEI 2 -->
+        <div class="mb-3">
+          <label for="imei_2" class="form-label">IMEI 2</label>
+          <input id="imei_2" type="text" class="form-control" formControlName="imei_2" placeholder="IMEI 2" />
+        </div>
+
+        <!-- Cor -->
+        <div class="mb-3">
+          <label for="cor" class="form-label">Cor</label>
+          <input id="cor" type="text" class="form-control" formControlName="cor" placeholder="Cor" />
+        </div>
+
+        <!-- Observações -->
+        <div class="mb-3">
+          <label for="observacoes" class="form-label">Observações</label>
+          <textarea id="observacoes" class="form-control" formControlName="observacoes" rows="3"
+            placeholder="Observações"></textarea>
+        </div>
+
+        <div class="d-flex justify-content-between gap-2 mt-4">
+          <button type="submit" class="btn btn-success flex-fill">Salvar</button>
+          <button type="button" class="btn btn-secondary flex-fill" (click)="onCancelar()">Cancelar</button>
+          <button *ngIf="isEditando" type="button" class="btn btn-danger flex-fill"
+            (click)="onExcluir()">Excluir</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div id="liveToast" class="toast position-fixed bottom-0 end-0 p-3 text-white bg-success border-0" role="alert"
+  aria-live="assertive" aria-atomic="true" style="z-index: 9999;">
+  <div class="d-flex">
+    <div class="toast-body">Mensagem</div>
+    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+      aria-label="Close"></button>
+  </div>
+</div>
