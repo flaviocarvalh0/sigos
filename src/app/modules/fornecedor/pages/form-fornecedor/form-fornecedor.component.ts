@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { FornecedorService } from '../../../../services/fornecedor.service';
 import { CommonModule, NgIf } from '@angular/common';
 
@@ -9,7 +9,11 @@ import { CommonModule, NgIf } from '@angular/common';
   selector: 'app-form-fornecedor',
   standalone: true,
   templateUrl: './form-fornecedor.component.html',
-  imports: [ReactiveFormsModule, HttpClientModule, NgIf, CommonModule, FormsModule],
+  imports: [ReactiveFormsModule, 
+// TODO: `HttpClientModule` should not be imported into a component directly.
+// Please refactor the code to add `provideHttpClient()` call to the provider list in the
+// application bootstrap logic and remove the `HttpClientModule` import from this component.
+HttpClientModule, NgIf, CommonModule, FormsModule],
   styleUrls: ['./form-fornecedor.component.css']
 })
 export class FormFornecedorComponent implements OnInit {

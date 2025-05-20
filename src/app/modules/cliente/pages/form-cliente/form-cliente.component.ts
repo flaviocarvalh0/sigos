@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, NgModel, ReactiveFormsModule, Validators } from '@angular/forms';
-import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { ClienteService } from '../../../../services/cliente.service';
 import { Cliente } from '../../../../Models/cliente.model';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -11,7 +11,11 @@ declare const bootstrap: any;
 @Component({
   selector: 'app-form-cliente',
   standalone: true,
-  imports: [ReactiveFormsModule, HttpClientModule, [NgIf], CommonModule, FormsModule],
+  imports: [ReactiveFormsModule, 
+// TODO: `HttpClientModule` should not be imported into a component directly.
+// Please refactor the code to add `provideHttpClient()` call to the provider list in the
+// application bootstrap logic and remove the `HttpClientModule` import from this component.
+HttpClientModule, [NgIf], CommonModule, FormsModule],
   templateUrl: './form-cliente.component.html',
   styleUrls: ['./form-cliente.component.css'],
 })

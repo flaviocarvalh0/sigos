@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 
-import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { EmpresaService } from '../../../../services/empresa.service';
 import { CommonModule } from '@angular/common';
 import { NgIf } from '@angular/common';
@@ -13,7 +13,11 @@ import { Empresa } from '../../../../Models/empresa.model';
   selector: 'app-form-empresa',
   standalone: true,
   templateUrl: './form-empresa.component.html',
-  imports: [ReactiveFormsModule, HttpClientModule, NgIf, CommonModule, FormsModule],
+  imports: [ReactiveFormsModule, 
+// TODO: `HttpClientModule` should not be imported into a component directly.
+// Please refactor the code to add `provideHttpClient()` call to the provider list in the
+// application bootstrap logic and remove the `HttpClientModule` import from this component.
+HttpClientModule, NgIf, CommonModule, FormsModule],
   styleUrls: ['./form-empresa.component.css']
 })
 export class FormEmpresaComponent implements OnInit {
