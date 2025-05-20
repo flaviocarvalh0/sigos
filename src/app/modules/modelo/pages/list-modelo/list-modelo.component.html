@@ -1,0 +1,49 @@
+<div class="container mt-4">
+  <h2>Lista de Modelos</h2>
+  <button class="btn btn-primary mb-3" (click)="novoModelo()">Novo Modelo</button>
+
+  <div class="table-responsive">
+    <div *ngIf="carregando" class="text-center">
+      <div class="spinner-border" role="status"><span class="visually-hidden">Carregando...</span></div>
+    </div>
+
+    <div *ngIf="!carregando && modelos.length === 0" class="alert alert-info">
+      Nenhum modelo cadastrado.
+    </div>
+
+    <table *ngIf="!carregando && modelos.length > 0" class="table table-bordered">
+      <thead class="table-light">
+        <tr>
+          <th>Nome</th>
+          <th>Marca</th>
+          <th style="width: 160px;">Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let modelo of modelos">
+          <td>{{ modelo.nome }}</td>
+          <td>{{ getNomeMarca(modelo.id_marca) }}</td>
+          <td>
+            <button class="btn btn-sm btn-warning me-2 d-none d-md-inline" (click)="editarModelo(modelo.id!)">Editar</button>
+            <button class="btn btn-sm btn-danger d-none d-md-inline" (click)="excluir(modelo.id!)">Excluir</button>
+
+            <button class="btn btn-sm btn-warning me-2 d-inline d-md-none" title="Editar" (click)="editarModelo(modelo.id!)">
+              <i class="bi bi-pencil"></i>
+            </button>
+            <button class="btn btn-sm btn-danger d-inline d-md-none" title="Excluir" (click)="excluir(modelo.id!)">
+              <i class="bi bi-trash"></i>
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
+<div #toast class="toast align-items-center text-bg-success border-0 position-fixed bottom-0 end-0 m-3" role="alert">
+  <div class="d-flex">
+    <div class="toast-body">Modelo excluído com sucesso!</div>
+    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+  </div>
+</div>

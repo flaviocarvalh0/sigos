@@ -69,7 +69,7 @@ export class FormClienteComponent implements OnInit {
           this.editingClienteId = cliente.id;
           this.isEditando = true;
         }
-        
+
         this.form.patchValue({
           nome_completo: cliente.nome_completo,
           apelido: cliente.apelido,
@@ -126,7 +126,7 @@ export class FormClienteComponent implements OnInit {
     if (cliente.id !== undefined) {
       this.editingClienteId = cliente.id;
     }
-    
+
     this.form.patchValue({
       nome_completo: cliente.nome_completo,
       apelido: cliente.apelido,
@@ -151,7 +151,7 @@ export class FormClienteComponent implements OnInit {
     this.isEditando = false;
     this.router.navigate(['/clientes']);
   }
-  
+
   onExcluir() {
     if (confirm('Tem certeza que deseja excluir este cliente?')) {
       this.clienteService.deleteCliente(this.editingClienteId!).subscribe(() => {
@@ -170,10 +170,10 @@ export class FormClienteComponent implements OnInit {
   onCepBlur() {
     const cep = this.form.value.cep?.replace(/\D/g, ''); // remove qualquer caractere não numérico
     if (!cep || cep.length !== 8) return; // CEP tem 8 dígitos
-  
+
     this.loadingCep = true;
     this.cepError = '';
-  
+
     this.http.get<any>(`https://viacep.com.br/ws/${cep}/json/`).subscribe({
       next: (data) => {
         if (data.erro) {

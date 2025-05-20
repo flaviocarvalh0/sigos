@@ -67,4 +67,5 @@ export class ListMarcaComponent implements OnInit {
     const toast = new bootstrap.Toast(this.toastElement.nativeElement);
     toast.show();
   }
+
 }

@@ -6,17 +6,9 @@ import { AparelhoService } from '../../../../services/aparelho.service';
 import { Cliente } from '../../../../Models/cliente.model';
 import { Aparelho } from '../../../../Models/aparelho.model';
 import { ClienteService } from '../../../../services/cliente.service';
+import { Marca } from '../../../../Models/marca.model';
+import { Modelo } from '../../../../Models/modelo.model';
 
-interface Marca {
-  id: number;
-  nome: string;
-}
-
-interface Modelo {
-  id: number;
-  nome: string;
-  id_marca: number;
-}
 
 declare const bootstrap: any;
 
@@ -47,7 +39,7 @@ export class FormAparelhoComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    
+
     this.clienteService.getClientes().subscribe(clientes => {
       this.clientes = clientes;
     });
@@ -62,17 +54,6 @@ export class FormAparelhoComponent implements OnInit {
       observacoes: ['']
     });
 
-    this.marcas = [
-      { id: 1, nome: 'Samsung' },
-      { id: 2, nome: 'Apple' }
-    ];
-
-    this.modelos = [
-      { id: 1, nome: 'Galaxy S21', id_marca: 1 },
-      { id: 2, nome: 'Galaxy A52', id_marca: 1 },
-      { id: 3, nome: 'iPhone 12', id_marca: 2 },
-      { id: 4, nome: 'iPhone 13', id_marca: 2 }
-    ];
 
     this.route.paramMap.subscribe(params => {
       const id = params.get('id');
