@@ -9,15 +9,14 @@ import { CommonModule, NgIf } from '@angular/common';
 declare const bootstrap: any;
 
 @Component({
-  selector: 'app-form-cliente',
-  standalone: true,
-  imports: [ReactiveFormsModule, 
-// TODO: `HttpClientModule` should not be imported into a component directly.
-// Please refactor the code to add `provideHttpClient()` call to the provider list in the
-// application bootstrap logic and remove the `HttpClientModule` import from this component.
-HttpClientModule, [NgIf], CommonModule, FormsModule],
-  templateUrl: './form-cliente.component.html',
-  styleUrls: ['./form-cliente.component.css'],
+    selector: 'app-form-cliente',
+    imports: [ReactiveFormsModule,
+        // TODO: `HttpClientModule` should not be imported into a component directly.
+        // Please refactor the code to add `provideHttpClient()` call to the provider list in the
+        // application bootstrap logic and remove the `HttpClientModule` import from this component.
+        HttpClientModule, [NgIf], CommonModule, FormsModule],
+    templateUrl: './form-cliente.component.html',
+    styleUrls: ['./form-cliente.component.css']
 })
 export class FormClienteComponent implements OnInit {
   isEditando = false;

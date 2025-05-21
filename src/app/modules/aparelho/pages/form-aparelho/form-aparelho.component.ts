@@ -14,11 +14,12 @@ declare const bootstrap: any;
 
 @Component({
   selector: 'app-form-aparelho',
-  standalone: true,
+  standalone: true, // Adicionar esta linha
   imports: [ReactiveFormsModule, NgIf, CommonModule],
   templateUrl: './form-aparelho.component.html',
   styleUrl: './form-aparelho.component.css'
 })
+
 export class FormAparelhoComponent implements OnInit {
   formAparelho!: FormGroup;
   isEditando = false;

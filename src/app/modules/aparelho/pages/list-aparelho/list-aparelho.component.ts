@@ -12,11 +12,10 @@ import { ModeloService } from '../../../../services/modelo.service';
 declare const bootstrap: any;
 
 @Component({
-  selector: 'app-list-aparelho',
-  standalone: true,
-  imports: [[NgFor, NgIf, RouterModule]],
-  templateUrl: './list-aparelho.component.html',
-  styleUrl: './list-aparelho.component.css'
+    selector: 'app-list-aparelho',
+    imports: [[NgFor, NgIf, RouterModule]],
+    templateUrl: './list-aparelho.component.html',
+    styleUrl: './list-aparelho.component.css'
 })
 export class ListAparelhoComponent implements OnInit {
   aparelhos: Aparelho[] = [];

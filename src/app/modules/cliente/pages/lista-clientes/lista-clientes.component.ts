@@ -7,10 +7,9 @@ import { Cliente } from '../../../../Models/cliente.model';
 declare const bootstrap: any;
 
 @Component({
-  selector: 'app-lista-cliente',
-  standalone: true,
-  imports: [CommonModule, RouterModule],
-  templateUrl: './lista-clientes.component.html',
+    selector: 'app-lista-cliente',
+    imports: [CommonModule, RouterModule],
+    templateUrl: './lista-clientes.component.html'
 })
 export class ListaClienteComponent {
   clientes: Cliente[] = [];

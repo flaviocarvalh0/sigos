@@ -5,10 +5,9 @@ import { Empresa } from '../../../../Models/empresa.model';
 import { EmpresaService } from '../../../../services/empresa.service';
 
 @Component({
-  selector: 'app-empresa-list',
-  standalone: true,
-  imports: [CommonModule, RouterModule],
-  templateUrl: './lista-empresa.component.html',
+    selector: 'app-empresa-list',
+    imports: [CommonModule, RouterModule],
+    templateUrl: './lista-empresa.component.html'
 })
 export class ListEmpresaComponent implements OnInit {
   empresas: Empresa[] = [];

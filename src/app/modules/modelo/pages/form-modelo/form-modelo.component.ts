@@ -10,11 +10,10 @@ import { CommonModule } from '@angular/common';
 declare const bootstrap: any;
 
 @Component({
-  selector: 'app-form-modelo',
-  templateUrl: './form-modelo.component.html',
-  styleUrls: ['./form-modelo.component.css'],
-  standalone: true,
-  imports: [ReactiveFormsModule, CommonModule, FormsModule]
+    selector: 'app-form-modelo',
+    templateUrl: './form-modelo.component.html',
+    styleUrls: ['./form-modelo.component.css'],
+    imports: [ReactiveFormsModule, CommonModule, FormsModule]
 })
 export class FormModeloComponent implements OnInit {
   isEditando = false;

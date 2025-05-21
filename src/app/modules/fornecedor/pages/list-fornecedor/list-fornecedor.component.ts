@@ -6,10 +6,9 @@ import { Router, RouterModule } from '@angular/router';
 
 
 @Component({
-  selector: 'app-fornecedor-list',
-  standalone: true,
-  imports: [CommonModule, RouterModule],
-  templateUrl: './list-fornecedor.component.html',
+    selector: 'app-fornecedor-list',
+    imports: [CommonModule, RouterModule],
+    templateUrl: './list-fornecedor.component.html'
 })
 export class ListFornecedorComponent implements OnInit {
 

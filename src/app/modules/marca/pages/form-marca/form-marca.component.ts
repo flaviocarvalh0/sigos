@@ -8,11 +8,10 @@ import { ActivatedRoute, Router } from '@angular/router';
 declare const bootstrap: any;
 
 @Component({
-  selector: 'app-form-marca',
-  standalone: true,
-  imports: [CommonModule, NgIf, FormsModule, ReactiveFormsModule],
-  templateUrl: './form-marca.component.html',
-  styleUrl: './form-marca.component.css'
+    selector: 'app-form-marca',
+    imports: [CommonModule, NgIf, FormsModule, ReactiveFormsModule],
+    templateUrl: './form-marca.component.html',
+    styleUrl: './form-marca.component.css'
 })
 export class FormMarcaComponent {
   @ViewChild('toast') toastElement!: ElementRef;

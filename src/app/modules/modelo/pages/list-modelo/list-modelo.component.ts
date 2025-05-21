@@ -10,11 +10,10 @@ import { CommonModule } from '@angular/common';
 declare const bootstrap: any;
 
 @Component({
-  selector: 'app-list-modelo',
-  templateUrl: './list-modelo.component.html',
-  styleUrl: './list-modelo.component.css',
-  standalone: true,
-  imports: [ReactiveFormsModule, RouterModule, CommonModule],
+    selector: 'app-list-modelo',
+    templateUrl: './list-modelo.component.html',
+    styleUrl: './list-modelo.component.css',
+    imports: [ReactiveFormsModule, RouterModule, CommonModule]
 })
 export class ListModeloComponent implements OnInit {
   @ViewChild('toast') toastElement!: ElementRef;

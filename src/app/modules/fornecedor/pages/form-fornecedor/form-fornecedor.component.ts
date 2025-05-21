@@ -6,15 +6,14 @@ import { FornecedorService } from '../../../../services/fornecedor.service';
 import { CommonModule, NgIf } from '@angular/common';
 
 @Component({
-  selector: 'app-form-fornecedor',
-  standalone: true,
-  templateUrl: './form-fornecedor.component.html',
-  imports: [ReactiveFormsModule, 
-// TODO: `HttpClientModule` should not be imported into a component directly.
-// Please refactor the code to add `provideHttpClient()` call to the provider list in the
-// application bootstrap logic and remove the `HttpClientModule` import from this component.
-HttpClientModule, NgIf, CommonModule, FormsModule],
-  styleUrls: ['./form-fornecedor.component.css']
+    selector: 'app-form-fornecedor',
+    templateUrl: './form-fornecedor.component.html',
+    imports: [ReactiveFormsModule,
+        // TODO: `HttpClientModule` should not be imported into a component directly.
+        // Please refactor the code to add `provideHttpClient()` call to the provider list in the
+        // application bootstrap logic and remove the `HttpClientModule` import from this component.
+        HttpClientModule, NgIf, CommonModule, FormsModule],
+    styleUrls: ['./form-fornecedor.component.css']
 })
 export class FormFornecedorComponent implements OnInit {
 

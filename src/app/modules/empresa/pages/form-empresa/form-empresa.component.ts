@@ -10,15 +10,14 @@ import { Empresa } from '../../../../Models/empresa.model';
 
 
 @Component({
-  selector: 'app-form-empresa',
-  standalone: true,
-  templateUrl: './form-empresa.component.html',
-  imports: [ReactiveFormsModule, 
-// TODO: `HttpClientModule` should not be imported into a component directly.
-// Please refactor the code to add `provideHttpClient()` call to the provider list in the
-// application bootstrap logic and remove the `HttpClientModule` import from this component.
-HttpClientModule, NgIf, CommonModule, FormsModule],
-  styleUrls: ['./form-empresa.component.css']
+    selector: 'app-form-empresa',
+    templateUrl: './form-empresa.component.html',
+    imports: [ReactiveFormsModule,
+        // TODO: `HttpClientModule` should not be imported into a component directly.
+        // Please refactor the code to add `provideHttpClient()` call to the provider list in the
+        // application bootstrap logic and remove the `HttpClientModule` import from this component.
+        HttpClientModule, NgIf, CommonModule, FormsModule],
+    styleUrls: ['./form-empresa.component.css']
 })
 export class FormEmpresaComponent implements OnInit {
 

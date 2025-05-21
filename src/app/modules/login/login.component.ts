@@ -6,10 +6,9 @@ import { NgIf } from '@angular/common';
 
 
 @Component({
-  selector: 'app-login',
-  standalone: true,  // importante: standalone
-  imports: [FormsModule, NgIf],
-  templateUrl: './login.component.html',
+    selector: 'app-login', // importante: standalone
+    imports: [FormsModule, NgIf],
+    templateUrl: './login.component.html'
 })
 export class LoginComponent {
   username = '';

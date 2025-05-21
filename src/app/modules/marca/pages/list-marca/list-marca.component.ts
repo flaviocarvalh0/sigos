@@ -8,11 +8,10 @@ import { Marca } from '../../../../Models/marca.model';
 declare const bootstrap: any;
 
 @Component({
-  selector: 'app-list-marca',
-  standalone: true,
-  imports: [NgIf, NgFor, RouterModule, CommonModule],
-  templateUrl: './list-marca.component.html',
-  styleUrl: './list-marca.component.css'
+    selector: 'app-list-marca',
+    imports: [NgIf, NgFor, RouterModule, CommonModule],
+    templateUrl: './list-marca.component.html',
+    styleUrl: './list-marca.component.css'
 })
 export class ListMarcaComponent implements OnInit {
   marcas: Marca[] = [];
