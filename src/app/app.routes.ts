@@ -17,6 +17,8 @@ import { ListModeloComponent } from './modules/modelo/pages/list-modelo/list-mod
 import { FormModeloComponent } from './modules/modelo/pages/form-modelo/form-modelo.component';
 import { ListServicoComponent } from './modules/servico/pages/list-servico/list-servico.component';
 import { FormServicoComponent } from './modules/servico/pages/form-servico/form-servico.component';
+import { ListPecaComponent } from './modules/pecas/pages/list-pecas/list-pecas.component';
+import { FormPecaComponent } from './modules/pecas/pages/form-peca/form-peca.component';
 
 
 export const routes: Routes = [
@@ -58,6 +60,11 @@ export const routes: Routes = [
       { path: 'servico', component: ListServicoComponent, data: { animation: 'ServicoPage' } },
       { path: 'servico/form', component: FormServicoComponent },
       { path: 'servico/form/:id', component: FormServicoComponent },
+
+      
+      { path: 'peca', component: ListPecaComponent, data: { animation: 'PecaPage' } },
+      { path: 'peca/form', component: FormPecaComponent },
+      { path: 'peca/form/:id', component: FormPecaComponent },
 
       // Redirecionamentos por último
       { path: '', redirectTo: '/cliente', pathMatch: 'full' },

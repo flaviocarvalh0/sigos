@@ -1,0 +1,57 @@
+<div class="container mt-4">
+  <h2>Lista de Peças</h2>
+  <button class="btn btn-primary mb-3" (click)="novaPeca()">Nova Peça</button>
+
+  <div class="table-responsive">
+
+    <div *ngIf="pecas.length === 0" class="alert alert-info">
+      Nenhuma peça cadastrada.
+    </div>
+
+    <table *ngIf="pecas.length > 0" class="table table-bordered">
+      <thead class="table-light">
+        <tr>
+          <th>ID</th>
+          <th>Nome</th>
+          <th>Preço Custo</th>
+          <th>Preço Venda</th>
+          <th>Localização</th>
+          <th style="width: 160px;">Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let peca of pecas">
+          <td>{{ peca.id }}</td>
+          <td>{{ peca.nome }}</td>
+          <td>{{ peca.preco_custo | currency:'BRL' }}</td>
+          <td>{{ peca.preco_venda | currency:'BRL' }}</td>
+          <td>{{ peca.localizacao_fisica || '-' }}</td>
+          <td>
+            <!-- Versão Desktop (texto) -->
+            <button class="btn btn-sm btn-warning me-2 d-none d-md-inline" 
+                    (click)="editarPeca(peca.id!)">Editar</button>
+            <button class="btn btn-sm btn-danger d-none d-md-inline" 
+                    (click)="excluirPeca(peca.id!)">Excluir</button>
+
+            <!-- Versão Mobile (ícones) -->
+            <button class="btn btn-sm btn-warning me-2 d-inline d-md-none" 
+                    title="Editar" (click)="editarPeca(peca.id!)">
+              <i class="bi bi-pencil"></i>
+            </button>
+            <button class="btn btn-sm btn-danger d-inline d-md-none" 
+                    title="Excluir" (click)="excluirPeca(peca.id!)">
+              <i class="bi bi-trash"></i>
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div #toast class="toast align-items-center text-bg-success border-0 position-fixed bottom-0 end-0 m-3" role="alert">
+  <div class="d-flex">
+    <div class="toast-body">Peça excluída com sucesso!</div>
+    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+  </div>
+</div>
