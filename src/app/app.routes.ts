@@ -15,6 +15,8 @@ import { ListMarcaComponent } from './modules/marca/pages/list-marca/list-marca.
 import { FormMarcaComponent } from './modules/marca/pages/form-marca/form-marca.component';
 import { ListModeloComponent } from './modules/modelo/pages/list-modelo/list-modelo.component';
 import { FormModeloComponent } from './modules/modelo/pages/form-modelo/form-modelo.component';
+import { ListServicoComponent } from './modules/servico/pages/list-servico/list-servico.component';
+import { FormServicoComponent } from './modules/servico/pages/form-servico/form-servico.component';
 
 
 export const routes: Routes = [
@@ -52,6 +54,10 @@ export const routes: Routes = [
       { path: 'modelo', component: ListModeloComponent, data: { animation: 'ModeloPage' } },
       { path: 'modelo/form', component: FormModeloComponent },
       { path: 'modelo/form/:id', component: FormModeloComponent },
+
+      { path: 'servico', component: ListServicoComponent, data: { animation: 'ServicoPage' } },
+      { path: 'servico/form', component: FormServicoComponent },
+      { path: 'servico/form/:id', component: FormServicoComponent },
 
       // Redirecionamentos por último
       { path: '', redirectTo: '/cliente', pathMatch: 'full' },

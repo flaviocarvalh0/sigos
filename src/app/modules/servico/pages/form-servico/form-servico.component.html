@@ -1,0 +1,73 @@
+<div class="container mt-4">
+  <div class="card shadow">
+    <div class="card-header bg-primary text-white">
+      <h5 class="mb-0">{{ isEditando ? 'Editar Serviço' : 'Cadastrar Serviço' }}</h5>
+    </div>
+    <div class="card-body">
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+        <!-- Nome do Serviço -->
+        <div class="mb-3">
+          <label for="nome" class="form-label">Nome <span class="text-danger">*</span></label>
+          <input id="nome" type="text" class="form-control" formControlName="nome"
+            [class.is-invalid]="form.get('nome')?.invalid && form.get('nome')?.touched"
+            placeholder="Nome do serviço">
+          <div *ngIf="form.get('nome')?.invalid && form.get('nome')?.touched" class="text-danger small">
+            Nome é obrigatório (mínimo 2 caracteres).
+          </div>
+        </div>
+
+        <!-- Descrição do Serviço -->
+        <div class="mb-3">
+          <label for="descricao" class="form-label">Descrição</label>
+          <textarea id="descricao" class="form-control" formControlName="descricao"
+            [class.is-invalid]="form.get('descricao')?.invalid && form.get('descricao')?.touched"
+            placeholder="Descrição do serviço" rows="3"></textarea>
+        </div>
+
+        <!-- Duração -->
+        <div class="mb-3">
+          <label for="duracao" class="form-label">Duração (minutos) <span class="text-danger">*</span></label>
+          <input id="duracao" type="number" class="form-control" formControlName="duracao"
+            [class.is-invalid]="form.get('duracao')?.invalid && form.get('duracao')?.touched"
+            placeholder="Duração em minutos">
+          <div *ngIf="form.get('duracao')?.invalid && form.get('duracao')?.touched" class="text-danger small">
+            Duração é obrigatória e deve ser maior que zero.
+          </div>
+        </div>
+
+        <!-- Valor -->
+        <div class="mb-3">
+          <label for="valor" class="form-label">Valor <span class="text-danger">*</span></label>
+          <div class="input-group">
+            <span class="input-group-text">R$</span>
+            <input id="valor" type="number" step="0.01" class="form-control" formControlName="valor"
+              [class.is-invalid]="form.get('valor')?.invalid && form.get('valor')?.touched"
+              placeholder="Valor do serviço">
+          </div>
+          <div *ngIf="form.get('valor')?.invalid && form.get('valor')?.touched" class="text-danger small">
+            Valor é obrigatório e deve ser maior que zero.
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-between gap-2 mt-4">
+          <button type="submit" class="btn btn-success flex-fill">
+            Salvar
+          </button>
+          <button type="button" class="btn btn-secondary flex-fill" (click)="onCancelar()">Cancelar</button>
+          <button *ngIf="isEditando" type="button" class="btn btn-danger flex-fill"
+            (click)="onExcluir()">Excluir</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Toast de Notificação -->
+<div id="liveToast" class="toast position-fixed bottom-0 end-0 p-3 text-white bg-success border-0" role="alert"
+  aria-live="assertive" aria-atomic="true" style="z-index: 9999;">
+  <div class="d-flex">
+    <div class="toast-body">Mensagem</div>
+    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+      aria-label="Close"></button>
+  </div>
+</div>
