@@ -1,13 +1,14 @@
 import { Component, HostListener, Renderer2 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, NgClass } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth/auth.service';
 
 @Component({
     selector: 'app-layout',
-    imports: [CommonModule, RouterModule],
+    imports: [CommonModule, RouterModule, NgClass],
     templateUrl: './layout.component.html',
-    styleUrls: ['./layout.component.css']
+    styleUrls: ['./layout.component.css'],
+    standalone : true,
 })
 export class LayoutComponent {
   isSidebarCollapsed = false;

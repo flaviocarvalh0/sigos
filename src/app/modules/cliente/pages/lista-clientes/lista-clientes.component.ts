@@ -9,7 +9,8 @@ declare const bootstrap: any;
 @Component({
     selector: 'app-lista-cliente',
     imports: [CommonModule, RouterModule],
-    templateUrl: './lista-clientes.component.html'
+    templateUrl: './lista-clientes.component.html',
+    standalone: true,
 })
 export class ListaClienteComponent {
   clientes: Cliente[] = [];
@@ -29,6 +30,7 @@ export class ListaClienteComponent {
   editar(id: number) {
     this.router.navigate(['/cliente/form', id]);
   }
+  
 
   excluir(id: number) {
     if (confirm('Tem certeza que deseja excluir este cliente?')) {

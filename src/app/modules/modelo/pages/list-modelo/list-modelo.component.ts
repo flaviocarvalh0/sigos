@@ -13,7 +13,8 @@ declare const bootstrap: any;
     selector: 'app-list-modelo',
     templateUrl: './list-modelo.component.html',
     styleUrl: './list-modelo.component.css',
-    imports: [ReactiveFormsModule, RouterModule, CommonModule]
+    imports: [RouterModule, CommonModule],
+    standalone: true,
 })
 export class ListModeloComponent implements OnInit {
   @ViewChild('toast') toastElement!: ElementRef;

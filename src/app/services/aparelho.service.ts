@@ -26,10 +26,15 @@ export class AparelhoService {
     return of(this.aparelhos).pipe(delay(500));
   }
 
-  buscarPorId(id: number): Observable<Aparelho | undefined> {
-    const aparelho = this.aparelhos.find(a => a.id === id);
-    return of(aparelho).pipe(delay(300));
-  }
+buscarPorCliente(clienteId: number): Observable<Aparelho[]> {
+  const aparelhosDoCliente = this.aparelhos.filter(a => a.id_cliente === clienteId);
+  return of(aparelhosDoCliente).pipe(delay(300));
+}
+
+buscarPorId(id: number): Observable<Aparelho | undefined> {
+  const aparelho = this.aparelhos.find(a => a.id === id);
+  return of(aparelho).pipe(delay(300));
+}
 
   criar(aparelho: Aparelho): Observable<Aparelho> {
     aparelho.id = this.proximoId++;

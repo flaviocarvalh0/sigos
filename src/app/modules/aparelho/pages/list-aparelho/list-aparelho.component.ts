@@ -13,7 +13,8 @@ declare const bootstrap: any;
 
 @Component({
     selector: 'app-list-aparelho',
-    imports: [[NgFor, NgIf, RouterModule]],
+    imports: [NgFor, NgIf, RouterModule],
+    standalone: true,
     templateUrl: './list-aparelho.component.html',
     styleUrl: './list-aparelho.component.css'
 })

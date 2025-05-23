@@ -1,37 +1,131 @@
-import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, NgModel, ReactiveFormsModule, Validators } from '@angular/forms';
-import { HttpClient } from '@angular/common/http';
+import { Component, inject, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup, FormsModule, NgModel, Validators } from '@angular/forms';
+import { ReactiveFormsModule } from '@angular/forms';
+import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { ClienteService } from '../../../../services/cliente.service';
 import { Cliente } from '../../../../Models/cliente.model';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule, NgIf } from '@angular/common';
+import { FormAparelhoComponent } from '../../../aparelho/pages/form-aparelho/form-aparelho.component';
+import { AparelhoService } from '../../../../services/aparelho.service';
+import { Aparelho } from '../../../../Models/aparelho.model';
+import { MarcaService } from '../../../../services/marca.service';
+import { ModeloService } from '../../../../services/modelo.service';
+
 
 declare const bootstrap: any;
 
 @Component({
     selector: 'app-form-cliente',
-    imports: [ReactiveFormsModule,
-        // TODO: `HttpClientModule` should not be imported into a component directly.
-        // Please refactor the code to add `provideHttpClient()` call to the provider list in the
-        // application bootstrap logic and remove the `HttpClientModule` import from this component.
-        HttpClientModule, [NgIf], CommonModule, FormsModule],
+    imports: [ [NgIf], CommonModule, ReactiveFormsModule, HttpClientModule, FormAparelhoComponent],
+    standalone: true,
     templateUrl: './form-cliente.component.html',
     styleUrls: ['./form-cliente.component.css']
 })
 export class FormClienteComponent implements OnInit {
+  private fb = inject(FormBuilder);
   isEditando = false;
-  clienteId: number | null = null;
+  clienteId: number | undefined;
   editingClienteId: number | null = null;
   form!: FormGroup;
   loadingCep = false;
   cepError = '';
+  aparelhoService: AparelhoService = inject(AparelhoService); 
+  aparelhos: Aparelho[] = [];
+  marcas: { id: number; nome: string }[] = [];
+  modelos: { id: number; nome: string }[] = [];
+  private carregouMarcas = false;
+  private carregouModelos = false;
+  private carregando = false;
+  abaSelecionada = 'aparelhos'; // ou 'aparelhos'
 
+  showAparelhoForm = false;
+
+  abrirFormularioAparelho() {
+    this.showAparelhoForm = true;
+  }
+
+  private verificarCarregamento(): void {
+    if (
+      this.carregouMarcas &&
+      this.carregouModelos
+    ) {
+      this.carregando = false;
+    }
+  }
+
+
+  carregarMarcas(): void {
+    this.marcaService.getMarcas().subscribe({
+      next: (data: { id: number; nome: string; }[]) => {
+        this.marcas = data;
+        this.carregouMarcas = true;
+        this.verificarCarregamento();
+      },
+      error: (err: any) => {
+        console.error('Erro ao carregar marcas', err);
+        this.carregouMarcas = true;
+        this.verificarCarregamento();
+      }
+    });
+  }
+
+  carregarModelos(): void {
+    this.modeloService.getModelos().subscribe({
+      next: (data: { id: number; nome: string; }[]) => {
+        this.modelos = data;
+        this.carregouModelos = true;
+        this.verificarCarregamento();
+      },
+      error: (err: any) => {
+        console.error('Erro ao carregar modelos', err);
+        this.carregouModelos = true;
+        this.verificarCarregamento();
+      }
+    });
+  }
+
+carregarAparelhosDoCliente(clienteId: number): void {
+  this.aparelhoService.buscarPorCliente(clienteId).subscribe({
+    next: (aparelho) => {
+      this.aparelhos = aparelho;
+    },
+    error: (err) => {
+      console.error('Erro ao carregar aparelho:', err);
+      this.showToast('Erro ao carregar aparelho do cliente');
+    }
+  });  
+}
+
+getNomeMarca(idMarca: number): string {
+  const marca = this.marcas.find(m => m.id == idMarca);
+  return marca ? marca.nome : 'Desconhecida';
+}
+
+getNomeModelo(idModelo: number): string {
+  const modelo = this.modelos.find(m => m.id == idModelo);
+  return modelo ? modelo.nome : 'Desconhecido';
+}
+
+excluir(id: number) {
+    if (confirm('Tem certeza que deseja excluir este aparelho?')) {
+      this.aparelhoService.excluir(id).subscribe(() => {
+        this.carregarAparelhosDoCliente(this.clienteId!);
+        this.showToast("Aparelho excluído com sucesso!");
+      });
+    }
+  }
+
+  editarParalho(id: number) {
+    this.router.navigate(['/aparelho/form', id]);
+  }
   constructor(
-    private fb: FormBuilder,
     private http: HttpClient,
     private clienteService: ClienteService,
     private route: ActivatedRoute,
-    private router: Router
+    private router: Router,
+    private marcaService: MarcaService,
+    private modeloService: ModeloService
   ) {
     this.form = this.fb.group({
       nome_completo: ['', [Validators.required, Validators.minLength(3)]],
@@ -59,11 +153,20 @@ export class FormClienteComponent implements OnInit {
       if (idParam) {
         this.clienteId = +idParam;
         this.carregarCliente(this.clienteId);
+        this.carregarAparelhosDoCliente(this.clienteId);
+        this.carregarMarcas();
+        this.carregarModelos();
       }else {
         this.form.patchValue({ ativo: true });
       }
     });
   }
+
+  aoSalvarOuCancelarAparelho(): void {
+  this.showAparelhoForm = false;
+  this.carregarAparelhosDoCliente(this.clienteId!); 
+}
+
 
   carregarCliente(id: number) {
     this.clienteService.getClienteById(id).subscribe(cliente => {

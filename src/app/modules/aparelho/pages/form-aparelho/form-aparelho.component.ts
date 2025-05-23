@@ -1,120 +1,177 @@
-import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { CommonModule, NgIf } from '@angular/common';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { CommonModule } from '@angular/common';
+import { NgSelectModule } from '@ng-select/ng-select';
+import { ReactiveFormsModule } from '@angular/forms';
 import { AparelhoService } from '../../../../services/aparelho.service';
-import { Cliente } from '../../../../Models/cliente.model';
-import { Aparelho } from '../../../../Models/aparelho.model';
 import { ClienteService } from '../../../../services/cliente.service';
-import { Marca } from '../../../../Models/marca.model';
-import { Modelo } from '../../../../Models/modelo.model';
-
+import { MarcaService } from '../../../../services/marca.service';
+import { ModeloService } from '../../../../services/modelo.service';
+import { ActivatedRoute, Router } from '@angular/router';
 
 declare const bootstrap: any;
 
 @Component({
   selector: 'app-form-aparelho',
-  standalone: true, // Adicionar esta linha
-  imports: [ReactiveFormsModule, NgIf, CommonModule],
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule, NgSelectModule],
   templateUrl: './form-aparelho.component.html',
-  styleUrl: './form-aparelho.component.css'
+  styleUrls: ['./form-aparelho.component.css']
 })
-
 export class FormAparelhoComponent implements OnInit {
-  formAparelho!: FormGroup;
-  isEditando = false;
-  clientes: Cliente[] = [];
-  marcas: Marca[] = [];
-  modelos: Modelo[] = [];
-  modelosFiltrados: Modelo[] = [];
+  @Input() clienteId?: number;
+  @Input() modoEmbedded = false;
+  @Output() salvar = new EventEmitter<any>();
+  @Output() cancelar = new EventEmitter<void>();
 
-  clienteId: number = 0;
+  formAparelho: FormGroup;
+  isEditando = false;
+  clientes: any[] = [];
+  marcas: any[] = [];
+  modelos: any[] = [];
+  modelosFiltrados: any[] = [];
   aparelhoIdEditando?: number;
 
   constructor(
     private fb: FormBuilder,
     private aparelhoService: AparelhoService,
     private clienteService: ClienteService,
+    private marcaService: MarcaService,
+    private modeloService: ModeloService,
     private route: ActivatedRoute,
     private router: Router
-  ) {}
-
-  ngOnInit() {
-
-    this.clienteService.getClientes().subscribe(clientes => {
-      this.clientes = clientes;
-    });
-
+  ) {
     this.formAparelho = this.fb.group({
-      id_cliente: ['', Validators.required],
-      id_marca: ['', Validators.required],
-      id_modelo: ['', Validators.required],
+      id_cliente: [null, Validators.required],
+      id_marca: [null, Validators.required],
+      id_modelo: [null, Validators.required],
       imei_1: [''],
       imei_2: [''],
       cor: [''],
       observacoes: ['']
     });
+  }
 
+  ngOnInit(): void {
+    this.carregarDadosIniciais();
+    
+    if (this.clienteId) {
+      this.formAparelho.patchValue({ id_cliente: this.clienteId });
+    }
 
-    this.route.paramMap.subscribe(params => {
-      const id = params.get('id');
-      if (id) {
-        this.isEditando = true;
-        this.aparelhoIdEditando = +id;
-        this.carregarAparelho(this.aparelhoIdEditando);
-      }
+    if (!this.modoEmbedded) {
+      this.route.paramMap.subscribe((params: { get: (arg0: string) => any; }) => {
+        const id = params.get('id');
+        if (id) {
+          this.isEditando = true;
+          this.aparelhoIdEditando = +id;
+          this.carregarAparelho(this.aparelhoIdEditando);
+        }
+      });
+    }
+  }
+
+  carregarDadosIniciais(): void {
+    this.clienteService.getClientes().subscribe(clientes => {
+      this.clientes = clientes;
+    });
+
+    this.marcaService.getMarcas().subscribe(marcas => {
+      this.marcas = marcas;
+    });
+
+    this.modeloService.getModelos().subscribe(modelos => {
+      this.modelos = modelos;
     });
   }
 
-  carregarAparelho(id: number) {
+  onMarcaChange(): void {
+    const marcaId = this.formAparelho.get('id_marca')?.value;
+    if (marcaId) {
+      this.modelosFiltrados = this.modelos.filter(m => m.id_marca === marcaId);
+      this.formAparelho.get('id_modelo')?.reset();
+    } else {
+      this.modelosFiltrados = [];
+    }
+  }
+
+  carregarAparelho(id: number): void {
     this.aparelhoService.buscarPorId(id).subscribe(aparelho => {
       if (aparelho) {
-        this.formAparelho.patchValue(aparelho);
-        this.onMarcaChange();
+        // Primeiro filtra os modelos da marca selecionada
+        this.modelosFiltrados = this.modelos.filter(m => m.id_marca === aparelho.id_marca);
+        
+        // Depois seta os valores do formulário
+        this.formAparelho.patchValue({
+          id_cliente: aparelho.id_cliente,
+          id_marca: aparelho.id_marca,
+          id_modelo: aparelho.id_modelo,
+          imei_1: aparelho.imei_1,
+          imei_2: aparelho.imei_2,
+          cor: aparelho.cor,
+          observacoes: aparelho.observacoes
+        });
       }
     });
   }
 
-  onMarcaChange() {
-    const marcaId = this.formAparelho.get('id_marca')?.value;
-    this.modelosFiltrados = this.modelos.filter(m => m.id_marca == marcaId);
-    this.formAparelho.get('id_modelo')?.setValue('');
-  }
-
-  onSubmit() {
+  onSubmit(): void {
     if (this.formAparelho.invalid) {
       this.formAparelho.markAllAsTouched();
       return;
     }
 
-    const aparelho: Aparelho = this.formAparelho.value;
+    const aparelho = this.formAparelho.value;
 
     if (this.isEditando && this.aparelhoIdEditando) {
-      this.aparelhoService.atualizar(this.aparelhoIdEditando, aparelho).subscribe(() => {
-        this.showToast('Aparelho atualizado com sucesso!');
-        this.router.navigate(['/aparelho']);
+      this.aparelhoService.atualizar(this.aparelhoIdEditando, aparelho).subscribe({
+        next: () => this.onSucesso('Aparelho atualizado com sucesso!'),
+        error: (err) => this.onErro('Erro ao atualizar aparelho', err)
       });
     } else {
-      this.aparelhoService.criar(aparelho).subscribe(() => {
-        this.showToast('Aparelho cadastrado com sucesso!');
-        this.router.navigate(['/aparelho']);
+      this.aparelhoService.criar(aparelho).subscribe({
+        next: () => this.onSucesso('Aparelho cadastrado com sucesso!'),
+        error: (err) => this.onErro('Erro ao cadastrar aparelho', err)
       });
     }
   }
 
-  onCancelar() {
-    this.formAparelho.reset();
+onSucesso(mensagem: string): void {
+  this.showToast(mensagem);
+  if (this.modoEmbedded) {
+    this.salvar.emit(); // Emite para o componente pai (form-cliente)
+  } else if (this.formAparelho.value.id_cliente) {
+    // Redireciona de volta para o form do cliente com o id correto
+    this.router.navigate(['/cliente/form', this.formAparelho.value.id_cliente]);
+  } else {
+    // Redireciona para a lista de aparelhos
     this.router.navigate(['/aparelho']);
   }
+}
 
-  onExcluir() {
-    if (this.isEditando && this.aparelhoIdEditando && confirm('Deseja excluir este aparelho?')) {
-      this.aparelhoService.excluir(this.aparelhoIdEditando).subscribe(() => {
-        this.showToast('Aparelho excluído com sucesso!');
-        this.router.navigate(['/aparelho']);
-      }, error => {
-        this.showToast('Erro ao excluir aparelho.');
-        console.error(error);
+
+
+  onErro(mensagem: string, erro: any): void {
+    console.error(mensagem, erro);
+    alert(mensagem);
+  }
+
+onCancelar(): void {
+  if (this.modoEmbedded) {
+    this.cancelar.emit(); // volta ao componente pai (form-cliente)
+  } else if (this.formAparelho.value.id_cliente) {
+    this.router.navigate(['/cliente/form', this.formAparelho.value.id_cliente]);
+  } else {
+    this.router.navigate(['/aparelho']);
+  }
+}
+
+
+  onExcluir(): void {
+    if (confirm('Deseja realmente excluir este aparelho?') && this.aparelhoIdEditando) {
+      this.aparelhoService.excluir(this.aparelhoIdEditando).subscribe({
+        next: () => this.onSucesso('Aparelho excluído com sucesso!'),
+        error: (err) => this.onErro('Erro ao excluir aparelho', err)
       });
     }
   }

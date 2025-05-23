@@ -1,11 +1,12 @@
-import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Component, inject, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup , Validators } from '@angular/forms';
+import { ReactiveFormsModule} from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ModeloService } from '../../../../services/modelo.service';
 import { MarcaService } from '../../../../services/marca.service';
 import { Marca } from '../../../../Models/marca.model';
-import { Modelo } from '../../../../Models/modelo.model';
 import { CommonModule } from '@angular/common';
+import { NgSelectModule } from '@ng-select/ng-select';
 
 declare const bootstrap: any;
 
@@ -13,16 +14,21 @@ declare const bootstrap: any;
     selector: 'app-form-modelo',
     templateUrl: './form-modelo.component.html',
     styleUrls: ['./form-modelo.component.css'],
-    imports: [ReactiveFormsModule, CommonModule, FormsModule]
+    standalone: true,
+    imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    NgSelectModule
+  ],
 })
 export class FormModeloComponent implements OnInit {
+  private fb = inject(FormBuilder);
   isEditando = false;
   form: FormGroup;
   marcas: Marca[] = [];
   modeloId: number | null = null;
 
   constructor(
-    private fb: FormBuilder,
     private modeloService: ModeloService,
     private marcaService: MarcaService,
     private route: ActivatedRoute,

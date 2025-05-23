@@ -1,35 +1,42 @@
-<div class="container mt-4">
-  <div class="card shadow">
-    <div class="card-header bg-primary text-white">
-      <h5 class="mb-0">Cadastrar Aparelho</h5>
-    </div>
-    <div class="card-body">
-      <form [formGroup]="formAparelho" (ngSubmit)="onSubmit()" novalidate>
+<div class="card shadow" [class.border-0]="modoEmbedded">
+  <div class="card-header bg-primary text-white" *ngIf="!modoEmbedded">
+    <h5 class="mb-0">{{ isEditando ? 'Editar Aparelho' : 'Cadastrar Aparelho' }}</h5>
+  </div>
+  <div class="card-body">
+    <form [formGroup]="formAparelho" (ngSubmit)="onSubmit()" novalidate>
 
-        <!-- Dropdown Cliente -->
-        <div class="mb-3">
-          <label for="id_cliente" class="form-label">Cliente</label>
-          <select id="id_cliente" class="form-select" formControlName="id_cliente" required>
-            <option value="">Selecione um cliente</option>
-            <option *ngFor="let cliente of clientes" [value]="cliente.id">
-              {{ cliente.nome_completo }}
-            </option>
-          </select>
-          <div *ngIf="formAparelho.get('id_cliente')?.invalid && formAparelho.get('id_cliente')?.touched"
-            class="text-danger">
-            Cliente é obrigatório.
-          </div>
+      <!-- Dropdown Cliente (oculto no modo embedded) -->
+      <div class="mb-3" *ngIf="!modoEmbedded">
+        <label class="form-label">Cliente</label>
+        <ng-select
+          [items]="clientes"
+          bindLabel="nome_completo"
+          bindValue="id"
+          formControlName="id_cliente"
+          [searchable]="true"
+          placeholder="Selecione um cliente"
+          [clearable]="true">
+        </ng-select>
+        <div *ngIf="formAparelho.get('id_cliente')?.touched && formAparelho.get('id_cliente')?.invalid"
+          class="text-danger small">
+          Cliente é obrigatório.
         </div>
+      </div>
 
         <!-- Dropdown Marca -->
         <div class="mb-3">
-          <label for="marca" class="form-label">Marca <span class="text-danger">*</span></label>
-          <select id="marca" class="form-select" formControlName="id_marca" (change)="onMarcaChange()" required>
-            <option value="">Selecione a marca</option>
-            <option *ngFor="let marca of marcas" [value]="marca.id">
-              {{ marca.nome }}
-            </option>
-          </select>
+          <label for="id_cliente" class="form-label">Marcas</label>
+          <ng-select
+            [items]="marcas"
+            bindLabel="nome"
+            bindValue="id"
+            formControlName="id_marca"
+            [searchable]="true"
+            placeholder="Selecione a marca"
+            (change)="onMarcaChange()"
+            [clearable]="true"
+            class="form-select">
+          </ng-select>
           <div *ngIf="formAparelho.get('id_marca')?.touched && formAparelho.get('id_marca')?.invalid"
             class="text-danger small">
             Marca é obrigatória.
@@ -37,19 +44,23 @@
         </div>
 
         <!-- Dropdown Modelo (filtrado por marca) -->
-        <div class="mb-3">
-          <label for="modelo" class="form-label">Modelo <span class="text-danger">*</span></label>
-          <select id="modelo" class="form-select" formControlName="id_modelo" required>
-            <option value="">Selecione o modelo</option>
-            <option *ngFor="let modelo of modelosFiltrados" [value]="modelo.id">
-              {{ modelo.nome }}
-            </option>
-          </select>
-          <div *ngIf="formAparelho.get('id_modelo')?.touched && formAparelho.get('id_modelo')?.invalid"
+      <div class="mb-3">
+        <label for="id_modelo" class="form-label">Modelos</label>
+        <ng-select
+          [items]="modelosFiltrados"
+          bindLabel="nome"
+          [bindValue]="'id'"
+          formControlName="id_modelo"
+          [searchable]="true"
+          placeholder="Selecione o modelo"
+          [clearable]="true"
+          class="form-select">
+        </ng-select>
+        <div *ngIf="formAparelho.get('id_modelo')?.touched && formAparelho.get('id_modelo')?.invalid"
             class="text-danger small">
-            Modelo é obrigatório.
-          </div>
+          Modelo é obrigatório.
         </div>
+      </div>
 
         <!-- IMEI 1 -->
         <div class="mb-3">
@@ -76,14 +87,17 @@
             placeholder="Observações"></textarea>
         </div>
 
-        <div class="d-flex justify-content-between gap-2 mt-4">
-          <button type="submit" class="btn btn-success flex-fill">Salvar</button>
-          <button type="button" class="btn btn-secondary flex-fill" (click)="onCancelar()">Cancelar</button>
-          <button *ngIf="isEditando" type="button" class="btn btn-danger flex-fill"
-            (click)="onExcluir()">Excluir</button>
-        </div>
-      </form>
-    </div>
+      <div class="d-flex justify-content-between gap-2 mt-4">
+        <button type="submit" class="btn btn-success flex-fill">
+          Salvar
+        </button>
+        <button type="button" class="btn btn-secondary flex-fill" (click)="onCancelar()">
+          Cancelar
+        </button>
+        <button *ngIf="isEditando && !modoEmbedded" type="button" class="btn btn-danger flex-fill"
+          (click)="onExcluir()">Excluir</button>
+      </div>
+    </form>
   </div>
 </div>
 
