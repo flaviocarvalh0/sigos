@@ -1,0 +1,57 @@
+<div class="container mt-4">
+  <div class="card shadow">
+    <div class="card-header bg-primary text-white">
+      <h5 class="mb-0">{{ isEditando ? 'Editar Prazo de Garantia' : 'Cadastrar Prazo de Garantia' }}</h5>
+    </div>
+    <div class="card-body">
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+        <!-- Quantidade de Dias -->
+        <div class="mb-3">
+          <label for="quantidade_de_dias" class="form-label">Duração (dias) <span class="text-danger">*</span></label>
+          <input id="quantidade_de_dias" type="number" class="form-control" formControlName="quantidade_de_dias"
+            [class.is-invalid]="form.get('quantidade_de_dias')?.invalid && form.get('quantidade_de_dias')?.touched"
+            placeholder="Quantidade de dias da garantia" min="1">
+          <div *ngIf="form.get('quantidade_de_dias')?.invalid && form.get('quantidade_de_dias')?.touched" class="text-danger small">
+            Duração é obrigatória (mínimo 1 dia).
+          </div>
+        </div>
+
+        <!-- Descrição -->
+        <div class="mb-3">
+          <label for="descricao" class="form-label">Descrição <span class="text-danger">*</span></label>
+          <textarea id="descricao" class="form-control" formControlName="descricao"
+            [class.is-invalid]="form.get('descricao')?.invalid && form.get('descricao')?.touched"
+            placeholder="Descrição do prazo de garantia" rows="3"></textarea>
+          <div *ngIf="form.get('descricao')?.invalid && form.get('descricao')?.touched" class="text-danger small">
+            Descrição é obrigatória.
+          </div>
+        </div>
+
+        <!-- Status Ativo -->
+        <div class="mb-3 form-check form-switch">
+          <input class="form-check-input" type="checkbox" id="ativo" formControlName="ativo">
+          <label class="form-check-label" for="ativo">Ativo</label>
+        </div>
+
+        <div class="d-flex justify-content-between gap-2 mt-4">
+          <button type="submit" class="btn btn-success flex-fill" [disabled]="form.invalid">
+            Salvar
+          </button>
+          <button type="button" class="btn btn-secondary flex-fill" (click)="onCancelar()">Cancelar</button>
+          <button *ngIf="isEditando" type="button" class="btn btn-danger flex-fill"
+            (click)="onExcluir()">Excluir</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Toast de Notificação -->
+<div id="liveToast" class="toast position-fixed bottom-0 end-0 p-3 text-white bg-success border-0" role="alert"
+  aria-live="assertive" aria-atomic="true" style="z-index: 9999;">
+  <div class="d-flex">
+    <div class="toast-body">Mensagem</div>
+    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+      aria-label="Close"></button>
+  </div>
+</div>

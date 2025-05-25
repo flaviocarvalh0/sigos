@@ -19,6 +19,8 @@ import { ListServicoComponent } from './modules/servico/pages/list-servico/list-
 import { FormServicoComponent } from './modules/servico/pages/form-servico/form-servico.component';
 import { ListPecaComponent } from './modules/pecas/pages/list-pecas/list-pecas.component';
 import { FormPecaComponent } from './modules/pecas/pages/form-peca/form-peca.component';
+import { ListPrazoGarantiaComponent } from './modules/prazo-garantia/list-prazo-garantia/list-prazo-garantia.component';
+import { FormPrazoGarantiaComponent } from './modules/prazo-garantia/form-prazo-garantia/form-prazo-garantia.component';
 
 
 export const routes: Routes = [
@@ -61,10 +63,14 @@ export const routes: Routes = [
       { path: 'servico/form', component: FormServicoComponent },
       { path: 'servico/form/:id', component: FormServicoComponent },
 
-      
+
       { path: 'peca', component: ListPecaComponent, data: { animation: 'PecaPage' } },
       { path: 'peca/form', component: FormPecaComponent },
       { path: 'peca/form/:id', component: FormPecaComponent },
+
+      { path: 'prazo_garantia', component: ListPrazoGarantiaComponent, data: { animation: 'PrazoGarantiaPage' } },
+      { path: 'prazo_garantia/form', component: FormPrazoGarantiaComponent },
+      { path: 'prazo_garantia/form/:id', component: FormPrazoGarantiaComponent },
 
       // Redirecionamentos por último
       { path: '', redirectTo: '/cliente', pathMatch: 'full' },

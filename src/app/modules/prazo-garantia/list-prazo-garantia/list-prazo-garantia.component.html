@@ -1,0 +1,56 @@
+<div class="container mt-4">
+  <h2>Prazos de Garantia</h2>
+  <button class="btn btn-primary mb-3" (click)="novoPrazoGarantia()">Novo Prazo de Garantia</button>
+  <div class="table-responsive">
+    <div *ngIf="prazoGarantia.length === 0" class="alert alert-info">
+      Nenhum prazo cadastrado cadastrada.
+    </div>
+    <table *ngIf="prazoGarantia.length > 0" class="table table-bordered">
+      <thead class="table-light">
+        <tr>
+          <th>Dias</th>
+          <th>Descrição</th>
+          <th>Status</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let prazo of prazoGarantia">
+          <td>{{ prazo.quantidade_de_dias }} dias</td>
+          <td>{{ prazo.descricao }}</td>
+          <td>
+            <span class="badge" [ngClass]="prazo.ativo ? 'bg-success' : 'bg-secondary'">
+              {{ prazo.ativo ? 'Ativo' : 'Inativo' }}
+            </span>
+          </td>
+          <div class="d-flex gap-2">
+                  <!-- Botões com texto visíveis em telas md+ -->
+                  <button class="btn btn-sm btn-warning d-none d-md-inline" (click)="editarPrazoGarantia(prazo.id!)">
+                    Editar
+                  </button>
+                  <button class="btn btn-sm btn-danger d-none d-md-inline" (click)="excluir(prazo.id!)">
+                    Excluir
+                  </button>
+
+                  <!-- Ícones visíveis em telas pequenas -->
+                  <button class="btn btn-sm btn-warning d-inline d-md-none" title="Editar" (click)="editarPrazoGarantia(prazo.id!)">
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                  <button class="btn btn-sm btn-danger d-inline d-md-none" title="Excluir" (click)="excluir(prazo.id!)">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Toast de Notificação -->
+  <div id="liveToast" class="toast position-fixed bottom-0 end-0 p-3 text-white bg-success border-0" role="alert"
+    aria-live="assertive" aria-atomic="true" style="z-index: 9999;">
+    <div class="d-flex">
+      <div class="toast-body">Mensagem</div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+        aria-label="Close"></button>
+    </div>
+  </div>
