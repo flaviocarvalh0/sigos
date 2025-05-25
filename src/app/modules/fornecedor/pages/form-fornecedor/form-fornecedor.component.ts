@@ -2,7 +2,7 @@ import { Component, inject, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ReactiveFormsModule} from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { FornecedorService } from '../../../../services/fornecedor.service';
 import { CommonModule } from '@angular/common';
 
@@ -13,7 +13,8 @@ import { CommonModule } from '@angular/common';
     styleUrls: ['./form-fornecedor.component.css'],
     imports: [
     CommonModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    HttpClientModule
   ],
 })
 export class FormFornecedorComponent implements OnInit {

@@ -25,6 +25,7 @@ export class ListPecaComponent implements OnInit {
   carregarPecas(): void {
     this.pecaService.listar().subscribe({
       next: (data) => this.pecas = data,
+      complete: () => console.log('Peças carregadas com sucesso: ', this.pecas),
       error: (err) => console.error('Erro ao carregar peças', err)
     });
   }

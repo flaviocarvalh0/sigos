@@ -5,7 +5,7 @@ import { AuthService } from '../../services/auth/auth.service';
 
 @Component({
     selector: 'app-layout',
-    imports: [CommonModule, RouterModule, NgClass],
+    imports: [CommonModule, RouterModule],
     templateUrl: './layout.component.html',
     styleUrls: ['./layout.component.css'],
     standalone : true,

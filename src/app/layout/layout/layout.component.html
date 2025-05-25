@@ -1,76 +1,103 @@
 <div class="d-flex flex-column vh-100">
   <!-- NAVBAR -->
-<nav class="navbar navbar-dark bg-primary fixed-top px-3 d-flex align-items-center">
-  <span class="navbar-brand mb-0 h1">SIGOS</span>
-  <button class="btn btn-outline-light ms-3" (click)="toggleSidebar()">☰</button>
+  <nav class="navbar navbar-dark bg-primary fixed-top px-3 d-flex align-items-center">
+    <div class="d-flex align-items-center">
+      <button class="btn btn-outline-light me-3" (click)="toggleSidebar()">
+        <i class="bi bi-list"></i>
+      </button>
+      <span class="navbar-brand mb-0 h1 d-flex align-items-center gap-2">
+        <div class="logo-icon">OS</div>
+        <div>
+          <div>SIGOS</div>
+          <small class="navbar-subtitle">Sistema de OS</small>
+        </div>
+      </span>
+    </div>
 
-  <div class="ms-auto d-flex align-items-center gap-2">
-    <button class="btn btn-light btn-sm" (click)="toggleTheme()">
-      <i [ngClass]="isDarkTheme ? 'bi bi-sun' : 'bi bi-moon'"></i>
-    </button>
-    <button *ngIf="auth.isLoggedIn()" class="btn btn-outline-light btn-sm" (click)="auth.logout()">
-      Logout
-    </button>
-  </div>
-</nav>
-
+    <div class="ms-auto d-flex align-items-center gap-2">
+      <button *ngIf="auth.isLoggedIn()" class="btn btn-outline-light btn-sm" (click)="auth.logout()">
+        Logout
+      </button>
+    </div>
+  </nav>
 
   <!-- LAYOUT -->
   <div class="d-flex flex-grow-1" style="margin-top: 56px;">
 
     <!-- SIDEBAR -->
-    <nav class="sidebar bg-primary text-white p-3" [class.collapsed]="isSidebarCollapsed">
-      <ul class="nav flex-column">
-        <li class="nav-item mb-2">
-          <a routerLink="/clientes" routerLinkActive="active" class="nav-link text-white d-flex align-items-center">
-            <i class="bi bi-people-fill me-2"></i> Clientes
-          </a>
-        </li>
-        <li class="nav-item mb-2">
-          <a routerLink="/fornecedor" routerLinkActive="active" class="nav-link text-white d-flex align-items-center">
-            <i class="bi bi-truck me-2"></i> Fornecedores
-          </a>
-        </li>
-        <li class="nav-item mb-2">
-          <a routerLink="/empresa" routerLinkActive="active" class="nav-link text-white d-flex align-items-center">
-            <i class="bi bi-building me-2"></i> Empresa
-          </a>
-        </li>
-        <li class="nav-item mb-2">
-          <a routerLink="/aparelho" routerLinkActive="active" class="nav-link text-white d-flex align-items-center">
-            <i class="bi bi-phone-fill me-2"></i> Aparelhos
-          </a>
-        </li>
-        <li class="nav-item mb-2">
-          <a routerLink="/marca" routerLinkActive="active" class="nav-link text-white d-flex align-items-center">
-            <i class="bi bi-tag me-2"></i> Marcas
-          </a>
-        </li>
+    <nav class="sidebar bg-light p-3 border-end" [class.collapsed]="isSidebarCollapsed">
+      <div class="sidebar-menu">
+        <div class="sidebar-group mb-4">
+          <div class="sidebar-group-label text-muted text-uppercase small fw-bold mb-2">Menu Principal</div>
+          <ul class="nav flex-column">
+            <li class="nav-item mb-1">
+              <a routerLink="/clientes" routerLinkActive="active" class="nav-link d-flex align-items-center rounded">
+                <i class="bi bi-people-fill me-2"></i>
+                <span>Clientes</span>
+              </a>
+            </li>
+            <li class="nav-item mb-1">
+              <a routerLink="/fornecedor" routerLinkActive="active" class="nav-link d-flex align-items-center rounded">
+                <i class="bi bi-truck me-2"></i>
+                <span>Fornecedores</span>
+              </a>
+            </li>
+            <li class="nav-item mb-1">
+              <a routerLink="/empresa" routerLinkActive="active" class="nav-link d-flex align-items-center rounded">
+                <i class="bi bi-building me-2"></i>
+                <span>Empresa</span>
+              </a>
+            </li>
+            <li class="nav-item mb-1">
+              <a routerLink="/aparelho" routerLinkActive="active" class="nav-link d-flex align-items-center rounded">
+                <i class="bi bi-phone-fill me-2"></i>
+                <span>Aparelhos</span>
+              </a>
+            </li>
+            <li class="nav-item mb-1">
+              <a routerLink="/marca" routerLinkActive="active" class="nav-link d-flex align-items-center rounded">
+                <i class="bi bi-tag me-2"></i>
+                <span>Marcas</span>
+              </a>
+            </li>
+            <li class="nav-item mb-1">
+              <a routerLink="/modelo" routerLinkActive="active" class="nav-link d-flex align-items-center rounded">
+                <i class="bi bi-badge-tm me-2"></i>
+                <span>Modelos</span>
+              </a>
+            </li>
+            <li class="nav-item mb-1">
+              <a routerLink="/servico" routerLinkActive="active" class="nav-link d-flex align-items-center rounded">
+                <i class="bi bi-tools me-2"></i>
+                <span>Serviços</span>
+              </a>
+            </li>
+            <li class="nav-item mb-1">
+              <a routerLink="/peca" routerLinkActive="active" class="nav-link d-flex align-items-center rounded">
+                <i class="bi bi-gear-fill me-2"></i>
+                <span>Peças</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
 
-        <li class="nav-item mb-2">
-          <a routerLink="/modelo" routerLinkActive="active" class="nav-link text-white d-flex align-items-center">
-            <i class="bi bi-badge-tm"></i> Modelos
-          </a>
-        </li>
-
-        <li class="nav-item mb-2">
-          <a routerLink="/servico" routerLinkActive="active" class="nav-link text-white d-flex align-items-center">
-            <i class="bi bi-tools"></i> Serviços
-          </a>
-        </li>
-
-        <li class="nav-item mb-2">
-          <a routerLink="/peca" routerLinkActive="active" class="nav-link text-white d-flex align-items-center">
-            <i class="bi bi-gear-fill"></i> Peças
-          </a>
-        </li>
-      </ul>
+      <div class="sidebar-footer mt-auto pt-3 border-top">
+        <div class="user-profile d-flex align-items-center p-2 rounded">
+          <div class="avatar bg-primary text-white me-2">TC</div>
+          <div class="user-info">
+            <div class="user-name fw-bold small">Técnico Admin</div>
+            <div class="user-email text-muted small">adminsigos.com</div>
+          </div>
+        </div>
+      </div>
     </nav>
 
     <!-- CONTEÚDO -->
-  <main class="main-content flex-grow-1 overflow-auto">
-    <router-outlet></router-outlet>
-  </main>
-
+    <main class="main-content flex-grow-1 overflow-auto p-0"> <!-- Removido padding -->
+      <div class="container-fluid px-3 py-2 container py-4"> <!-- Adicionado container interno -->
+        <router-outlet></router-outlet>
+      </div>
+    </main>
   </div>
 </div>
