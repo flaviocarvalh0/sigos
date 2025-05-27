@@ -9,7 +9,7 @@ export class EstoqueService {
   private estoqueItems: Estoque[] = [
     {
       id: 1,
-      quantidade_atual: 50,
+      quantidade_atual: 0,
       quantidade_minima: 10,
       id_peca: 1, // ID da peça relacionada
       id_usuario_criador: 1,
@@ -17,7 +17,7 @@ export class EstoqueService {
     },
     {
       id: 2,
-      quantidade_atual: 30,
+      quantidade_atual: 0,
       quantidade_minima: 10,
       id_peca: 2,
       id_usuario_criador: 1,
@@ -39,6 +39,10 @@ export class EstoqueService {
     return of(this.estoqueItems.find(item => item.id === id));
   }
 
+  buscarEstoquePorIdPeca(pecaId: number): Observable<Estoque | undefined> {
+    return of(this.estoqueItems.find(item => item.id_peca === pecaId));
+  }
+
   // Busca estoque de uma peça específica
   buscarPorPeca(idPeca: number): Observable<Estoque | undefined> {
     return of(this.estoqueItems.find(item => item.id_peca === idPeca));
@@ -49,6 +53,17 @@ export class EstoqueService {
     const item = this.estoqueItems.find(i => i.id === id);
     if (item) {
       item.id_peca = estoque.id_peca;
+      item.data_modificacao = new Date();
+      return of(item);
+    }
+    return of(undefined);
+  }
+
+  atualizarQuantidadeEstoque(id: number, estoque: Estoque): Observable<Estoque | undefined> {
+    const item = this.estoqueItems.find(i => i.id === id);
+    if (item) {
+      item.id_peca = estoque.id_peca;
+      item.quantidade_atual = estoque.quantidade_atual;
       item.data_modificacao = new Date();
       return of(item);
     }

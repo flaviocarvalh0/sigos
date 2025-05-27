@@ -23,6 +23,8 @@ import { ListPrazoGarantiaComponent } from './modules/prazo-garantia/list-prazo-
 import { FormPrazoGarantiaComponent } from './modules/prazo-garantia/form-prazo-garantia/form-prazo-garantia.component';
 import { ListEstoqueComponent } from './modules/estoque/list-estoque/list-estoque.component';
 import { FormEstoqueComponent } from './modules/estoque/form-estoque/form-estoque.component';
+import { ListMovimentoEstoqueComponent } from './modules/movimento-estoque/list-movimento-estoque/list-movimento-estoque.component';
+import { FormMovimentoEstoqueComponent } from './modules/movimento-estoque/form-movimento-estoque/form-movimento-estoque.component';
 
 
 export const routes: Routes = [
@@ -77,6 +79,10 @@ export const routes: Routes = [
       { path: 'estoque', component: ListEstoqueComponent, data: { animation: 'EstoquePage' } },
       { path: 'estoque/form', component: FormEstoqueComponent },
       { path: 'estoque/form/:id', component: FormEstoqueComponent },
+
+      { path: 'movimento-estoque', component: ListMovimentoEstoqueComponent, data: { animation: 'MovimentnoEstoquePage' } },
+      { path: 'movimento-estoque/form', component: FormMovimentoEstoqueComponent },
+      { path: 'movimento-estoque/form/:id', component: FormMovimentoEstoqueComponent },
 
       // Redirecionamentos por último
       { path: '', redirectTo: '/cliente', pathMatch: 'full' },

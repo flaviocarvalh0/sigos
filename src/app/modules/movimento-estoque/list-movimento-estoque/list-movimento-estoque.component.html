@@ -1,0 +1,53 @@
+<div class="container mt-4">
+  <h2>Movimentações</h2>
+  <button class="btn btn-primary mb-3" (click)="novaMovimentacao()">Nova Movimentação</button>
+  <div class="table-responsive">
+    <div *ngIf="movimentacoes.length === 0" class="alert alert-info">
+      Nenhuma movimentação realizada.
+    </div>
+    <table *ngIf="movimentacoes.length > 0" class="table table-bordered">
+      <thead class="table-light">
+        <tr>
+          <th>Peça</th>
+          <th>Tipo</th>
+          <th>Quantidade</th>
+          <th>Data</th>
+          <!--<th>Ações</th>-->
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let mov of movimentacoes">
+          <td>{{ getNomePeca(mov.id_peca) }}</td>
+          <td>
+            <span class="badge" [ngClass]="{
+          'bg-success': mov.tipo_de_movimentacao === 'ENTRADA',
+          'bg-danger': mov.tipo_de_movimentacao === 'SAIDA'
+        }">
+              {{ mov.tipo_de_movimentacao }}
+            </span>
+          </td>
+          <td>{{ mov.quantidade }}</td>
+          <td>{{ mov.data }}</td>
+          <!--<td>
+            <div class="d-flex gap-2">
+              <button class="btn btn-sm btn-warning d-none d-md-inline" (click)="editarMovimentacao(mov.id!)">
+                Editar
+              </button>
+              <button class="btn btn-sm btn-danger d-none d-md-inline" (click)="excluir(mov.id!)">
+                Excluir
+              </button>
+
+              <button class="btn btn-sm btn-warning d-inline d-md-none" title="Editar"
+                (click)="editarMovimentacao(mov.id!)">
+                <i class="bi bi-pencil"></i>
+              </button>
+              <button class="btn btn-sm btn-danger d-inline d-md-none" title="Excluir" (click)="excluir(mov.id!)">
+                <i class="bi bi-trash"></i>
+              </button>
+            </div>
+          </td> -->
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

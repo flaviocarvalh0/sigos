@@ -1,0 +1,43 @@
+<div class="container mt-4">
+  <div class="card shadow">
+    <div class="card-header bg-primary text-white">
+      <h5 class="mb-0">{{ isEditando ? 'Editar Movimentação' : 'Cadastrar Movimentação' }}</h5>
+    </div>
+    <div class="card-body">
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" onchange="onPecaChange()" novalidate>
+        <div class="mb-3">
+          <label for="id_peca" class="form-label">Peça <span class="text-danger">*</span></label>
+          <ng-select
+            [items]="pecas"
+            bindLabel="nome"
+            bindValue="id"
+            formControlName="id_peca"
+            placeholder="Selecione a peça"
+            [searchable]="true"
+            [clearable]="true"
+            class="form-control">
+          </ng-select>
+        </div>
+
+        <div class="mb-3">
+          <label for="tipo" class="form-label">Tipo de Movimentação</label>
+          <select class="form-select" formControlName="tipo_de_movimentacao">
+            <option value="ENTRADA">ENTRADA</option>
+            <option value="SAIDA">SAÍDA</option>
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <label for="quantidade" class="form-label">Quantidade</label>
+          <input type="number" class="form-control" formControlName="quantidade" placeholder="Informe a quantidade">
+        </div>
+
+        <div class="d-flex justify-content-between gap-2 mt-4">
+          <button type="submit" class="btn btn-success flex-fill" [disabled]="form.invalid">Salvar</button>
+          <button type="button" class="btn btn-secondary flex-fill" (click)="onCancelar()">Cancelar</button>
+          <button *ngIf="isEditando" type="button" class="btn btn-danger flex-fill" (click)="onExcluir()">Excluir</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
