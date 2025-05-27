@@ -6,27 +6,22 @@ import { Estoque } from '../Models/estoque.model';
   providedIn: 'root'
 })
 export class EstoqueService {
-  private estoque: Estoque[] = [
+  private estoqueItems: Estoque[] = [
     {
       id: 1,
-      quantidade_atual: 15,
-      id_peca: 1,
+      quantidade_atual: 50,
+      quantidade_minima: 10,
+      id_peca: 1, // ID da peça relacionada
       id_usuario_criador: 1,
-      data_criacao: new Date('2023-01-15')
+      data_criacao: new Date('2023-01-10')
     },
     {
       id: 2,
-      quantidade_atual: 8,
+      quantidade_atual: 30,
+      quantidade_minima: 10,
       id_peca: 2,
       id_usuario_criador: 1,
-      data_criacao: new Date('2023-02-20')
-    },
-    {
-      id: 3,
-      quantidade_atual: 25,
-      id_peca: 3,
-      id_usuario_criador: 2,
-      data_criacao: new Date('2023-03-10')
+      data_criacao: new Date('2023-01-15')
     }
   ];
 
@@ -34,24 +29,28 @@ export class EstoqueService {
 
   constructor() { }
 
+  // Lista todo o estoque
   listar(): Observable<Estoque[]> {
-    return of(this.estoque);
+    return of(this.estoqueItems);
   }
 
+  // Busca um item de estoque por ID
   buscarPorId(id: number): Observable<Estoque | undefined> {
-    return of(this.estoque.find(item => item.id === id));
+    return of(this.estoqueItems.find(item => item.id === id));
   }
 
+  // Busca estoque de uma peça específica
   buscarPorPeca(idPeca: number): Observable<Estoque | undefined> {
-    return of(this.estoque.find(item => item.id_peca === idPeca));
+    return of(this.estoqueItems.find(item => item.id_peca === idPeca));
   }
 
-  atualizarQuantidade(idPeca: number, quantidade: number): Observable<Estoque | undefined> {
-    const index = this.estoque.findIndex(item => item.id_peca === idPeca);
-    if (index !== -1) {
-      this.estoque[index].quantidade_atual = quantidade;
-      this.estoque[index].data_modificacao = new Date();
-      return of(this.estoque[index]);
+  // Atualiza a quantidade de um item no estoque
+  atualizarEstoque(id: number, estoque: Estoque): Observable<Estoque | undefined> {
+    const item = this.estoqueItems.find(i => i.id === id);
+    if (item) {
+      item.id_peca = estoque.id_peca;
+      item.data_modificacao = new Date();
+      return of(item);
     }
     return of(undefined);
   }
@@ -62,27 +61,15 @@ export class EstoqueService {
       id: this.idCounter++,
       data_criacao: new Date()
     };
-    this.estoque.push(novoItem);
+    this.estoqueItems.push(novoItem);
     return of(novoItem);
   }
 
-  atualizar(id: number, item: Estoque): Observable<Estoque | undefined> {
-    const index = this.estoque.findIndex(i => i.id === id);
-    if (index !== -1) {
-      this.estoque[index] = {
-        ...this.estoque[index],
-        ...item,
-        data_modificacao: new Date()
-      };
-      return of(this.estoque[index]);
-    }
-    return of(undefined);
-  }
-
+  // Remove um item do estoque
   excluir(id: number): Observable<boolean> {
-    const index = this.estoque.findIndex(item => item.id === id);
+    const index = this.estoqueItems.findIndex(item => item.id === id);
     if (index !== -1) {
-      this.estoque.splice(index, 1);
+      this.estoqueItems.splice(index, 1);
       return of(true);
     }
     return of(false);

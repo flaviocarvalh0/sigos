@@ -1,1 +1,57 @@
-<p>list-estoque works!</p>
+<div class="container mt-4">
+  <h2>Controle de Estoque</h2>
+  <button class="btn btn-primary mb-3" (click)="novoEstoque()">Novo Estoque</button>
+
+  <div class="table-responsive">
+    <div *ngIf="estoqueItems.length === 0" class="alert alert-info">
+      Nenhum item em estoque cadastrado.
+    </div>
+
+    <table *ngIf="estoqueItems.length > 0" class="table table-bordered">
+      <thead class="table-light">
+        <tr>
+          <th>Peça</th>
+          <th>Quantidade</th>
+          <th>Quantidade Mínima</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of estoqueItems">
+          <td>{{ getNomePeca(item.id_peca) }}</td>
+          <td>{{ item.quantidade_atual }}</td>
+          <td>{{ item.quantidade_minima }}</td>
+          <td>
+            <div class="d-flex gap-2">
+              <!-- Botões com texto visíveis em telas md+ -->
+              <button class="btn btn-sm btn-warning d-none d-md-inline" (click)="editarEstoque(item.id!)">
+                Editar
+              </button>
+              <button class="btn btn-sm btn-danger d-none d-md-inline" (click)="excluir(item.id!)">
+                Excluir
+              </button>
+
+              <button class="btn btn-sm btn-warning d-inline d-md-none" title="Editar" (click)="editarEstoque(item.id!)">
+                <i class="bi bi-pencil"></i>
+              </button>
+              <button class="btn btn-sm btn-danger d-inline d-md-none" title="Excluir" (click)="excluir(item.id!)">
+                <i class="bi bi-trash"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+  <!-- Toast de Notificação -->
+  <div id="liveToast" class="toast position-fixed bottom-0 end-0 p-3 text-white bg-success border-0" role="alert"
+    aria-live="assertive" aria-atomic="true" style="z-index: 9999;">
+    <div class="d-flex">
+      <div class="toast-body">Mensagem</div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+        aria-label="Close"></button>
+    </div>
+  </div>
+
