@@ -1,47 +1,21 @@
+import { PecaService } from './peca.service';
 import { Injectable } from '@angular/core';
-import { Observable, of } from 'rxjs';
+import { Observable, of, switchMap, throwError } from 'rxjs';
 import { MovimentacaoEstoque } from '../Models/movimento_estoque.model';
+import { Peca } from '../Models/peca.model';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class MovimentacaoEstoqueService {
-  private movimentacoes: MovimentacaoEstoque[] = [
-    {
-      id: 1,
-      quantidade: 10,
-      data: new Date('2023-01-15'),
-      tipo_de_movimentacao: 'ENTRADA',
-      id_peca: 1,
-      id_usuario_criador: 1,
-      data_criacao: new Date('2023-01-15')
-    },
-    {
-      id: 2,
-      quantidade: 5,
-      data: new Date('2023-01-20'),
-      tipo_de_movimentacao: 'SAIDA',
-      id_peca: 1,
-      id_usuario_criador: 2,
-      data_criacao: new Date('2023-01-20')
-    },
-    {
-      id: 3,
-      quantidade: 15,
-      data: new Date('2023-02-01'),
-      tipo_de_movimentacao: 'ENTRADA',
-      id_peca: 2,
-      id_usuario_criador: 1,
-      data_criacao: new Date('2023-02-01')
-    }
-  ];
+  private movimentacoes: MovimentacaoEstoque[] = [];
 
   private idCounter = 4;
 
-  constructor() { }
+  constructor(private pecaService: PecaService) {}
 
   listarPorPeca(idPeca: number): Observable<MovimentacaoEstoque[]> {
-    return of(this.movimentacoes.filter(m => m.id_peca === idPeca));
+    return of(this.movimentacoes.filter((m) => m.id_peca === idPeca));
   }
 
   listarTodos(): Observable<MovimentacaoEstoque[]> {
@@ -49,38 +23,127 @@ export class MovimentacaoEstoqueService {
   }
 
   buscarPorId(id: number): Observable<MovimentacaoEstoque | undefined> {
-    return of(this.movimentacoes.find(m => m.id === id));
+    return of(this.movimentacoes.find((m) => m.id === id));
   }
 
-  criar(movimentacao: Omit<MovimentacaoEstoque, 'id'>): Observable<MovimentacaoEstoque> {
-    const novaMovimentacao: MovimentacaoEstoque = {
-      ...movimentacao,
-      id: this.idCounter++,
-      data_criacao: new Date()
-    };
-    this.movimentacoes.push(novaMovimentacao);
-    return of(novaMovimentacao);
+criar(mov: MovimentacaoEstoque): Observable<MovimentacaoEstoque> {
+  return this.pecaService.buscarPorId(mov.id_peca).pipe(
+    switchMap(peca => {
+      if (!peca) {
+        return throwError(() => new Error('Peça não encontrada'));
+      }
+
+      if (mov.tipo_de_movimentacao === 'SAIDA' && peca.quantidade_atual_estoque! < mov.quantidade) {
+        return throwError(() => new Error('Estoque insuficiente para essa saída'));
+      }
+
+      this.atualizarEstoqueDaPeca(mov.id_peca, mov.quantidade, mov.tipo_de_movimentacao);
+      
+      mov.id = this.movimentacoes.length + 1;
+      this.movimentacoes.push(mov);
+
+      return of(mov);
+    })
+  );
+}
+
+
+
+  atualizar(id: number, data: any): Observable<any> {
+    const index = this.movimentacoes.findIndex((m) => m.id === id);
+    if (index === -1)
+      return throwError(() => new Error('Movimentação não encontrada'));
+
+    const movimentoAntigo = this.movimentacoes[index];
+
+    // Reverter efeito da movimentação anterior
+    this.reverterEstoqueDaPeca(
+      movimentoAntigo.id_peca,
+      movimentoAntigo.quantidade,
+      movimentoAntigo.tipo_de_movimentacao
+    );
+
+    // Atualizar movimentação
+    this.movimentacoes[index] = { ...data, id };
+
+    // Aplicar nova movimentação
+    this.atualizarEstoqueDaPeca(
+      data.id_peca,
+      data.quantidade,
+      data.tipo_de_movimentacao
+    );
+
+    return of(this.movimentacoes[index]);
   }
 
-  atualizar(id: number, movimentacao: MovimentacaoEstoque): Observable<MovimentacaoEstoque | undefined> {
-    const index = this.movimentacoes.findIndex(m => m.id === id);
-    if (index !== -1) {
-      this.movimentacoes[index] = {
-        ...this.movimentacoes[index],
-        ...movimentacao,
-        data_modificacao: new Date()
-      };
-      return of(this.movimentacoes[index]);
+  excluir(id: number): Observable<void> {
+    const movimentacao = this.movimentacoes.find((m) => m.id === id);
+    if (!movimentacao) {
+      return throwError(() => new Error('Movimentação não encontrada'));
     }
+
+    // Reverte o estoque antes de excluir
+    this.reverterEstoqueDaPeca(
+      movimentacao.id_peca,
+      movimentacao.quantidade,
+      movimentacao.tipo_de_movimentacao
+    );
+
+    this.movimentacoes = this.movimentacoes.filter((m) => m.id !== id);
     return of(undefined);
   }
 
-  excluir(id: number): Observable<boolean> {
-    const index = this.movimentacoes.findIndex(m => m.id === id);
-    if (index !== -1) {
-      this.movimentacoes.splice(index, 1);
-      return of(true);
+  atualizarEstoqueDaPeca(
+    pecaId: number,
+    quantidadeMovimentada: number,
+    tipo: 'ENTRADA' | 'SAIDA'
+  ): void {
+    this.pecaService.buscarPorId(pecaId).subscribe((peca) => {
+      if (!peca) {
+        throw new Error('Peça não encontrada');
+      }
+
+      let quantidadeAtual = peca.quantidade_atual_estoque ?? 0;
+
+      if (tipo === 'ENTRADA') {
+        quantidadeAtual += quantidadeMovimentada;
+      } else if (tipo === 'SAIDA') {
+        if (quantidadeAtual < quantidadeMovimentada) {
+          throw new Error('Estoque insuficiente para saída');
+        }
+        quantidadeAtual -= quantidadeMovimentada;
+      }
+
+      this.pecaService.atualizarQuantidade(pecaId, quantidadeAtual);
+    });
+  }
+
+  reverterEstoqueDaPeca(
+    id_peca: number,
+    quantidade: number,
+    tipo: 'ENTRADA' | 'SAIDA'
+  ): void {
+    const peca = this.pecaService.buscarPorId(id_peca);
+
+    if (peca instanceof Observable) {
+      peca.subscribe((p) => {
+        if (!p) throw new Error('Peça não encontrada');
+
+        const atual = p.quantidade_atual_estoque ?? 0;
+
+        if (tipo === 'ENTRADA') {
+          // Reverter entrada = subtrair
+          p.quantidade_atual_estoque = atual - quantidade;
+        } else if (tipo === 'SAIDA') {
+          // Reverter saída = somar
+          p.quantidade_atual_estoque = atual + quantidade;
+        }
+
+        // Atualiza a peça no "banco de dados"
+        this.pecaService.atualizar(p.id!, p).subscribe();
+      });
+    } else {
+      throw new Error('pecaService.buscarPorId deve retornar um Observable');
     }
-    return of(false);
   }
 }

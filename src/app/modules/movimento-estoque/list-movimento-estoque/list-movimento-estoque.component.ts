@@ -3,13 +3,13 @@ import { Router } from '@angular/router';
 import { MovimentacaoEstoque } from '../../../Models/movimento_estoque.model';
 import { MovimentacaoEstoqueService } from '../../../services/movimentacao_estoque.service';
 import { PecaService } from '../../../services/peca.service';
-import { NgClass, NgFor, NgIf } from '@angular/common';
+import { CommonModule, NgClass, NgFor, NgIf } from '@angular/common';
 
 declare const bootstrap: any;
 
 @Component({
   selector: 'app-list-movimento-estoque',
-  imports: [NgClass, [NgIf,NgFor]],
+  imports: [NgClass, [NgIf,NgFor], CommonModule],
   templateUrl: './list-movimento-estoque.component.html',
   styleUrl: './list-movimento-estoque.component.css',
 })

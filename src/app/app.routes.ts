@@ -21,8 +21,6 @@ import { ListPecaComponent } from './modules/pecas/pages/list-pecas/list-pecas.c
 import { FormPecaComponent } from './modules/pecas/pages/form-peca/form-peca.component';
 import { ListPrazoGarantiaComponent } from './modules/prazo-garantia/list-prazo-garantia/list-prazo-garantia.component';
 import { FormPrazoGarantiaComponent } from './modules/prazo-garantia/form-prazo-garantia/form-prazo-garantia.component';
-import { ListEstoqueComponent } from './modules/estoque/list-estoque/list-estoque.component';
-import { FormEstoqueComponent } from './modules/estoque/form-estoque/form-estoque.component';
 import { ListMovimentoEstoqueComponent } from './modules/movimento-estoque/list-movimento-estoque/list-movimento-estoque.component';
 import { FormMovimentoEstoqueComponent } from './modules/movimento-estoque/form-movimento-estoque/form-movimento-estoque.component';
 
@@ -75,10 +73,6 @@ export const routes: Routes = [
       { path: 'prazo_garantia', component: ListPrazoGarantiaComponent, data: { animation: 'PrazoGarantiaPage' } },
       { path: 'prazo_garantia/form', component: FormPrazoGarantiaComponent },
       { path: 'prazo_garantia/form/:id', component: FormPrazoGarantiaComponent },
-
-      { path: 'estoque', component: ListEstoqueComponent, data: { animation: 'EstoquePage' } },
-      { path: 'estoque/form', component: FormEstoqueComponent },
-      { path: 'estoque/form/:id', component: FormEstoqueComponent },
 
       { path: 'movimento-estoque', component: ListMovimentoEstoqueComponent, data: { animation: 'MovimentnoEstoquePage' } },
       { path: 'movimento-estoque/form', component: FormMovimentoEstoqueComponent },

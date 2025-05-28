@@ -4,7 +4,7 @@
       <h5 class="mb-0">{{ isEditando ? 'Editar Movimentação' : 'Cadastrar Movimentação' }}</h5>
     </div>
     <div class="card-body">
-      <form [formGroup]="form" (ngSubmit)="onSubmit()" onchange="onPecaChange()" novalidate>
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
         <div class="mb-3">
           <label for="id_peca" class="form-label">Peça <span class="text-danger">*</span></label>
           <ng-select
@@ -39,5 +39,15 @@
         </div>
       </form>
     </div>
+  </div>
+</div>
+
+<!-- Toast de Notificação -->
+<div id="liveToast" class="toast position-fixed bottom-0 end-0 p-3 text-white bg-warning border-0" role="alert"
+  aria-live="assertive" aria-atomic="true" style="z-index: 9999;">
+  <div class="d-flex">
+    <div class="toast-body">Mensagem</div>
+    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+      aria-label="Close"></button>
   </div>
 </div>

@@ -15,6 +15,8 @@
           <th>Preço Custo</th>
           <th>Preço Venda</th>
           <th>Localização</th>
+          <th>Quantidade Atual em Estoque</th>
+          <th>Quantidade Mínima Estoque</th>
           <th style="width: 160px;">Ações</th>
         </tr>
       </thead>
@@ -24,6 +26,8 @@
           <td>{{ peca.preco_custo | currency:'BRL' }}</td>
           <td>{{ peca.preco_venda | currency:'BRL' }}</td>
           <td>{{ peca.localizacao_fisica || '-' }}</td>
+          <td>{{ peca.quantidade_atual_estoque || '-' }}</td>
+          <td>{{ peca.quantidade_minima_estoque || '-' }}</td>
           <td>
             <!-- Versão Desktop (texto) -->
             <button class="btn btn-sm btn-warning me-2 d-none d-md-inline"

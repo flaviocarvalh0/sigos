@@ -6,6 +6,7 @@ export interface Peca {
   preco_venda: number;
   localizacao_fisica?: string;
   quantidade_minima_estoque?: number;
+  quantidade_atual_estoque?: number;
   id_marca?: number;
   id_modelo?: number;
   id_fornecedor?: number;
