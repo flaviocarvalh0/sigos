@@ -1,0 +1,105 @@
+<div class="min-vh-100 d-flex bg-light">
+  <main class="flex-grow-1 d-flex flex-column overflow-hidden">
+    <!-- Header -->
+    <header class="bg-white border-bottom px-3 py-2 sticky-top">
+      <div class="d-flex align-items-center justify-content-between">
+        <div>
+          <h1 class="h5 mb-0 fw-bold">Ordens de Serviço</h1>
+        </div>
+        <button class="btn btn-primary btn-sm" (click)="novaOrdemServico()">
+          <i class="bi bi-plus d-none d-sm-inline me-1"></i>
+          <span class="d-none d-sm-inline">Nova OS</span>
+          <i class="bi bi-plus d-sm-none"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- Content -->
+    <div class="flex-grow-1 overflow-auto p-3">
+      <!-- Metrics Grid -->
+      <div class="row g-2 mb-3">
+        <div class="col-6 col-md-4">
+          <app-metric-card
+            title="Total de OS"
+            [value]="metrics.totalOrders || '0'"
+            [change]="metrics.changeTotal"
+            [changeType]="metrics.changeTotalType"
+            color="bg-primary"
+          >
+            <i class="bi bi-clipboard2-data text-white" icon></i>
+          </app-metric-card>
+        </div>
+        <div class="col-6 col-md-4">
+          <app-metric-card
+            title="Pendentes"
+            [value]="metrics.pendingOrders || '0'"
+            [change]="metrics.urgentOrders"
+            [changeType]="metrics.changeTotalTypePeding"
+            color="bg-warning"
+          >
+            <i class="bi bi-exclamation-triangle text-white" icon></i>
+          </app-metric-card>
+        </div>
+        <div class="col-6 col-md-4">
+          <app-metric-card
+            title="Concluídas Hoje"
+            [value]="metrics.completedToday || '0'"
+            [change]="metrics.changeCompleted"
+            [changeType]="metrics.changeCompletedType"
+            color="bg-success"
+          >
+            <i class="bi bi-check-circle text-white" icon></i>
+          </app-metric-card>
+        </div>
+      </div>
+
+      <!-- Recent Orders Section -->
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-0 pb-0">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="card-title mb-0">
+              <i class="bi bi-list-task me-2"></i>
+              Ordens Recentes
+            </h5>
+            <button class="btn btn-sm btn-outline-secondary" (click)="loadAllOrders()">
+              Ver Todas
+            </button>
+          </div>
+          
+          <!-- Filtros com espaçamento -->
+          <app-order-filters
+            (filterChange)="handleFilterChange($event)"
+            class="mb-3"
+          ></app-order-filters>
+        </div>
+        
+        <div class="card-body p-0">
+          <div class="p-3">
+            <div *ngIf="isLoading" class="text-center py-4">
+              <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Carregando...</span>
+              </div>
+            </div>
+
+            <div *ngIf="!isLoading && filteredOrders.length === 0" class="text-center py-4">
+              <i class="bi bi-inbox text-muted fs-1 mb-3"></i>
+              <p class="text-muted mb-0">Nenhuma ordem de serviço encontrada</p>
+              <button class="btn btn-link btn-sm mt-2" (click)="resetFilters()">
+                Limpar filtros
+              </button>
+            </div>
+
+            <div *ngIf="!isLoading" class="row g-2">
+              <div *ngFor="let order of filteredOrders" class="col-12 col-md-6 col-lg-4">
+                <app-service-order-card
+                  [order]="order"
+                  (onViewDetails)="handleViewDetails($event)"
+                ></app-service-order-card>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>

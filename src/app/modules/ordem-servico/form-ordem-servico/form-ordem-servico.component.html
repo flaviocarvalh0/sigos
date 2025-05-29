@@ -1,0 +1,152 @@
+<div class="container mt-4">
+  <form [formGroup]="form" (ngSubmit)="onSubmit()"> <!-- Abas -->
+    <ul class="nav nav-tabs" id="osTabs" role="tablist">
+      <li class="nav-item" role="presentation"> <button class="nav-link active" id="dados-tab" data-bs-toggle="tab"
+          data-bs-target="#dados" type="button" role="tab">Dados</button> </li>
+      <li class="nav-item" role="presentation"> <button class="nav-link" id="servicos-tab" data-bs-toggle="tab"
+          data-bs-target="#servicos" type="button" role="tab">Serviços</button> </li>
+      <li class="nav-item" role="presentation"> <button class="nav-link" id="pecas-tab" data-bs-toggle="tab"
+          data-bs-target="#pecas" type="button" role="tab">Peças</button> </li>
+      <li class="nav-item" role="presentation"> <button class="nav-link" id="anexos-tab" data-bs-toggle="tab"
+          data-bs-target="#anexos" type="button" role="tab">Anexos</button> </li>
+    </ul>
+    <div class="tab-content p-3 border border-top-0" id="osTabsContent">
+      <!-- Aba Dados -->
+      <div class="tab-pane fade show active" id="dados" role="tabpanel">
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label for="id_empresa" class="form-label">Empresa <span class="text-danger">*</span></label>
+            <ng-select id="id_empresa" [items]="empresas" bindLabel="nome" bindValue="id" placeholder="Selecione"
+              formControlName="id_empresa" [searchable]="true" [clearable]="true" class="form-control">
+            </ng-select>
+          </div>
+
+          <div class="col-md-6 mb-3">
+            <label for="id_cliente" class="form-label">Cliente <span class="text-danger">*</span></label>
+            <ng-select id="id_cliente" [items]="clientes" bindLabel="nome" bindValue="id" formControlName="id_cliente"
+              placeholder="Selecione" [searchable]="true" [clearable]="true" class="form-control">
+            </ng-select>
+          </div>
+
+          <div class="col-md-6 mb-3">
+            <label for="id_aparelho" class="form-label">Aparelho <span class="text-danger">*</span></label>
+            <ng-select id="id_aparelho" [items]="aparelhos" bindLabel="descricao" bindValue="id"
+              formControlName="id_aparelho" placeholder="Selecione" [searchable]="true" [clearable]="true"
+              class="form-control">
+            </ng-select>
+          </div>
+
+          <div class="col-md-6 mb-3">
+            <label for="data_criacao" class="form-label">Data de Criação <span class="text-danger">*</span></label>
+            <input type="date" id="data_criacao" class="form-control" formControlName="data_criacao">
+          </div>
+
+          <div class="col-md-12 mb-3">
+            <label for="relato_cliente" class="form-label">Relato do Cliente</label>
+            <textarea class="form-control" formControlName="relato_cliente" rows="2"></textarea>
+          </div>
+
+          <div class="col-md-12 mb-3">
+            <label for="relato_tecnico" class="form-label">Relato do Técnico</label>
+            <textarea class="form-control" formControlName="relato_tecnico" rows="2"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Aba Serviços -->
+      <div class="tab-pane fade" id="servicos" role="tabpanel">
+        <div formArrayName="servicos">
+          <div *ngFor="let grupo of servicosFormArray.controls; let i = index" [formGroupName]="i"
+            class="border rounded p-3 mb-3">
+            <div class="row align-items-end">
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Serviço</label>
+                <ng-select [items]="servicos" bindLabel="descricao" bindValue="id" placeholder="Selecione"
+                  formControlName="id_servico" [searchable]="true" [clearable]="true" class="form-control">
+                </ng-select>
+              </div>
+
+              <div class="col-md-3 mb-3">
+                <label class="form-label">Valor</label>
+                <input type="number" class="form-control" formControlName="valor">
+              </div>
+
+              <div class="col-md-3 mb-3 d-flex justify-content-end">
+                <button type="button" class="btn btn-danger mt-4" (click)="removeServico(i)">Remover</button>
+              </div>
+
+              <div class="col-md-12 mb-3">
+                <label class="form-label">Observação</label>
+                <textarea class="form-control" formControlName="observacao" rows="1"></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+        <button type="button" class="btn btn-primary" (click)="addServico()">Adicionar Serviço</button>
+      </div>
+
+      <!-- Aba Peças -->
+      <div class="tab-pane fade" id="pecas" role="tabpanel">
+        <div formArrayName="pecas">
+          <div *ngFor="let grupo of pecasFormArray.controls; let i = index" [formGroupName]="i"
+            class="border rounded p-3 mb-3">
+            <div class="row align-items-end">
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Peça</label>
+                <ng-select [items]="pecas" bindLabel="descricao" bindValue="id" placeholder="Selecione"
+                  formControlName="id_peca" [searchable]="true" [clearable]="true" class="form-control">
+                </ng-select>
+              </div>
+
+              <div class="col-md-3 mb-3">
+                <label class="form-label">Quantidade</label>
+                <input type="number" class="form-control" formControlName="quantidade">
+              </div>
+
+              <div class="col-md-3 mb-3">
+                <label class="form-label">Valor Unitário</label>
+                <input type="number" class="form-control" formControlName="valor_unitario">
+              </div>
+
+              <div class="col-md-12 text-end">
+                <button type="button" class="btn btn-danger" (click)="removePeca(i)">Remover</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <button type="button" class="btn btn-primary" (click)="addPeca()">Adicionar Peça</button>
+      </div>
+
+      <!-- Aba Anexos -->
+      <div class="tab-pane fade" id="anexos" role="tabpanel">
+        <div formArrayName="anexos">
+          <div *ngFor="let grupo of anexosFormArray.controls; let i = index" [formGroupName]="i"
+            class="border rounded p-3 mb-3">
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Nome do Arquivo</label>
+                <input type="text" class="form-control" formControlName="nome_arquivo">
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Arquivo</label>
+                <input type="file" class="form-control"
+                  (change)="grupo.patchValue({ arquivo: $event.target.files[0] })">
+              </div>
+
+              <div class="col-md-12 text-end">
+                <button type="button" class="btn btn-danger" (click)="removeAnexo(i)">Remover</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <button type="button" class="btn btn-primary" (click)="addAnexo()">Adicionar Anexo</button>
+      </div>
+    </div>
+  </form>
+  
+
+    <!-- Botão Submit -->
+    <div class="text-end mt-4">
+      <button type="submit" class="btn btn-success">Salvar Ordem de Serviço</button>
+    </div>

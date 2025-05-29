@@ -23,6 +23,8 @@ import { ListPrazoGarantiaComponent } from './modules/prazo-garantia/list-prazo-
 import { FormPrazoGarantiaComponent } from './modules/prazo-garantia/form-prazo-garantia/form-prazo-garantia.component';
 import { ListMovimentoEstoqueComponent } from './modules/movimento-estoque/list-movimento-estoque/list-movimento-estoque.component';
 import { FormMovimentoEstoqueComponent } from './modules/movimento-estoque/form-movimento-estoque/form-movimento-estoque.component';
+import { OrdemServicoComponent } from './modules/ordem-servico/service-orders-page/service-orders-page.component';
+import { FormOrdemServicoComponent } from './modules/ordem-servico/form-ordem-servico/form-ordem-servico.component';
 
 
 export const routes: Routes = [
@@ -78,9 +80,13 @@ export const routes: Routes = [
       { path: 'movimento-estoque/form', component: FormMovimentoEstoqueComponent },
       { path: 'movimento-estoque/form/:id', component: FormMovimentoEstoqueComponent },
 
+      { path: 'ordem-servico', component: OrdemServicoComponent, data: { animation: 'MovimentnoEstoquePage' } },
+      { path: 'ordem-servico/form', component: FormOrdemServicoComponent, data: { animation: 'MovimentnoEstoquePage' } },
+      { path: 'ordem-servico/form:id', component: FormOrdemServicoComponent, data: { animation: 'MovimentnoEstoquePage' } },
+
       // Redirecionamentos por último
-      { path: '', redirectTo: '/cliente', pathMatch: 'full' },
-      { path: '**', redirectTo: '/cliente' },
+      { path: '', redirectTo: '/ordem-servico', pathMatch: 'full' },
+      { path: '**', redirectTo: '/ordem-servico' },
     ]
   }
 ];
