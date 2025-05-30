@@ -7,7 +7,6 @@ import { Marca } from '../../../../Models/marca.model';
 import { ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 
-declare const bootstrap: any;
 
 @Component({
     selector: 'app-list-modelo',

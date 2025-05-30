@@ -1,152 +1,388 @@
-<div class="container mt-4">
-  <form [formGroup]="form" (ngSubmit)="onSubmit()"> <!-- Abas -->
-    <ul class="nav nav-tabs" id="osTabs" role="tablist">
-      <li class="nav-item" role="presentation"> <button class="nav-link active" id="dados-tab" data-bs-toggle="tab"
-          data-bs-target="#dados" type="button" role="tab">Dados</button> </li>
-      <li class="nav-item" role="presentation"> <button class="nav-link" id="servicos-tab" data-bs-toggle="tab"
-          data-bs-target="#servicos" type="button" role="tab">Serviços</button> </li>
-      <li class="nav-item" role="presentation"> <button class="nav-link" id="pecas-tab" data-bs-toggle="tab"
-          data-bs-target="#pecas" type="button" role="tab">Peças</button> </li>
-      <li class="nav-item" role="presentation"> <button class="nav-link" id="anexos-tab" data-bs-toggle="tab"
-          data-bs-target="#anexos" type="button" role="tab">Anexos</button> </li>
-    </ul>
-    <div class="tab-content p-3 border border-top-0" id="osTabsContent">
-      <!-- Aba Dados -->
-      <div class="tab-pane fade show active" id="dados" role="tabpanel">
-        <div class="row">
-          <div class="col-md-6 mb-3">
-            <label for="id_empresa" class="form-label">Empresa <span class="text-danger">*</span></label>
-            <ng-select id="id_empresa" [items]="empresas" bindLabel="nome" bindValue="id" placeholder="Selecione"
-              formControlName="id_empresa" [searchable]="true" [clearable]="true" class="form-control">
-            </ng-select>
-          </div>
-
-          <div class="col-md-6 mb-3">
-            <label for="id_cliente" class="form-label">Cliente <span class="text-danger">*</span></label>
-            <ng-select id="id_cliente" [items]="clientes" bindLabel="nome" bindValue="id" formControlName="id_cliente"
-              placeholder="Selecione" [searchable]="true" [clearable]="true" class="form-control">
-            </ng-select>
-          </div>
-
-          <div class="col-md-6 mb-3">
-            <label for="id_aparelho" class="form-label">Aparelho <span class="text-danger">*</span></label>
-            <ng-select id="id_aparelho" [items]="aparelhos" bindLabel="descricao" bindValue="id"
-              formControlName="id_aparelho" placeholder="Selecione" [searchable]="true" [clearable]="true"
-              class="form-control">
-            </ng-select>
-          </div>
-
-          <div class="col-md-6 mb-3">
-            <label for="data_criacao" class="form-label">Data de Criação <span class="text-danger">*</span></label>
-            <input type="date" id="data_criacao" class="form-control" formControlName="data_criacao">
-          </div>
-
-          <div class="col-md-12 mb-3">
-            <label for="relato_cliente" class="form-label">Relato do Cliente</label>
-            <textarea class="form-control" formControlName="relato_cliente" rows="2"></textarea>
-          </div>
-
-          <div class="col-md-12 mb-3">
-            <label for="relato_tecnico" class="form-label">Relato do Técnico</label>
-            <textarea class="form-control" formControlName="relato_tecnico" rows="2"></textarea>
-          </div>
+<div class="container mt-4 mb-5">
+  <div class="card shadow-sm">
+    <div class="card-header bg-primary text-white">
+      <h4 class="mb-0">
+        <i class="fas fa-edit me-2"></i>
+        {{ isEditMode ? 'Editar Ordem de Serviço' : 'Nova Ordem de Serviço' }}
+      </h4>
+    </div>
+    <div class="card-body">
+      <div *ngIf="isLoading" class="text-center my-3">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Carregando...</span>
         </div>
+        <p>Carregando dados...</p>
       </div>
 
-      <!-- Aba Serviços -->
-      <div class="tab-pane fade" id="servicos" role="tabpanel">
-        <div formArrayName="servicos">
-          <div *ngFor="let grupo of servicosFormArray.controls; let i = index" [formGroupName]="i"
-            class="border rounded p-3 mb-3">
-            <div class="row align-items-end">
-              <div class="col-md-6 mb-3">
-                <label class="form-label">Serviço</label>
-                <ng-select [items]="servicos" bindLabel="descricao" bindValue="id" placeholder="Selecione"
-                  formControlName="id_servico" [searchable]="true" [clearable]="true" class="form-control">
-                </ng-select>
-              </div>
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" *ngIf="!isLoading">
+        <ul class="nav nav-tabs mb-3" id="osTab" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="dados-principais-tab" data-bs-toggle="tab"
+              data-bs-target="#dados-principais" type="button" role="tab" aria-controls="dados-principais"
+              aria-selected="true">
+              <i class="fas fa-file-alt me-1"></i>Dados Principais
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="servicos-tab" data-bs-toggle="tab" data-bs-target="#servicos" type="button"
+              role="tab" aria-controls="servicos" aria-selected="false">
+              <i class="fas fa-concierge-bell me-1"></i>Serviços
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="pecas-tab" data-bs-toggle="tab" data-bs-target="#pecas" type="button"
+              role="tab" aria-controls="pecas" aria-selected="false">
+              <i class="fas fa-cogs me-1"></i>Peças
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="anexos-tab" data-bs-toggle="tab" data-bs-target="#anexos" type="button"
+              role="tab" aria-controls="anexos" aria-selected="false">
+              <i class="fas fa-paperclip me-1"></i>Anexos
+            </button>
+          </li>
+        </ul>
 
-              <div class="col-md-3 mb-3">
-                <label class="form-label">Valor</label>
-                <input type="number" class="form-control" formControlName="valor">
+        <div class="tab-content" id="osTabContent">
+          <div class="tab-pane fade show active" id="dados-principais" role="tabpanel"
+            aria-labelledby="dados-principais-tab">
+            <h5 class="mb-3">Informações da Ordem de Serviço</h5>
+            <div class="row mb-3">
+              <div class="col-md-3">
+                <label for="codigo" class="form-label">Código OS <span class="text-danger">*</span></label>
+                <input type="text" id="codigo" class="form-control" formControlName="codigo"
+                  [ngClass]="{ 'is-invalid': isInvalid('codigo') }">
+                <div *ngIf="isInvalid('codigo')" class="invalid-feedback">Código é obrigatório.</div>
               </div>
-
-              <div class="col-md-3 mb-3 d-flex justify-content-end">
-                <button type="button" class="btn btn-danger mt-4" (click)="removeServico(i)">Remover</button>
+              <div class="col-md-3">
+                <label for="data_entrada" class="form-label">Data de Entrada <span class="text-danger">*</span></label>
+                <input type="date" id="data_entrada" class="form-control" formControlName="data_entrada"
+                  [ngClass]="{ 'is-invalid': isInvalid('data_entrada') }">
+                <div *ngIf="isInvalid('data_entrada')" class="invalid-feedback">Data de entrada é obrigatória.</div>
               </div>
-
-              <div class="col-md-12 mb-3">
-                <label class="form-label">Observação</label>
-                <textarea class="form-control" formControlName="observacao" rows="1"></textarea>
+              <div class="col-md-3">
+                <label for="id_status_os" class="form-label">Status da OS <span class="text-danger">*</span></label>
+                <select id="id_status_os" formControlName="id_status_os" class="form-select"
+                  [ngClass]="{ 'is-invalid': isInvalid('id_status_os') }">
+                  <option [ngValue]="null" disabled>Selecione o Status</option>
+                  <option *ngFor="let status of statusOS" [ngValue]="status.id">{{ status.descricao }}</option>
+                </select>
+                <div *ngIf="isInvalid('id_status_os')" class="invalid-feedback">Status é obrigatório.</div>
+              </div>
+              <div class="col-md-3" *ngIf="form.get('id_empresa')?.enabled || form.get('id_empresa')?.value"> <label
+                  for="id_empresa" class="form-label">Empresa <span class="text-danger">*</span></label>
+                <select id="id_empresa" formControlName="id_empresa" class="form-select"
+                  [ngClass]="{ 'is-invalid': isInvalid('id_empresa') }">
+                  <option [ngValue]="null" disabled>Selecione a Empresa</option>
+                  <option *ngFor="let empresa of empresas" [ngValue]="empresa.id">{{ empresa.razao_social }}</option>
+                </select>
+                <div *ngIf="isInvalid('id_empresa')" class="invalid-feedback">Empresa é obrigatória.</div>
               </div>
             </div>
-          </div>
-        </div>
-        <button type="button" class="btn btn-primary" (click)="addServico()">Adicionar Serviço</button>
-      </div>
 
-      <!-- Aba Peças -->
-      <div class="tab-pane fade" id="pecas" role="tabpanel">
-        <div formArrayName="pecas">
-          <div *ngFor="let grupo of pecasFormArray.controls; let i = index" [formGroupName]="i"
-            class="border rounded p-3 mb-3">
-            <div class="row align-items-end">
-              <div class="col-md-6 mb-3">
-                <label class="form-label">Peça</label>
-                <ng-select [items]="pecas" bindLabel="descricao" bindValue="id" placeholder="Selecione"
-                  formControlName="id_peca" [searchable]="true" [clearable]="true" class="form-control">
-                </ng-select>
-              </div>
-
-              <div class="col-md-3 mb-3">
-                <label class="form-label">Quantidade</label>
-                <input type="number" class="form-control" formControlName="quantidade">
-              </div>
-
-              <div class="col-md-3 mb-3">
-                <label class="form-label">Valor Unitário</label>
-                <input type="number" class="form-control" formControlName="valor_unitario">
-              </div>
-
-              <div class="col-md-12 text-end">
-                <button type="button" class="btn btn-danger" (click)="removePeca(i)">Remover</button>
-              </div>
-            </div>
-          </div>
-        </div>
-        <button type="button" class="btn btn-primary" (click)="addPeca()">Adicionar Peça</button>
-      </div>
-
-      <!-- Aba Anexos -->
-      <div class="tab-pane fade" id="anexos" role="tabpanel">
-        <div formArrayName="anexos">
-          <div *ngFor="let grupo of anexosFormArray.controls; let i = index" [formGroupName]="i"
-            class="border rounded p-3 mb-3">
-            <div class="row">
-              <div class="col-md-6 mb-3">
-                <label class="form-label">Nome do Arquivo</label>
-                <input type="text" class="form-control" formControlName="nome_arquivo">
-              </div>
-
-              <div class="col-md-6 mb-3">
-                <label class="form-label">Arquivo</label>
-                <input type="file" class="form-control"
-                  (change)="grupo.patchValue({ arquivo: $event.target.files[0] })">
-              </div>
-
-              <div class="col-md-12 text-end">
-                <button type="button" class="btn btn-danger" (click)="removeAnexo(i)">Remover</button>
-              </div>
-            </div>
-          </div>
-        </div>
-        <button type="button" class="btn btn-primary" (click)="addAnexo()">Adicionar Anexo</button>
+            <h5 class="mb-3 mt-4">Cliente e Aparelho</h5>
+            <div class="row mb-3 align-items-end">
+  <div class="col-sm-6 col-md-5">
+    <label for="id_cliente" class="form-label">Cliente <span class="text-danger">*</span></label>
+    <select id="id_cliente" formControlName="id_cliente" class="form-select"
+            [ngClass]="{ 'is-invalid': isInvalid('id_cliente') }">
+      <option [ngValue]="null" disabled>Selecione o Cliente</option>
+      <option *ngFor="let cliente of clientes" [ngValue]="cliente.id">{{ cliente.nome_completo }}</option>
+    </select>
+    <div *ngIf="isInvalid('id_cliente')" class="invalid-feedback">Cliente é obrigatório.</div>
+  </div>
+  <div class="col-sm-6 col-md-1 mb-sm-0 mb-2">
+    <button type="button" class="btn btn-sm btn-outline-primary w-100" title="Novo Cliente"
+            (click)="abrirModalNovoCliente()">
+      <i class="fas fa-plus"></i> <span class="d-none d-md-inline">Novo</span>
+    </button>
+  </div>
+  <div class="col-md-6">
+      <label for="id_aparelho" class="form-label">Aparelho <span class="text-danger">*</span></label>
+      <select id="id_aparelho" formControlName="id_aparelho" class="form-select"
+              [ngClass]="{ 'is-invalid': isInvalid('id_aparelho') }">
+        <option [ngValue]="null" disabled>Selecione o Aparelho</option>
+        <option *ngFor="let aparelho of aparelhosDoCliente" [ngValue]="aparelho.id">
+          {{ getNomeMarca(aparelho.id_marca) }} - {{ getNomeModelo(aparelho.id_modelo) || 'NA'}} - IMEI: {{ aparelho.imei_1 || 'N/A' }}
+        </option>
+      </select>
+      <div *ngIf="isInvalid('id_aparelho')" class="invalid-feedback">Aparelho é obrigatório.</div>
+      <div *ngIf="form.get('id_cliente')?.value && aparelhosDoCliente.length === 0 && !form.get('id_aparelho')?.disabled"
+           class="form-text text-warning small">
+        Nenhum aparelho para este cliente.
       </div>
     </div>
-  </form>
-  
+</div>
 
-    <!-- Botão Submit -->
-    <div class="text-end mt-4">
-      <button type="submit" class="btn btn-success">Salvar Ordem de Serviço</button>
+<div class="modal fade" id="modalNovoClienteOs" tabindex="-1" aria-labelledby="modalNovoClienteOsLabel" aria-hidden="true" #modalNovoClienteOsRef>
+  <div class="modal-dialog modal-xl"> <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalNovoClienteOsLabel">Cadastrar Novo Cliente</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <app-form-cliente [isModal]="true" (clienteSalvo)="handleClienteCriado($event)"></app-form-cliente>
+      </div>
     </div>
+  </div>
+</div>
+
+            <h5 class="mb-3 mt-4">Relatos e Observações</h5>
+            <div class="row mb-3">
+              <div class="col-md-12">
+                <label for="defeito_relatado_cliente" class="form-label">Relato do Problema (Cliente) <span
+                    class="text-danger">*</span></label>
+                <textarea id="defeito_relatado_cliente" formControlName="defeito_relatado_cliente" class="form-control"
+                  rows="3" [ngClass]="{ 'is-invalid': isInvalid('defeito_relatado_cliente') }"></textarea>
+                <div *ngIf="isInvalid('defeito_relatado_cliente')" class="invalid-feedback">Relato é obrigatório.</div>
+              </div>
+            </div>
+            <div class="row mb-3">
+              <div class="col-md-12">
+                <label for="defeito_constatado_tecnico" class="form-label">Relato Técnico (Defeito Constatado)</label>
+                <textarea id="defeito_constatado_tecnico" formControlName="defeito_constatado_tecnico"
+                  class="form-control" rows="3"></textarea>
+              </div>
+            </div>
+            <div class="row mb-3">
+              <div class="col-md-12">
+                <label for="observacoes_gerais" class="form-label">Observações Gerais</label>
+                <textarea id="observacoes_gerais" formControlName="observacoes_gerais" class="form-control"
+                  rows="3"></textarea>
+              </div>
+            </div>
+
+            <h5 class="mb-3 mt-4">Datas e Garantia</h5>
+            <div class="row mb-3">
+              <div class="col-md-3">
+                <label for="data_execucao" class="form-label">Data de Execução</label>
+                <input type="date" id="data_execucao" class="form-control" formControlName="data_execucao">
+              </div>
+              <div class="col-md-3">
+                <label for="data_conclusao" class="form-label">Data de Conclusão</label>
+                <input type="date" id="data_conclusao" class="form-control" formControlName="data_conclusao">
+              </div>
+              <div class="col-md-3">
+                <label for="id_prazo_garantia" class="form-label">Prazo de Garantia</label>
+                <select id="id_prazo_garantia" formControlName="id_prazo_garantia" class="form-select">
+                  <option [ngValue]="null" selected>Sem Garantia</option>
+                  <option *ngFor="let prazo of prazosGarantia" [ngValue]="prazo.id">{{ prazo.descricao }}</option>
+                </select>
+              </div>
+              <div class="col-md-3">
+                <label for="data_expiracao_garantia" class="form-label">Expiração da Garantia</label>
+                <input type="date" id="data_expiracao_garantia" class="form-control"
+                  formControlName="data_expiracao_garantia">
+              </div>
+            </div>
+            <div class="row mb-3">
+              <div class="col-md-3">
+                <label for="data_saida" class="form-label">Data de Retirada/Saída</label>
+                <input type="date" id="data_saida" class="form-control" formControlName="data_saida">
+              </div>
+            </div>
+
+          </div>
+
+          <div class="tab-pane fade" id="servicos" role="tabpanel" aria-labelledby="servicos-tab">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h5>Serviços Adicionados</h5>
+              <button type="button" class="btn btn-sm btn-outline-primary" (click)="addServico()">
+                <i class="bi bi-plus me-1"></i> Adicionar Serviço
+              </button>
+            </div>
+            <div formArrayName="os_servicos">
+              <div *ngIf="osServicos.controls.length === 0" class="alert alert-light text-center">Nenhum serviço
+                adicionado.</div>
+              <div *ngFor="let servicoCtrl of osServicos.controls; let i = index" [formGroupName]="i" class="card mb-3">
+                <div class="card-body">
+                  <div class="row gx-2 align-items-end">
+                    <div class="col-md-4">
+                      <label for="id_servico_catalogo_{{i}}" class="form-label">Serviço <span
+                          class="text-danger">*</span></label>
+                      <select id="id_servico_catalogo_{{i}}" formControlName="id_servico_catalogo"
+                        class="form-select form-select-sm"
+                        [ngClass]="{ 'is-invalid': isFormArrayControlInvalid('os_servicos', i, 'id_servico_catalogo') }">
+                        <option [ngValue]="null" disabled>Selecione...</option>
+                        <option *ngFor="let catServico of servicosDisponiveis" [ngValue]="catServico.id">{{
+                          catServico.nome }}</option>
+                      </select>
+                    </div>
+                    <div class="col-md-2">
+                      <label for="quantidade_servico_{{i}}" class="form-label">Qtd. <span
+                          class="text-danger">*</span></label>
+                      <input type="number" id="quantidade_servico_{{i}}" formControlName="quantidade"
+                        class="form-control form-control-sm"
+                        [ngClass]="{ 'is-invalid': isFormArrayControlInvalid('os_servicos', i, 'quantidade') }">
+                    </div>
+                    <div class="col-md-2">
+                      <label for="valor_unitario_servico_{{i}}" class="form-label">Val. Unit. <span
+                          class="text-danger">*</span></label>
+                      <input type="number" id="valor_unitario_servico_{{i}}" formControlName="valor_unitario"
+                        class="form-control form-control-sm"
+                        [ngClass]="{ 'is-invalid': isFormArrayControlInvalid('os_servicos', i, 'valor_unitario') }">
+                    </div>
+                    <div class="col-md-2">
+                      <label for="valor_total_servico_item_{{i}}" class="form-label">Subtotal</label>
+                      <input type="number" id="valor_total_servico_item_{{i}}" formControlName="valor_total_calculado"
+                        class="form-control form-control-sm" readonly>
+                    </div>
+                    <div class="col-md-2 text-end">
+                      <button type="button" class="btn btn-sm btn-outline-danger" (click)="removeServico(i)"
+                        title="Remover Serviço">
+                        <i class="bi bi-trash"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="row mt-3">
+              <div class="col-md-4 offset-md-8">
+                <label for="valor_total_servicos" class="form-label fw-bold">Total Serviços (R$)</label>
+                <input type="number" id="valor_total_servicos" formControlName="valor_total_servicos"
+                  class="form-control" readonly>
+              </div>
+            </div>
+          </div>
+
+          <div class="tab-pane fade" id="pecas" role="tabpanel" aria-labelledby="pecas-tab">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h5>Peças Utilizadas</h5>
+              <button type="button" class="btn btn-sm btn-outline-primary" (click)="addPeca()">
+                <i class="bi bi-plus me-1"></i> Adicionar Peça
+              </button>
+            </div>
+            <div formArrayName="os_pecas">
+              <div *ngIf="osPecas.controls.length === 0" class="alert alert-light text-center">Nenhuma peça adicionada.
+              </div>
+              <div *ngFor="let pecaCtrl of osPecas.controls; let i = index" [formGroupName]="i" class="card mb-3">
+                <div class="card-body">
+                  <div class="row gx-2 align-items-end">
+                    <div class="col-md-5">
+                      <label for="id_peca_catalogo_{{i}}" class="form-label">Peça <span
+                          class="text-danger">*</span></label>
+                      <select id="id_peca_catalogo_{{i}}" formControlName="id_peca_catalogo"
+                        class="form-select form-select-sm"
+                        [ngClass]="{ 'is-invalid': isFormArrayControlInvalid('os_pecas', i, 'id_peca_catalogo') }">
+                        <option [ngValue]="null" disabled>Selecione...</option>
+                        <option *ngFor="let catPeca of pecasDisponiveis" [ngValue]="catPeca.id">{{ catPeca.nome }}
+                        </option>
+                      </select>
+                    </div>
+                    <div class="col-md-2">
+                      <label for="quantidade_peca_{{i}}" class="form-label">Qtd. <span
+                          class="text-danger">*</span></label>
+                      <input type="number" id="quantidade_peca_{{i}}" formControlName="quantidade"
+                        class="form-control form-control-sm"
+                        [ngClass]="{ 'is-invalid': isFormArrayControlInvalid('os_pecas', i, 'quantidade') }">
+                    </div>
+                    <div class="col-md-2">
+                      <label for="valor_unitario_peca_{{i}}" class="form-label">Val. Unit. <span
+                          class="text-danger">*</span></label>
+                      <input type="number" id="valor_unitario_peca_{{i}}" formControlName="valor_unitario"
+                        class="form-control form-control-sm"
+                        [ngClass]="{ 'is-invalid': isFormArrayControlInvalid('os_pecas', i, 'valor_unitario') }">
+                    </div>
+                    <div class="col-md-2">
+                      <label for="valor_total_peca_item_{{i}}" class="form-label">Subtotal</label>
+                      <input type="number" id="valor_total_peca_item_{{i}}" formControlName="valor_total_calculado"
+                        class="form-control form-control-sm" readonly>
+                    </div>
+                    <div class="col-md-1 text-end">
+                      <button type="button" class="btn btn-sm btn-outline-danger" (click)="removePeca(i)"
+                        title="Remover Peça">
+                        <i class="bi bi-trash"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="row mt-3">
+              <div class="col-md-4 offset-md-8">
+                <label for="valor_total_pecas" class="form-label fw-bold">Total Peças (R$)</label>
+                <input type="number" id="valor_total_pecas" formControlName="valor_total_pecas" class="form-control"
+                  readonly>
+              </div>
+            </div>
+          </div>
+
+          <div class="tab-pane fade" id="anexos" role="tabpanel" aria-labelledby="anexos-tab">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h5>Anexos</h5>
+              <button type="button" class="btn btn-sm btn-outline-primary" (click)="addAnexo()">
+                <i class="bi bi-plus me-1"></i> Adicionar Anexo
+              </button>
+            </div>
+            <div formArrayName="os_anexos">
+              <div *ngIf="osAnexos.controls.length === 0" class="alert alert-light text-center">Nenhum anexo adicionado.
+              </div>
+              <div *ngFor="let anexoCtrl of osAnexos.controls; let i = index" [formGroupName]="i" class="card mb-3">
+                <div class="card-body">
+                  <div class="row gx-2 align-items-center">
+                    <div class="col-md-5">
+                      <label for="nome_arquivo_{{i}}" class="form-label">Nome do Arquivo <span
+                          class="text-danger">*</span></label>
+                      <input type="text" id="nome_arquivo_{{i}}" formControlName="nome_arquivo"
+                        class="form-control form-control-sm" readonly
+                        [ngClass]="{ 'is-invalid': isFormArrayControlInvalid('os_anexos', i, 'nome_arquivo') }">
+                    </div>
+                    <div class="col-md-5">
+                      <label for="stream_anexo_{{i}}" class="form-label">
+                        {{ anexoCtrl.get('id')?.value ? 'Substituir Arquivo (Opcional)' : 'Selecionar Arquivo' }}
+                        <span *ngIf="!anexoCtrl.get('id')?.value" class="text-danger">*</span>
+                      </label>
+                      <input type="file" id="stream_anexo_{{i}}" (change)="onFileSelected($event, i)"
+                        class="form-control form-control-sm"
+                        [ngClass]="{ 'is-invalid': isFormArrayControlInvalid('os_anexos', i, 'stream_anexo') && anexoCtrl.get('stream_anexo')?.hasError('required') }">
+                      <div
+                        *ngIf="anexoCtrl.get('id')?.value && anexoCtrl.get('nome_arquivo')?.value && !anexoCtrl.get('stream_anexo')?.value"
+                        class="form-text small mt-1">
+                        Arquivo existente: {{ anexoCtrl.get('nome_arquivo')?.value }}
+                        <button type="button" class="btn btn-link btn-sm p-0 ms-2" (click)="downloadAnexo(i)"
+                          title="Baixar anexo existente">
+                          <i class="fas fa-download"></i> Baixar
+                        </button>
+                      </div>
+                    </div>
+                    <div class="col-md-2 text-end">
+                      <button type="button" class="btn btn-sm btn-outline-danger" (click)="removeAnexo(i)"
+                        title="Remover Anexo">
+                        <i class="bi bi-trash"></i>
+                      </button>
+                    </div>
+                  </div>
+                  <div *ngIf="anexoCtrl.get('stream_anexo')?.value as selectedFile"
+                    class="form-text small mt-1 text-muted">
+                    Arquivo selecionado: {{ selectedFile.name }} ({{ (selectedFile.size / 1024) | number:'1.0-2' }} KB)
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <hr class="my-4">
+        <div class="row justify-content-end mb-3">
+          <div class="col-md-4">
+            <label for="valor_total_orcamento" class="form-label fw-bold fs-5">Valor Total da OS (R$)</label>
+            <input type="number" id="valor_total_orcamento" formControlName="valor_total_orcamento"
+              class="form-control fs-5" readonly>
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-end">
+          <button type="button" class="btn btn-secondary me-2" (click)="goBack()">
+            <i class="fas fa-times me-1"></i> Cancelar
+          </button>
+          <button type="submit" class="btn btn-success" [disabled]="form.invalid || isLoading">
+            <i class="fas fa-save me-1"></i>
+            <span *ngIf="!isLoading">{{ isEditMode ? 'Atualizar' : 'Salvar' }} Ordem de Serviço</span>
+            <span *ngIf="isLoading">Salvando... <span class="spinner-border spinner-border-sm"></span></span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

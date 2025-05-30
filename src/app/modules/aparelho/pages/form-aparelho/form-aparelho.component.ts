@@ -54,7 +54,7 @@ export class FormAparelhoComponent implements OnInit {
 
   ngOnInit(): void {
     this.carregarDadosIniciais();
-    
+
     if (this.clienteId) {
       this.formAparelho.patchValue({ id_cliente: this.clienteId });
     }
@@ -100,7 +100,7 @@ export class FormAparelhoComponent implements OnInit {
       if (aparelho) {
         // Primeiro filtra os modelos da marca selecionada
         this.modelosFiltrados = this.modelos.filter(m => m.id_marca === aparelho.id_marca);
-        
+
         // Depois seta os valores do formulário
         this.formAparelho.patchValue({
           id_cliente: aparelho.id_cliente,

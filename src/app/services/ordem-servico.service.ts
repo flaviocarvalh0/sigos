@@ -1,13 +1,13 @@
 // src/app/services/service-order.service.ts
 import { Injectable } from '@angular/core';
 import { of, Observable, delay } from 'rxjs';
-import { OrdemServico } from '../Models/ordem_servico.model';
+import { OrdemServico } from '../Models/ordem-servico/ordem_servico.model';
 
 @Injectable({
   providedIn: 'root',
 })
 export class OrdemServicoService {
-  private mockOrders: OrdemServico[] = [
+    private mockOrders: OrdemServico[] = [
     {
       id: 1,
       codigo: 'OS-2024-001',
@@ -84,11 +84,37 @@ export class OrdemServicoService {
     },
   ];
 
+  private static ultimoCodigoData: string = '';
+  private static sequencialDiario: number = 0;
+
   constructor() {}
 
   // Método para obter todas as ordens de serviço
   getAllOrders(): Observable<OrdemServico[]> {
     return of(this.mockOrders).pipe(delay(500));
+  }
+
+  getProximoCodigoOS(): Observable<string> {
+    const hoje = new Date();
+    const ano = hoje.getFullYear();
+    const mes = (hoje.getMonth() + 1).toString().padStart(2, '0');
+    const dia = hoje.getDate().toString().padStart(2, '0');
+    const dataFormatada = `${ano}${mes}${dia}`;
+
+    if (OrdemServicoService.ultimoCodigoData !== dataFormatada) {
+      OrdemServicoService.ultimoCodigoData = dataFormatada;
+      OrdemServicoService.sequencialDiario = 1;
+    } else {
+      OrdemServicoService.sequencialDiario++;
+    }
+
+    const sequencialFormatado = OrdemServicoService.sequencialDiario.toString().padStart(3, '0');
+    const proximoCodigo = `${dataFormatada}-${sequencialFormatado}`;
+
+    // Simula uma chamada de API com delay
+    // No futuro, substitua por: return this.http.get<string>(`${this.apiUrl}/proximo-codigo`, { headers: this.getHeaders() });
+    console.log(`[Mock OrdemServicoService] Gerando próximo código OS: ${proximoCodigo}`);
+    return of(proximoCodigo).pipe(delay(200));
   }
 
   // Método para filtrar ordens de serviço

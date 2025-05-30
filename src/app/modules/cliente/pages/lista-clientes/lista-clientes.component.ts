@@ -30,7 +30,7 @@ export class ListaClienteComponent {
   editar(id: number) {
     this.router.navigate(['/cliente/form', id]);
   }
-  
+
 
   excluir(id: number) {
     if (confirm('Tem certeza que deseja excluir este cliente?')) {

@@ -1,6 +1,6 @@
 // src/app/models/service-order.model.ts
 export interface OrdemServico {
-  id: number;
+  id: number | undefined;
   codigo: string;
   status: string;
   valor_total: number;

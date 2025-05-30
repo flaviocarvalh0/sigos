@@ -28,19 +28,19 @@
                     Nome é obrigatório e deve ter no mínimo 3 caracteres.
                   </div>
                 </div>
-            
+
                 <!-- Apelido -->
                 <div class="mb-3">
                   <label for="apelido" class="form-label">Apelido</label>
                   <input id="apelido" type="text" class="form-control" formControlName="apelido" placeholder="Apelido (opcional)" />
                 </div>
-            
+
                 <!-- CPF -->
                 <div class="mb-3">
                   <label for="cpf" class="form-label">CPF</label>
                   <input id="cpf" type="text" class="form-control" formControlName="cpf" placeholder="000.000.000-00" mask="000.000.000-00" />
                 </div>
-            
+
                 <!-- CEP -->
                 <div class="mb-3">
                   <label for="cep" class="form-label">CEP</label>
@@ -48,19 +48,19 @@
                   <div *ngIf="cepError" class="text-danger small mt-1">{{ cepError }}</div>
                   <div *ngIf="loadingCep" class="text-info small mt-1">Buscando endereço...</div>
                 </div>
-    
+
                 <!-- Cidade -->
                 <div class="mb-3">
                   <label for="cidade" class="form-label">Cidade</label>
                   <input id="cidade" type="text" class="form-control" formControlName="cidade" />
                 </div>
-    
+
                 <!-- Logradouro -->
                 <div class="mb-3">
                   <label for="logradouro" class="form-label">Logradouro</label>
                   <input id="logradouro" type="text" class="form-control" formControlName="logradouro" placeholder="Rua, Avenida, etc" />
                 </div>
-            
+
                 <!-- Número e Complemento lado a lado -->
                 <div class="row mb-3">
                   <div class="col-6">
@@ -72,7 +72,7 @@
                     <input id="complemento" type="text" class="form-control" formControlName="complemento" placeholder="Apto, bloco..." />
                   </div>
                 </div>
-            
+
                 <!-- Bairro e UF lado a lado -->
                 <div class="row mb-3">
                   <div class="col-8">
@@ -84,19 +84,19 @@
                     <input id="uf" type="text" class="form-control" formControlName="uf" placeholder="UF" maxlength="2" />
                   </div>
                 </div>
-            
+
                 <!-- País -->
                 <div class="mb-3">
                   <label for="pais" class="form-label">País</label>
                   <input id="pais" type="text" class="form-control" formControlName="pais"/>
                 </div>
-            
+
                 <!-- Telefone -->
                 <div class="mb-3">
                   <label for="telefone" class="form-label">Telefone</label>
                   <input id="telefone" type="text" class="form-control" formControlName="telefone" placeholder="(00) 0000-0000" mask="(00) 0000-0000" />
                 </div>
-            
+
                 <!-- Celular -->
                 <div class="mb-3">
                   <label for="celular" class="form-label">Celular <span class="text-danger">*</span></label>
@@ -105,7 +105,7 @@
                     Celular é obrigatório.
                   </div>
                 </div>
-            
+
                 <!-- Email -->
                 <div class="mb-3">
                   <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
@@ -117,7 +117,7 @@
                     E-mail inválido.
                   </div>
                 </div>
-            
+
                 <!-- Tipo de pessoa -->
                 <div class="mb-3">
                   <label for="tipo_de_pessoa" class="form-label">Tipo de Pessoa</label>
@@ -127,7 +127,7 @@
                     <option value="Jurídica">Pessoa Jurídica</option>
                   </select>
                 </div>
-    
+
                 <!-- Ativo -->
                 <div class="form-check form-switch mb-3">
                   <input class="form-check-input" type="checkbox" id="ativo" formControlName="ativo" />
@@ -138,7 +138,7 @@
               <button type="submit" class="btn btn-success flex-fill">Salvar</button>
               <button type="button" class="btn btn-secondary flex-fill" (click)="onCancelar()">Cancelar</button>
               <button *ngIf="isEditando" type="button" class="btn btn-danger flex-fill" (click)="onExcluir()">Excluir</button>
-            </div>        
+            </div>
           </form>
         </div>
       </div>
@@ -165,14 +165,14 @@
 
   <!-- Formulário reutilizável -->
   <div *ngIf="showAparelhoForm" class="mb-4">
-    <app-form-aparelho 
+    <app-form-aparelho
       [clienteId]="clienteId"
       [modoEmbedded]="true"
       (salvar)="aoSalvarOuCancelarAparelho()"
       (cancelar)="aoSalvarOuCancelarAparelho()">
     </app-form-aparelho>
   </div>
-  
+
   <div class="table-responsive">
     <table class="table table-striped table-hover">
       <thead class="table-light">
@@ -194,18 +194,18 @@
           <td>{{ aparelho.cor || '-' }}</td>
           <td>
           <!-- Botões visíveis em telas md+ -->
-          <button class="btn btn-sm btn-warning me-2 d-none d-md-inline" (click)="editarParalho(aparelho.id!)">
+          <button class="btn btn-sm btn-warning me-2 d-none d-md-inline" (click)="editarAparelho(aparelho.id!)">
             Editar
           </button>
-          <button class="btn btn-sm btn-danger d-none d-md-inline" (click)="excluir(aparelho.id!)">
+          <button class="btn btn-sm btn-danger d-none d-md-inline" (click)="excluirAparelho(aparelho.id!)">
             Excluir
           </button>
 
           <!-- Ícones visíveis em telas pequenas (sm e xs) -->
-          <button class="btn btn-sm btn-warning me-2 d-inline d-md-none" title="Editar" (click)="editarParalho(aparelho.id!)">
+          <button class="btn btn-sm btn-warning me-2 d-inline d-md-none" title="Editar" (click)="editarAparelho(aparelho.id!)">
             <i class="bi bi-pencil"></i>
           </button>
-          <button class="btn btn-sm btn-danger d-inline d-md-none" title="Excluir" (click)="excluir(aparelho.id!)">
+          <button class="btn btn-sm btn-danger d-inline d-md-none" title="Excluir" (click)="excluirAparelho(aparelho.id!)">
             <i class="bi bi-trash"></i>
           </button>
         </td>

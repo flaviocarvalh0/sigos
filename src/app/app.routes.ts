@@ -81,8 +81,8 @@ export const routes: Routes = [
       { path: 'movimento-estoque/form/:id', component: FormMovimentoEstoqueComponent },
 
       { path: 'ordem-servico', component: OrdemServicoComponent, data: { animation: 'MovimentnoEstoquePage' } },
-      { path: 'ordem-servico/form', component: FormOrdemServicoComponent, data: { animation: 'MovimentnoEstoquePage' } },
-      { path: 'ordem-servico/form:id', component: FormOrdemServicoComponent, data: { animation: 'MovimentnoEstoquePage' } },
+      { path: 'ordem-servico/form', component: FormOrdemServicoComponent, data: { animation: 'FormOsEstoquePage' } },
+      { path: 'ordem-servico/form/:id', component: FormOrdemServicoComponent, data: { animation: 'FormOsEstoquePage' } },
 
       // Redirecionamentos por último
       { path: '', redirectTo: '/ordem-servico', pathMatch: 'full' },

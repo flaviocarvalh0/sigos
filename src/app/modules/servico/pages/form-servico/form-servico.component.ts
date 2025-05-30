@@ -50,7 +50,7 @@ export class FormServicoComponent implements OnInit {
       }
     });
   }
-  
+
   carregarServico(id: number): void {
   this.servicoService.buscarPorId(id).subscribe({
     next: (servico: Servico | undefined) => {

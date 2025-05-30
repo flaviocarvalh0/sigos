@@ -4,8 +4,8 @@ import { CommonModule } from '@angular/common';
 import { MetricCardComponent } from '../metric-card/metric-card.component';
 import { OrderFiltersComponent } from '../order-filters/order-filters.component';
 import { ServiceOrderCardComponent } from '../service-order-card/service-order-card.component';
-import { OrdemServicoService } from '../../../services/ordem_servico_service';
-import { OrdemServico } from '../../../Models/ordem_servico.model';
+import { OrdemServicoService } from '../../../services/ordem-servico.service';
+import { OrdemServico } from '../../../Models/ordem-servico/ordem_servico.model';
 
 @Component({
   selector: 'app-ordem-servico',
@@ -39,7 +39,7 @@ export class OrdemServicoComponent implements OnInit {
 
   loadInitialData(): void {
     this.isLoading = true;
-    
+
     this.serviceOrderService.getAllOrders().subscribe({
       next: (orders) => {
         this.allOrders = orders;
@@ -56,8 +56,8 @@ export class OrdemServicoComponent implements OnInit {
 
   getRecentOrders(orders: OrdemServico[]): OrdemServico[] {
     // Retorna as últimas 10 ordens ou todas se tiver menos que 10
-    return orders.length > 10 
-      ? [...orders].sort((a, b) => 
+    return orders.length > 10
+      ? [...orders].sort((a, b) =>
           new Date(b.data_criacao).getTime() - new Date(a.data_criacao).getTime()
         ).slice(0, 10)
       : orders;
@@ -67,58 +67,58 @@ export class OrdemServicoComponent implements OnInit {
     const today = new Date();
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
-    
+
     const todayISO = this.formatDate(today);
     const yesterdayISO = this.formatDate(yesterday);
-    
+
     // Ordens concluídas hoje
-    const completedToday = orders.filter(o => 
-      o.status === 'concluido' && 
-      o.data_conclusao && 
+    const completedToday = orders.filter(o =>
+      o.status.toLocaleLowerCase() === 'concluído' &&
+      o.data_conclusao &&
       this.formatDate(new Date(o.data_conclusao)) === todayISO
     ).length;
 
     // Ordens concluídas ontem
-    const completedYesterday = orders.filter(o => 
-      o.status === 'concluido' && 
-      o.data_conclusao && 
+    const completedYesterday = orders.filter(o =>
+      o.status.toLocaleLowerCase() === 'concluído' &&
+      o.data_conclusao &&
       this.formatDate(new Date(o.data_conclusao)) === yesterdayISO
     ).length;
 
-    
+
     // Cálculo da variação percentual deste mês
     const currentMonth = today.getMonth();
     const currentYear = today.getFullYear();
-    
+
     const thisMonthOrders = orders.filter(o => {
       const date = new Date(o.data_criacao);
       return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
     }).length;
-    
+
     const lastMonthOrders = orders.filter(o => {
       const date = new Date(o.data_criacao);
       const lastMonth = currentMonth === 0 ? 11 : currentMonth - 1;
       const year = currentMonth === 0 ? currentYear - 1 : currentYear;
       return date.getMonth() === lastMonth && date.getFullYear() === year;
     }).length;
-    
-    const changePercent = lastMonthOrders > 0 
+
+    const changePercent = lastMonthOrders > 0
       ? Math.round(((thisMonthOrders - lastMonthOrders) / lastMonthOrders) * 100)
       : thisMonthOrders > 0 ? 100 : 0;
 
-    const totalPendentes = orders.filter(o => o.status === 'pendente').length;
+    const totalPendentes = orders.filter(o => o.status.toLocaleLowerCase() === 'pendente').length;
 
     this.metrics = {
       totalOrders: orders.length.toString(),
-      pendingOrders: orders.filter(o => o.status === 'pendente').length.toString(),
+      pendingOrders: orders.filter(o => o.status.toLocaleLowerCase() === 'pendente').length.toString(),
       completedToday: completedToday.toString(),
       changeTotal: changePercent >= 0 ? `+${changePercent}% este mês` : `${changePercent}% este mês`,
       changeTotalType: changePercent >= 0 ? 'positive' : 'negative',
-      changeTotalTypePeding: totalPendentes == 0 ? '' : 'Nenhuma pendente',
-      changeCompleted: completedYesterday > 0 
-        ? `+${completedToday - completedYesterday} desde ontem` 
+      changeTotalTypePeding: totalPendentes == 0 ? '' : 'Nenhuma Pendente',
+      changeCompleted: completedYesterday > 0
+        ? `+${completedToday - completedYesterday} desde ontem`
         : 'Nenhuma ontem',
-      changeCompletedType: completedYesterday > 0 
+      changeCompletedType: completedYesterday > 0
         ? (completedToday >= completedYesterday ? 'positive' : 'negative')
         : 'neutral'
     };
@@ -128,7 +128,7 @@ export class OrdemServicoComponent implements OnInit {
     this.isLoading = true;
     this.currentFilters = filters;
     this.showingAll = false;
-    
+
     this.serviceOrderService.getFilteredOrders(filters).subscribe({
       next: (orders) => {
         this.filteredOrders = this.getRecentOrders(orders);
@@ -145,7 +145,7 @@ export class OrdemServicoComponent implements OnInit {
   loadAllOrders(): void {
     this.isLoading = true;
     this.showingAll = true;
-    
+
     this.serviceOrderService.getAllOrders().subscribe({
       next: (orders) => {
         this.filteredOrders = orders;
@@ -167,8 +167,7 @@ export class OrdemServicoComponent implements OnInit {
   }
 
   handleViewDetails(order: OrdemServico): void {
-    console.log('Visualizar detalhes da OS:', order);
-    // Implemente navegação ou modal aqui
+    this.router.navigate(['/ordem-servico/form', order.id]);
   }
 
   novaOrdemServico(): void {

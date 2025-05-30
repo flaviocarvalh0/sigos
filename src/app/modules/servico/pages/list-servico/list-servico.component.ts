@@ -4,7 +4,6 @@ import { CommonModule } from '@angular/common';
 import { Servico } from '../../../../Models/servico.mode';
 import { ServicoService } from '../../../../services/service.service';
 
-declare const bootstrap: any;
 
 @Component({
     selector: 'app-list-servico',
