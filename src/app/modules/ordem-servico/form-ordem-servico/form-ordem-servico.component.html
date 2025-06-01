@@ -81,52 +81,86 @@
             </div>
 
             <h5 class="mb-3 mt-4">Cliente e Aparelho</h5>
-            <div class="row mb-3 align-items-end">
-  <div class="col-sm-6 col-md-5">
-    <label for="id_cliente" class="form-label">Cliente <span class="text-danger">*</span></label>
-    <select id="id_cliente" formControlName="id_cliente" class="form-select"
-            [ngClass]="{ 'is-invalid': isInvalid('id_cliente') }">
-      <option [ngValue]="null" disabled>Selecione o Cliente</option>
-      <option *ngFor="let cliente of clientes" [ngValue]="cliente.id">{{ cliente.nome_completo }}</option>
-    </select>
-    <div *ngIf="isInvalid('id_cliente')" class="invalid-feedback">Cliente é obrigatório.</div>
-  </div>
-  <div class="col-sm-6 col-md-1 mb-sm-0 mb-2">
-    <button type="button" class="btn btn-sm btn-outline-primary w-100" title="Novo Cliente"
-            (click)="abrirModalNovoCliente()">
-      <i class="fas fa-plus"></i> <span class="d-none d-md-inline">Novo</span>
-    </button>
-  </div>
-  <div class="col-md-6">
-      <label for="id_aparelho" class="form-label">Aparelho <span class="text-danger">*</span></label>
-      <select id="id_aparelho" formControlName="id_aparelho" class="form-select"
-              [ngClass]="{ 'is-invalid': isInvalid('id_aparelho') }">
-        <option [ngValue]="null" disabled>Selecione o Aparelho</option>
-        <option *ngFor="let aparelho of aparelhosDoCliente" [ngValue]="aparelho.id">
-          {{ getNomeMarca(aparelho.id_marca) }} - {{ getNomeModelo(aparelho.id_modelo) || 'NA'}} - IMEI: {{ aparelho.imei_1 || 'N/A' }}
-        </option>
-      </select>
-      <div *ngIf="isInvalid('id_aparelho')" class="invalid-feedback">Aparelho é obrigatório.</div>
-      <div *ngIf="form.get('id_cliente')?.value && aparelhosDoCliente.length === 0 && !form.get('id_aparelho')?.disabled"
-           class="form-text text-warning small">
-        Nenhum aparelho para este cliente.
-      </div>
-    </div>
-</div>
+            <div class="row mb-3">
+              <div class="col-md-6 mb-3 mb-md-0">
+                <label for="id_cliente" class="form-label">Cliente <span class="text-danger">*</span></label>
+                <div class="input-group">
+                  <select id="id_cliente" formControlName="id_cliente" class="form-select"
+                    [ngClass]="{ 'is-invalid': isInvalid('id_cliente') }">
+                    <option [ngValue]="null" disabled>Selecione o Cliente</option>
+                    <option *ngFor="let cliente of clientes" [ngValue]="cliente.id">{{ cliente.nome_completo }}</option>
+                  </select>
+                  <button type="button" class="btn btn-outline-primary" title="Novo Cliente"
+                    (click)="abrirModalNovoCliente()"
+                    style="display: flex; align-items: center; justify-content: center;">
+                    <i class="bi bi-plus"></i>
+                  </button>
+                </div>
+                <div *ngIf="isInvalid('id_cliente')" class="invalid-feedback d-block">
+                  Cliente é obrigatório.
+                </div>
+              </div>
 
-<div class="modal fade" id="modalNovoClienteOs" tabindex="-1" aria-labelledby="modalNovoClienteOsLabel" aria-hidden="true" #modalNovoClienteOsRef>
-  <div class="modal-dialog modal-xl"> <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="modalNovoClienteOsLabel">Cadastrar Novo Cliente</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <app-form-cliente [isModal]="true" (clienteSalvo)="handleClienteCriado($event)"></app-form-cliente>
-      </div>
-    </div>
-  </div>
-</div>
-
+              <div class="col-md-6">
+                <label for="id_aparelho" class="form-label">Aparelho <span class="text-danger">*</span></label>
+                <div class="input-group">
+                  <select id="id_aparelho" formControlName="id_aparelho" class="form-select"
+                    [ngClass]="{ 'is-invalid': isInvalid('id_aparelho') }">
+                    <option [ngValue]="null" disabled>Selecione o Aparelho</option>
+                    <option *ngFor="let aparelho of aparelhosDoCliente" [ngValue]="aparelho.id">
+                      {{ getNomeMarca(aparelho.id_marca) }} - {{ getNomeModelo(aparelho.id_modelo) || 'NA'}} - IMEI: {{
+                      aparelho.imei_1 || 'N/A' }}
+                    </option>
+                  </select>
+                  <button type="button" class="btn btn-outline-primary" title="Novo Aparelho para este Cliente"
+                    (click)="abrirModalNovoAparelhoParaOS()" [disabled]="!form.get('id_cliente')?.value">
+                    <i class="bi bi-plus"></i>
+                  </button>
+                </div>
+                <div *ngIf="isInvalid('id_aparelho')" class="invalid-feedback">
+                  Aparelho é obrigatório.
+                </div>
+                <div
+                  *ngIf="form.get('id_cliente')?.value && aparelhosDoCliente.length === 0 && !form.get('id_aparelho')?.disabled"
+                  class="form-text text-warning small">
+                  Nenhum aparelho cadastrado para este cliente.
+                </div>
+              </div>
+            </div>
+            <div class="modal fade" id="modalNovoClienteOs" tabindex="-1" aria-labelledby="modalNovoClienteOsLabel"
+              aria-hidden="true" #modalNovoClienteOsRef>
+              <div class="modal-dialog modal-xl">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="modalNovoClienteOsLabel">Cadastrar Novo Cliente</h5>
+                    <button type="button" class="btn-close" (click)="fecharModalNovoClienteManual()"
+                      aria-label="Close"></button>
+                  </div>
+                  <div class="modal-body">
+                    <app-form-cliente [hidden]="!exibirConteudoModalCliente" [isModal]="true"
+                      (clienteSalvo)="handleClienteCriado($event)"></app-form-cliente>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="modal fade" id="modalNovoAparelhoOs" tabindex="-1" aria-labelledby="modalNovoAparelhoOsLabel"
+              aria-hidden="true" #modalNovoAparelhoOsRef>
+              <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="modalNovoAparelhoOsLabel">{{ editandoAparelhoOsId ? 'Editar Aparelho' :
+                      'Novo Aparelho para Cliente Selecionado' }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                  </div>
+                  <div class="modal-body">
+                    <app-form-aparelho *ngIf="exibirConteudoModalAparelhoOs" [clienteId]="form.get('id_cliente')?.value"
+                      [aparelhoIdParaEditar]="editandoAparelhoOsId" [modoEmbedded]="true"
+                      (salvar)="handleAparelhoCriadoNaOS($event)" (cancelar)="handleAparelhoCanceladoNaOS()">
+                    </app-form-aparelho>
+                  </div>
+                </div>
+              </div>
+            </div>
             <h5 class="mb-3 mt-4">Relatos e Observações</h5>
             <div class="row mb-3">
               <div class="col-md-12">

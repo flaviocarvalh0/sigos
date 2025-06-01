@@ -10,12 +10,13 @@ declare const bootstrap: any;
     selector: 'app-lista-cliente',
     imports: [CommonModule, RouterModule],
     templateUrl: './lista-clientes.component.html',
-    standalone: true,
+    standalone: true
 })
 export class ListaClienteComponent {
   clientes: Cliente[] = [];
 
   @ViewChild('toast') toastElement!: ElementRef;
+
 
   constructor(private clienteService: ClienteService, private router: Router) {
     this.carregarClientes();

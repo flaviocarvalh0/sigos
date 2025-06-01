@@ -1,6 +1,6 @@
 import { Modelo } from './../../../Models/modelo.model';
 import { MarcaService } from './../../../services/marca.service';
-import { Component, OnInit, OnDestroy, ViewChild, ElementRef, Inject, PLATFORM_ID } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef, Inject, PLATFORM_ID, ChangeDetectorRef, NgZone } from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
@@ -10,7 +10,7 @@ import {
   AbstractControl,
 } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { CommonModule } from '@angular/common';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { NgSelectModule } from '@ng-select/ng-select'; // Necessário se o HTML final usar ng-select
 import { forkJoin, Observable, of, Subscription, throwError } from 'rxjs';
 import { switchMap, catchError, tap, map, startWith } from 'rxjs/operators';
@@ -45,15 +45,16 @@ import { OrdemServico } from '../../../Models/ordem-servico/ordem_servico.model'
 import { OsAnexo } from '../../../Models/ordem-servico/os-anexos.model';
 import { Mode } from 'fs';
 import { ModeloService } from '../../../services/modelo.service';
-import { Modal } from 'bootstrap';
 import { FormClienteComponent } from "../../cliente/pages/form-cliente/form-cliente.component";
+import { FormAparelhoComponent } from "../../aparelho/pages/form-aparelho/form-aparelho.component";
 
+declare const bootstrap: any;
 
 @Component({
   selector: 'app-form-ordem-servico',
   templateUrl: './form-ordem-servico.component.html', // Será atualizado depois
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, NgSelectModule, FormClienteComponent],
+  imports: [CommonModule, ReactiveFormsModule, NgSelectModule, FormClienteComponent, FormAparelhoComponent],
 })
 export class FormOrdemServicoComponent implements OnInit, OnDestroy {
   form!: FormGroup;
@@ -94,12 +95,21 @@ export class FormOrdemServicoComponent implements OnInit, OnDestroy {
 
   private subscriptions = new Subscription();
 
-   @ViewChild('modalNovoClienteOsRef') modalNovoClienteRef!: ElementRef; // Renomeado o #ref no HTML
-  private modalClienteInstance: Modal | undefined;
+  @ViewChild('modalNovoClienteOsRef') modalNovoClienteRef!: ElementRef;
+  private modalClienteInstance: any; // Ou bootstrap.Modal se tiver os types e funcionar
+  exibirConteudoModalCliente = false; // Para controlar o *ngIf do conteúdo do modal
+
+  @ViewChild('modalNovoAparelhoOsRef') modalNovoAparelhoOsRef!: ElementRef;
+  private modalAparelhoOsInstance: any; // Ou bootstrap.Modal
+  exibirConteudoModalAparelhoOs = false;
+  editandoAparelhoOsId: number | undefined = undefined;
+
 
   constructor(
 @Inject(PLATFORM_ID) private platformId: Object,
     private fb: FormBuilder,
+    private cdr: ChangeDetectorRef,
+    private zone: NgZone,
     private ordemServicoService: OrdemServicoService,
     private empresaService: EmpresaService,
     private clienteService: ClienteService,
@@ -170,26 +180,40 @@ export class FormOrdemServicoComponent implements OnInit, OnDestroy {
     this.subscriptions.add(servicosChangesSub);
     this.subscriptions.add(pecasChangesSub);
   }
+ngAfterViewInit() {
+    if (isPlatformBrowser(this.platformId)) {
+      // Modal Cliente (como antes)
+      const modalClienteEl = this.modalNovoClienteRef?.nativeElement;
+      if (modalClienteEl) {
+        this.modalClienteInstance = new bootstrap.Modal(modalClienteEl);
+        modalClienteEl.addEventListener('show.bs.modal', () => this.zone.run(() => { this.exibirConteudoModalCliente = true; this.cdr.detectChanges(); }));
+        modalClienteEl.addEventListener('hidden.bs.modal', () => this.zone.run(() => { this.exibirConteudoModalCliente = false; this.cdr.detectChanges(); }));
+      }
 
-  ngAfterViewInit() {
-    // Inicializa a instância do Modal do Bootstrap após a view ser renderizada
-    if (this.modalNovoClienteRef?.nativeElement) {
-      this.modalClienteInstance = new Modal(this.modalNovoClienteRef.nativeElement);
-    } else {
-        // Adicionar um pequeno delay e tentar novamente se o elemento não estiver pronto imediatamente
-        setTimeout(() => {
-            if (this.modalNovoClienteRef?.nativeElement) {
-                this.modalClienteInstance = new Modal(this.modalNovoClienteRef.nativeElement);
-            } else {
-                console.warn("Referência do modal de cliente não encontrada após delay.");
+      // Novo Modal Aparelho (controlado pela OS)
+      const modalAparelhoOsEl = this.modalNovoAparelhoOsRef?.nativeElement;
+      if (modalAparelhoOsEl) {
+        this.modalAparelhoOsInstance = new bootstrap.Modal(modalAparelhoOsEl);
+        modalAparelhoOsEl.addEventListener('show.bs.modal', () => this.zone.run(() => { this.exibirConteudoModalAparelhoOs = true; this.cdr.detectChanges(); }));
+        modalAparelhoOsEl.addEventListener('hidden.bs.modal', () => this.zone.run(() => {
+            this.exibirConteudoModalAparelhoOs = false;
+            this.editandoAparelhoOsId = undefined; // Limpa ID de edição
+            // Recarrega aparelhos do cliente selecionado na OS, se houver um
+            const clienteIdNaOs = this.form.get('id_cliente')?.value;
+            if (clienteIdNaOs) {
+                this.onClienteChange(clienteIdNaOs); // Reutiliza para recarregar aparelhos
             }
-        }, 500);
+            this.cdr.detectChanges();
+        }));
+      }
     }
   }
 
   ngOnDestroy(): void {
     this.subscriptions.unsubscribe();
-    this.modalClienteInstance?.dispose();
+    if (isPlatformBrowser(this.platformId)) {
+      this.modalClienteInstance?.dispose();
+    }
   }
 
   initForm(): void {
@@ -212,29 +236,54 @@ export class FormOrdemServicoComponent implements OnInit, OnDestroy {
       defeito_constatado_tecnico: [''], // No HTML, mapeia para relato_tecnico
       observacoes_gerais: [''], // No HTML, mapeia para observacoes
 
-      // Campos do seu HTML que não estão no modelo OrdemServico, mantidos para UI
-      data_previsao_entrega: [null],
-      id_status_os: [null, Validators.required], // Usado para popular o select, será mapeado para 'status: string'
-      // prioridade: ['Normal', Validators.required], // Removido pois não está no modelo OS
-      // id_tecnico_responsavel: [null], // Removido pois não está no modelo OS
-      // senha_aparelho: [''], // Removido
-      // condicoes_aparelho: [''], // Removido
-      // acessorios_deixados: [''], // Removido
-      // solucao_aplicada: [''], // Removido
-      // termo_garantia: [''], // Removido
-      // valor_sinal_entrada: [null, Validators.min(0)], // Removido
-      // forma_pagamento_sinal: [''], // Removido
 
-      // Valores (para UI e para 'valor_total' da OS)
+      data_previsao_entrega: [null],
+      id_status_os: [null, Validators.required],
+
       valor_total_servicos: [{ value: 0, disabled: true }],
       valor_total_pecas: [{ value: 0, disabled: true }],
-      valor_total_orcamento: [{ value: 0, disabled: true }], // Este valor será usado para 'valor_total' da OS
+      valor_total_orcamento: [{ value: 0, disabled: true }],
 
       // FormArrays
       os_servicos: this.fb.array([]),
       os_pecas: this.fb.array([]),
       os_anexos: this.fb.array([]),
     });
+  }
+
+  abrirModalNovoAparelhoParaOS(aparelhoId?: number): void {
+    const clienteIdSelecionado = this.form.get('id_cliente')?.value;
+    if (!clienteIdSelecionado) {
+      this.showToast('Selecione um cliente primeiro para adicionar um aparelho.', 'warning');
+      return;
+    }
+    this.editandoAparelhoOsId = aparelhoId; // Define se está editando ou criando novo
+    // A flag exibirConteudoModalAparelhoOs será true pelo evento 'show.bs.modal'
+    if (isPlatformBrowser(this.platformId)) {
+        // Um pequeno timeout pode ajudar se o *ngIf precisar de um ciclo para renderizar o conteúdo
+        // antes do Bootstrap JS calcular o tamanho do modal.
+        setTimeout(() => {
+            this.modalAparelhoOsInstance?.show();
+        }, 0);
+    }
+  }
+
+  handleAparelhoCriadoNaOS(aparelho?: Aparelho): void {
+    if (isPlatformBrowser(this.platformId)) {
+      this.modalAparelhoOsInstance?.hide(); // O listener 'hidden.bs.modal' recarregará a lista
+    }
+    if (aparelho && aparelho.id) {
+      this.showToast(`Aparelho "${this.getNomeMarca(aparelho.id_marca)} ${this.getNomeModelo(aparelho.id_modelo)}" salvo com sucesso!`, 'success');
+      // A lista de aparelhosDoCliente será atualizada pelo listener 'hidden.bs.modal'.
+      // Seleciona o aparelho recém-criado/editado no select da OS.
+      this.form.get('id_aparelho')?.setValue(aparelho.id);
+    }
+  }
+
+  handleAparelhoCanceladoNaOS(): void {
+    if (isPlatformBrowser(this.platformId)) {
+      this.modalAparelhoOsInstance?.hide();
+    }
   }
 
   private gerarEPreencherCodigoOS(): void {
@@ -1070,26 +1119,31 @@ export class FormOrdemServicoComponent implements OnInit, OnDestroy {
   }
 
   // --- Lógica para Modal Novo Cliente (já implementada na resposta anterior) ---
+ // --- Lógica para Modal Novo Cliente ---
   abrirModalNovoCliente(): void {
-    // Reseta o FormClienteComponent (se necessário, o próprio FormClienteComponent lida com isso em seu ngOnInit se !isModal e !id)
-    this.modalClienteInstance?.show();
+    if (isPlatformBrowser(this.platformId)) {
+      // A flag `exibirConteudoModalCliente` será definida como true pelo evento 'show.bs.modal'
+      this.modalClienteInstance?.show();
+    } else {
+      console.log("[SSR] Tentativa de abrir modal de cliente no servidor (ignorado).");
+    }
+  }
+
+  fecharModalNovoClienteManual(): void { // Se o btn-close do modal não estiver funcionando via data-bs-dismiss
+      if (isPlatformBrowser(this.platformId)) {
+          this.modalClienteInstance?.hide();
+      }
   }
 
   handleClienteCriado(clienteCriado?: Cliente): void {
+  if (isPlatformBrowser(this.platformId)) {
     this.modalClienteInstance?.hide();
-    if (clienteCriado && clienteCriado.id) {
-      this.showToast('Cliente cadastrado com sucesso!', 'success');
-      this.isLoading = true;
-      const clientesSub = this.clienteService.getClientes().subscribe(data => {
-        this.clientes = data;
-        this.form.get('id_cliente')?.setValue(clienteCriado.id);
-        // Após selecionar o novo cliente, o onClienteChange será disparado para carregar os aparelhos.
-        this.isLoading = false;
-      }, error => {
-        this.isLoading = false;
-        this.showToast('Erro ao recarregar lista de clientes.', 'error');
-      });
-      this.subscriptions.add(clientesSub);
-    }
   }
+
+  if (clienteCriado && clienteCriado.id) {
+      this.showToast(`Cliente salvo com sucesso!`, 'success');
+      this.form.get('id_cliente')?.setValue(clienteCriado.id);
+    }
+}
+
 }

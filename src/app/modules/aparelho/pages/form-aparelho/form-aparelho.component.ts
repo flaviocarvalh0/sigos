@@ -8,6 +8,7 @@ import { ClienteService } from '../../../../services/cliente.service';
 import { MarcaService } from '../../../../services/marca.service';
 import { ModeloService } from '../../../../services/modelo.service';
 import { ActivatedRoute, Router } from '@angular/router';
+import { Aparelho } from '../../../../Models/aparelho.model';
 
 declare const bootstrap: any;
 
@@ -21,7 +22,8 @@ declare const bootstrap: any;
 export class FormAparelhoComponent implements OnInit {
   @Input() clienteId?: number;
   @Input() modoEmbedded = false;
-  @Output() salvar = new EventEmitter<any>();
+  @Input() aparelhoIdParaEditar?: number; // Para edição via OS
+  @Output() salvar = new EventEmitter<Aparelho | undefined>(); // Emite o aparelho salvo
   @Output() cancelar = new EventEmitter<void>();
 
   formAparelho: FormGroup;
@@ -57,6 +59,9 @@ export class FormAparelhoComponent implements OnInit {
 
     if (this.clienteId) {
       this.formAparelho.patchValue({ id_cliente: this.clienteId });
+      if (this.modoEmbedded) { // modoEmbedded geralmente significa que o cliente não deve ser alterado
+          this.formAparelho.get('id_cliente')?.disable();
+      }
     }
 
     if (!this.modoEmbedded) {
@@ -66,6 +71,25 @@ export class FormAparelhoComponent implements OnInit {
           this.isEditando = true;
           this.aparelhoIdEditando = +id;
           this.carregarAparelho(this.aparelhoIdEditando);
+        }
+      });
+    }
+
+    if (this.aparelhoIdParaEditar) {
+      this.isEditando = true;
+      this.carregarAparelho(this.aparelhoIdParaEditar);
+    } else if (!this.modoEmbedded) { // Lógica de rota para página completa
+      this.route.paramMap.subscribe(params => {
+        const id = params.get('id');
+        const routeClienteId = params.get('clienteId'); // Se vier da rota
+        if (id) {
+          this.isEditando = true;
+          this.aparelhoIdParaEditar = +id;
+          this.carregarAparelho(this.aparelhoIdParaEditar);
+        }
+        if(routeClienteId && !this.clienteId) { // Prioriza @Input clienteId se ambos presentes
+            this.clienteId = +routeClienteId;
+            this.formAparelho.patchValue({ id_cliente: this.clienteId });
         }
       });
     }
@@ -115,39 +139,37 @@ export class FormAparelhoComponent implements OnInit {
     });
   }
 
-  onSubmit(): void {
+   onSubmit(): void {
     if (this.formAparelho.invalid) {
       this.formAparelho.markAllAsTouched();
+      this.showToast('Formulário de aparelho inválido.');
       return;
     }
-
-    const aparelho = this.formAparelho.value;
-
-    if (this.isEditando && this.aparelhoIdEditando) {
-      this.aparelhoService.atualizar(this.aparelhoIdEditando, aparelho).subscribe({
-        next: () => this.onSucesso('Aparelho atualizado com sucesso!'),
-        error: (err) => this.onErro('Erro ao atualizar aparelho', err)
+    const aparelhoData = this.formAparelho.getRawValue();
+    // Garante que id_cliente esteja no payload se veio do @Input
+    if (this.clienteId && !aparelhoData.id_cliente) {
+        aparelhoData.id_cliente = this.clienteId;
+    }
+    if (this.isEditando && this.aparelhoIdParaEditar) {
+      this.aparelhoService.atualizar(this.aparelhoIdParaEditar, aparelhoData).subscribe({
+        next: (aparelhoAtualizado) => this.onSucesso('Aparelho atualizado!', aparelhoAtualizado),
+        error: (err) => this.onErro('Erro ao atualizar aparelho.', err)
       });
     } else {
-      this.aparelhoService.criar(aparelho).subscribe({
-        next: () => this.onSucesso('Aparelho cadastrado com sucesso!'),
-        error: (err) => this.onErro('Erro ao cadastrar aparelho', err)
+      const { id, ...aparelhoParaCriar } = aparelhoData; // Remove ID para criação
+      this.aparelhoService.criar(aparelhoParaCriar as Aparelho).subscribe({
+        next: (aparelhoCriado) => this.onSucesso('Aparelho cadastrado!', aparelhoCriado),
+        error: (err) => this.onErro('Erro ao cadastrar aparelho.', err)
       });
     }
   }
 
-onSucesso(mensagem: string): void {
-  this.showToast(mensagem);
-  if (this.modoEmbedded) {
-    this.salvar.emit(); // Emite para o componente pai (form-cliente)
-  } else if (this.formAparelho.value.id_cliente) {
-    // Redireciona de volta para o form do cliente com o id correto
-    this.router.navigate(['/cliente/form', this.formAparelho.value.id_cliente]);
-  } else {
-    // Redireciona para a lista de aparelhos
-    this.router.navigate(['/aparelho']);
+  onSucesso(mensagem: string, aparelho?: Aparelho): void {
+    this.showToast(mensagem);
+    this.salvar.emit(aparelho); // Emite o aparelho para o componente pai (FormOrdemServico ou FormCliente)
   }
-}
+
+
 
 
 
@@ -158,7 +180,7 @@ onSucesso(mensagem: string): void {
 
 onCancelar(): void {
   if (this.modoEmbedded) {
-    this.cancelar.emit(); // volta ao componente pai (form-cliente)
+    this.cancelar.emit();
   } else if (this.formAparelho.value.id_cliente) {
     this.router.navigate(['/cliente/form', this.formAparelho.value.id_cliente]);
   } else {
