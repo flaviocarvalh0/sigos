@@ -1,0 +1,13 @@
+/* Pode usar o mesmo .login-page-wrapper ou criar um similar */
+.forgot-password-container {
+  background: linear-gradient(135deg, #6c757d 0%, #343a40 100%); /* Exemplo de fundo diferente */
+}
+
+.input-group-text {
+  background-color: #e9ecef;
+  border-right: none;
+}
+.input-group > .form-control:not(:first-child) {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}

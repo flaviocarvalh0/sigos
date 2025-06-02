@@ -1,0 +1,51 @@
+/* src/app/modules/login/login.component.css */
+.login-page-wrapper {
+  /* Exemplo com gradiente simples. Pode ser uma imagem de fundo também. */
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  /* Ou uma cor sólida: background-color: #f0f2f5; */
+  width: 100%;
+  min-height: 100vh; /* Garante que o fundo cubra toda a altura da viewport */
+  display: flex; /* Para centralizar o .login-container, caso ele não seja vh-100 */
+  justify-content: center; /* Para centralizar o .login-container */
+  align-items: center; /* Para centralizar o .login-container */
+}
+
+.login-container {
+  /* min-vh-100 já está no HTML, o que é bom para centralização vertical.
+     Se login-page-wrapper já tem display:flex e centraliza,
+     vh-100 no login-container pode não ser estritamente necessário. */
+}
+
+.login-card {
+  width: 100%;
+  max-width: 420px; /* Limita a largura máxima do card em telas maiores */
+  border: none; /* Remove a borda padrão do card se o shadow-lg já der o efeito desejado */
+}
+
+/* Opcional: Ajuste fino para o logo/título se você adicionar uma imagem */
+.login-card img {
+  /* Estilos para o logo */
+}
+
+.input-group-text {
+  background-color: #e9ecef; /* Cor de fundo padrão para input-group-text */
+  border-right: none; /* Remove a borda direita se o input não tiver borda esquerda arredondada */
+}
+
+/* Garante que o input dentro do input-group não tenha borda esquerda arredondada
+   se o input-group-text estiver à esquerda (Bootstrap 5 já deve cuidar disso) */
+.input-group > .form-control:not(:first-child) {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+.input-group > .input-group-text:not(:last-child) {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+/* Ícones Bootstrap */
+/* Certifique-se de ter importado a fonte de ícones do Bootstrap no seu projeto,
+   geralmente em styles.css global ou angular.json. Ex:
+   @import "bootstrap-icons/font/bootstrap-icons.css";
+   Ou via CDN no index.html.
+*/

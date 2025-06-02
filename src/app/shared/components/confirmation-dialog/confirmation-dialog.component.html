@@ -1,0 +1,21 @@
+<div class="modal fade" #confirmationModal tabindex="-1" [attr.aria-labelledby]="config ? 'confirmationModalLabel-' + config.title : null" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div *ngIf="config" class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" [id]="'confirmationModalLabel-' + config.title">{{ config.title }}</h5>
+        <button type="button" class="btn-close" (click)="onCancel()" aria-label="Cancelar"></button>
+      </div>
+      <div class="modal-body">
+        <p [innerHTML]="config.message"></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn {{ config.cancelButtonClass || 'btn-secondary' }}" (click)="onCancel()">
+          {{ config.cancelButtonText || 'Cancelar' }}
+        </button>
+        <button type="button" class="btn {{ config.acceptButtonClass || 'btn-primary' }}" (click)="onAccept()">
+          {{ config.acceptButtonText || 'Confirmar' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

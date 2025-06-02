@@ -77,7 +77,17 @@
               "buildTarget": "sigos:build:development"
             }
           },
-          "defaultConfiguration": "development"
+          "defaultConfiguration": "development",
+          "options": { 
+            "allowedHosts": [
+              "7a27-2804-29b8-50ba-3212-5ca2-c2a-48e0-1963.ngrok-free.app",
+              "localhost", 
+              "127.0.0.1"  
+            ],
+            "host": "0.0.0.0", 
+            "disableHostCheck": false 
+          }
+          
         },
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",

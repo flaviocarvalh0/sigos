@@ -1,0 +1,48 @@
+<div class="forgot-password-container d-flex justify-content-center align-items-center min-vh-100 p-3">
+  <div class="card forgot-password-card p-4 p-lg-5 shadow-lg rounded-3" style="max-width: 450px; width: 100%;">
+    <div class="text-center mb-4">
+      <h1 class="fw-bold text-primary mb-2">SIGOS</h1>
+      <h4 class="mb-3">Recuperar Senha</h4>
+      <p class="text-muted small">
+        Insira o endereço de e-mail associado à sua conta e enviaremos um link para redefinir sua senha.
+      </p>
+    </div>
+
+    <form [formGroup]="forgotPasswordForm" (ngSubmit)="onSubmit()">
+      <div class="mb-3">
+        <label for="email" class="form-label fw-semibold">Email</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-envelope-fill"></i></span>
+          <input
+            type="email"
+            id="email"
+            class="form-control form-control-lg"
+            formControlName="email"
+            required
+            placeholder="seuemail@exemplo.com"
+            [ngClass]="{ 'is-invalid': isInvalidControl('email') }"
+            [disabled]="isLoading"
+          />
+        </div>
+        <div *ngIf="isInvalidControl('email')" class="invalid-feedback d-block">
+          <span *ngIf="forgotPasswordForm.get('email')?.errors?.['required']">Email é obrigatório.</span>
+          <span *ngIf="forgotPasswordForm.get('email')?.errors?.['email']">Por favor, insira um email válido.</span>
+        </div>
+      </div>
+
+      <div *ngIf="message && !isLoading" class="alert mt-3 py-2" [ngClass]="messageType === 'success' ? 'alert-success' : 'alert-danger'">
+        {{ message }}
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold mt-4" [disabled]="isLoading || forgotPasswordForm.invalid">
+        <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+        <span *ngIf="isLoading">Enviando...</span>
+        <span *ngIf="!isLoading">Enviar Link de Recuperação</span>
+      </button>
+    </form>
+
+    <div class="text-center mt-4">
+      <a routerLink="/login" class="text-muted small">Voltar para o Login</a>
+    </div>
+  </div>
+</div>

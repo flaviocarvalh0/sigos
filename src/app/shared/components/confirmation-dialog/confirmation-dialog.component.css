@@ -1,0 +1,8 @@
+/* src/app/shared/components/confirmation-dialog/confirmation-dialog.component.css */
+/* O modal fade já deve estar configurado pelo Bootstrap.
+   Se precisar de estilos adicionais, coloque aqui.
+   Por exemplo, para garantir que o modal seja exibido:
+*/
+.modal.show { /* Bootstrap 5 usa 'show' em vez de 'in' */
+  display: block;
+}

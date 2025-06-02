@@ -1,0 +1,134 @@
+<div class="container mt-4 mb-5">
+  <div class="card shadow-sm">
+    <div class="card-header bg-primary text-white">
+      <h4 class="mb-0">
+        <i class="fas fa-user-plus me-2"></i>
+        {{ isEditMode ? 'Editar Usuário' : 'Cadastrar Novo Usuário' }}
+      </h4>
+    </div>
+    <div class="card-body">
+      <div *ngIf="isLoading" class="text-center my-3">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Carregando...</span>
+        </div>
+        <p>Processando...</p>
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" *ngIf="!isLoading" novalidate>
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label for="nome" class="form-label">Nome Completo <span class="text-danger">*</span></label>
+            <input type="text" id="nome" class="form-control" formControlName="nome" placeholder="Nome completo do usuário">
+            <div *ngIf="isInvalidControl('nome')" class="text-danger small">
+              <span *ngIf="form.get('nome')?.errors?.['required']">Nome é obrigatório.</span>
+            </div>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label for="login" class="form-label">Login <span class="text-danger">*</span></label>
+            <input type="text" id="login" class="form-control" formControlName="login" placeholder="Login de acesso">
+            <div *ngIf="isInvalidControl('login')" class="text-danger small">
+              <span *ngIf="form.get('login')?.errors?.['required']">Login é obrigatório.</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
+            <input type="email" id="email" class="form-control" formControlName="email" placeholder="endereco@email.com">
+            <div *ngIf="isInvalidControl('email')" class="text-danger small">
+              <span *ngIf="form.get('email')?.errors?.['required']">Email é obrigatório.</span>
+              <span *ngIf="form.get('email')?.errors?.['email']">Email inválido.</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label for="senha" class="form-label">Senha <span *ngIf="!isEditMode" class="text-danger">*</span></label>
+            <div class="input-group">
+              <input [type]="senhaVisivel ? 'text' : 'password'" id="senha" class="form-control" formControlName="senha" placeholder="{{ isEditMode ? 'Nova senha (deixe em branco para não alterar)' : 'Mínimo 6 caracteres' }}">
+              <button class="btn btn-outline-secondary" type="button" (click)="toggleSenhaVisivel()">
+                <i class="bi" [ngClass]="senhaVisivel ? 'bi-eye-slash' : 'bi-eye'"></i>
+              </button>
+            </div>
+            <div *ngIf="isInvalidControl('senha')" class="text-danger small">
+              <span *ngIf="form.get('senha')?.errors?.['required']">Senha é obrigatória.</span>
+              <span *ngIf="form.get('senha')?.errors?.['minlength']">Senha deve ter no mínimo 6 caracteres.</span>
+            </div>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label for="confirmarSenha" class="form-label">Confirmar Senha <span *ngIf="!isEditMode || form.get('senha')?.value" class="text-danger">*</span></label>
+             <div class="input-group">
+              <input [type]="confirmaSenhaVisivel ? 'text' : 'password'" id="confirmarSenha" class="form-control" formControlName="confirmarSenha" placeholder="Confirme a senha">
+               <button class="btn btn-outline-secondary" type="button" (click)="toggleConfirmaSenhaVisivel()">
+                <i class="bi" [ngClass]="confirmaSenhaVisivel ? 'bi-eye-slash' : 'bi-eye'"></i>
+              </button>
+            </div>
+            <div *ngIf="form.hasError('senhasNaoCombinam') && (form.get('confirmarSenha')?.touched || form.get('senha')?.touched)" class="text-danger small">
+              As senhas não combinam.
+            </div>
+             <div *ngIf="isInvalidControl('confirmarSenha') && form.get('confirmarSenha')?.errors?.['required']" class="text-danger small">
+              Confirmação de senha é obrigatória.
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label for="id_empresa" class="form-label">Empresa</label>
+            <ng-select id="id_empresa"
+                       [items]="empresas"
+                       bindLabel="razao_social"
+                       bindValue="id"
+                       formControlName="id_empresa"
+                       placeholder="Selecione a Empresa"
+                       [clearable]="true">
+            </ng-select>
+          </div>
+          <!-- <div class="col-md-6 mb-3">
+            <label for="id_grupos" class="form-label">Grupos de Acesso <span class="text-danger">*</span></label>
+            <ng-select id="id_grupos"
+                       [items]="gruposDisponiveis"
+                       bindLabel="nome"
+                       bindValue="id"
+                       [multiple]="true"
+                       formControlName="id_grupos"
+                       placeholder="Selecione os grupos"
+                       [closeOnSelect]="false">
+            </ng-select>
+             <div *ngIf="isInvalidControl('id_grupos')" class="text-danger small">
+              Pelo menos um grupo é obrigatório.
+            </div>
+          </div> -->
+        </div>
+
+        <div class="mb-3">
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="ativo" formControlName="ativo">
+            <label class="form-check-label" for="ativo">Usuário Ativo</label>
+          </div>
+        </div>
+
+        <hr class="my-4">
+        <div class="d-flex justify-content-end">
+          <button type="button" class="btn btn-secondary me-2" (click)="router.navigate(['/admin/usuarios'])">
+            Cancelar
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="form.invalid || isLoading">
+            <span *ngIf="!isLoading">{{ isEditMode ? 'Atualizar Usuário' : 'Salvar Usuário' }}</span>
+            <span *ngIf="isLoading">Salvando... <span class="spinner-border spinner-border-sm"></span></span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+   <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1090">
+    <div id="liveToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body"></div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    </div>
+  </div>
+</div>

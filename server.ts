@@ -17,6 +17,25 @@ export function app(): express.Express {
   server.set('view engine', 'html');
   server.set('views', browserDistFolder);
 
+server.use((req: express.Request, res: express.Response, next: express.NextFunction): void => {
+  const allowedHosts = [
+    'localhost',
+    '127.0.0.1',
+    '7a27-2804-29b8-50ba-3212-5ca2-c2a-48e0-1963.ngrok-free.app'
+  ];
+
+  const host = req.headers.host?.split(':')[0]; // <- isso garante que a porta não influencie
+
+  if (!allowedHosts.includes(host!)) {
+    console.warn('Blocked host:', host);
+    res.status(403).send(`Blocked host: ${host}`);
+    return;
+  }
+
+  next();
+});
+
+
   // Example Express Rest API endpoints
   // server.get('/api/**', (req, res) => { });
   // Serve static files from /browser

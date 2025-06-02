@@ -1,0 +1,57 @@
+<div class="login-page-wrapper">
+  <div class="login-container d-flex justify-content-center align-items-center min-vh-100 p-3 p-md-0">
+    <div class="card login-card p-4 p-lg-5 shadow-lg rounded-3">
+      <div class="text-center mb-4">
+        <h1 class="fw-bold text-primary mb-2">SIGOS</h1>
+        <p class="text-muted">Bem-vindo! Faça seu login para continuar.</p>
+      </div>
+      <form (ngSubmit)="onSubmit()">
+        <div class="mb-3">
+          <label for="username" class="form-label fw-semibold">Usuário ou Email</label>
+          <div class="input-group">
+            <span class="input-group-text"><i class="bi bi-person-fill"></i></span>
+            <input
+              type="text"
+              id="username"
+              class="form-control form-control-lg"
+              [(ngModel)]="username"
+              name="usernameInput"
+              required
+              placeholder="Seu login ou email"
+              autocomplete="username"
+              [disabled]="isLoading"
+            />
+          </div>
+        </div>
+        <div class="mb-4">
+          <label for="password" class="form-label fw-semibold">Senha</label>
+          <div class="input-group">
+            <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
+            <input
+              type="password"
+              id="password"
+              class="form-control form-control-lg"
+              [(ngModel)]="password"
+              name="password"
+              required
+              placeholder="Sua senha"
+              autocomplete="current-password"
+              [disabled]="isLoading"
+            />
+          </div>
+        </div>
+
+        <div *ngIf="error && !isLoading" class="alert alert-danger py-2 mb-3">{{ error }}</div>
+
+        <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold" [disabled]="isLoading">
+          <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+          <span *ngIf="isLoading">Entrando...</span>
+          <span *ngIf="!isLoading">Entrar</span>
+        </button>
+      </form>
+      <div class="text-center mt-4">
+      <a routerLink="/esqueci-senha" class="text-muted small">Esqueci minha senha</a>
+      </div>
+    </div>
+  </div>
+</div>

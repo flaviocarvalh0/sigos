@@ -1,5 +1,4 @@
 <div class="d-flex flex-column vh-100">
-  <!-- NAVBAR -->
   <nav class="navbar navbar-dark bg-primary fixed-top px-3 d-flex align-items-center">
     <div class="d-flex align-items-center">
       <button class="btn btn-outline-light me-3" (click)="toggleSidebar()">
@@ -13,25 +12,26 @@
         </div>
       </span>
     </div>
-
     <div class="ms-auto d-flex align-items-center gap-2">
-      <button *ngIf="auth.isLoggedIn()" class="btn btn-outline-light btn-sm" (click)="auth.logout()">
+      <span *ngIf="authService.isLoggedIn() && authService.currentUserValue?.nome" class="text-white me-2 small">
+        Olá, {{ authService.currentUserValue?.nome }}
+      </span>
+      <button *ngIf="authService.isLoggedIn()" class="btn btn-outline-light btn-sm" (click)="authService.logout()">
         Logout
       </button>
     </div>
   </nav>
 
-  <!-- LAYOUT -->
   <div class="d-flex flex-grow-1" style="margin-top: 56px;">
 
-    <!-- SIDEBAR -->
     <nav class="sidebar bg-light p-3 border-end" [class.collapsed]="isSidebarCollapsed">
       <div class="sidebar-menu">
         <div class="sidebar-group mb-4">
           <div class="sidebar-group-label text-muted text-uppercase small fw-bold mb-2">Menu Principal</div>
           <ul class="nav flex-column">
             <li class="nav-item mb-1">
-              <a routerLink="/ordem-servico" routerLinkActive="active" class="nav-link d-flex align-items-center rounded">
+              <a routerLink="/ordem-servico" routerLinkActive="active"
+                class="nav-link d-flex align-items-center rounded">
                 <i class="bi bi-clipboard-data me-2"></i>
                 <span>Ordens de Serviço</span>
               </a>
@@ -40,6 +40,13 @@
               <a routerLink="/cliente" routerLinkActive="active" class="nav-link d-flex align-items-center rounded">
                 <i class="bi bi-people-fill me-2"></i>
                 <span>Clientes</span>
+              </a>
+            </li>
+            <li class="nav-item mb-1">
+              <a routerLink="/admin/usuarios" routerLinkActive="active"
+                class="nav-link d-flex align-items-center rounded">
+                <i class="bi bi-person-lines-fill me-2"></i>
+                <span>Gerenciar Usuários</span>
               </a>
             </li>
             <li class="nav-item mb-1">
@@ -85,13 +92,15 @@
               </a>
             </li>
             <li class="nav-item mb-1">
-              <a routerLink="/prazo_garantia" routerLinkActive="active" class="nav-link d-flex align-items-center rounded">
+              <a routerLink="/prazo_garantia" routerLinkActive="active"
+                class="nav-link d-flex align-items-center rounded">
                 <i class="bi bi-calendar-check me-2"></i>
                 <span>Prazo Garantias</span>
               </a>
             </li>
-              <li class="nav-item mb-1">
-              <a routerLink="/movimento-estoque" routerLinkActive="active" class="nav-link d-flex align-items-center rounded">
+            <li class="nav-item mb-1">
+              <a routerLink="/movimento-estoque" routerLinkActive="active"
+                class="nav-link d-flex align-items-center rounded">
                 <i class="bi bi-arrow-down-up me-2"></i>
                 <span>Movimentações</span>
               </a>
@@ -101,21 +110,26 @@
       </div>
 
       <div class="sidebar-footer mt-auto pt-3 border-top">
-        <div class="user-profile d-flex align-items-center p-2 rounded">
-          <div class="avatar bg-primary text-white me-2">TC</div>
+        <div *ngIf="authService.isLoggedIn() && authService.currentUserValue as user"
+          class="user-profile d-flex align-items-center p-2 rounded">
+          <div class="avatar bg-secondary text-white me-2">
+            {{ user.nome ? user.nome.substring(0,1).toUpperCase() : 'U' }}
+          </div>
           <div class="user-info">
-            <div class="user-name fw-bold small">Técnico Admin</div>
-            <div class="user-email text-muted small">adminsigos.com</div>
+            <div class="user-name fw-bold small">{{ user.nome || user.login }}</div>
+            <div class="user-email text-muted small">{{ user.email }}</div>
           </div>
         </div>
       </div>
     </nav>
 
-    <!-- CONTEÚDO -->
-    <main class="main-content flex-grow-1 overflow-auto p-0"> <!-- Removido padding -->
-      <div class="container-fluid px-3 py-2 container py-4"> <!-- Adicionado container interno -->
+    <main class="main-content flex-grow-1 overflow-auto p-0">
+      <div class="container-fluid px-3 py-2 container py-4">
         <router-outlet></router-outlet>
       </div>
     </main>
   </div>
 </div>
+
+<app-toasts-container></app-toasts-container>
+<app-confirmation-dialog></app-confirmation-dialog>
