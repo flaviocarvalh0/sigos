@@ -1,71 +1,58 @@
 import { Injectable } from '@angular/core';
-import { Observable, of, throwError } from 'rxjs';
-import { Fornecedor } from '../Models/fornecedor.model';
-// ajuste o caminho conforme seu projeto
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
+import { Fornecedor, FornecedorCriacaoPayload, FornecedorAtualizacaoPayload } from '../Models/fornecedor.model';
+import { CrudService } from './crud.service';
+import { RespostaApi } from '../Models/reposta-api.model';
 
 @Injectable({
   providedIn: 'root'
 })
-export class FornecedorService {
+export class FornecedorService extends CrudService<Fornecedor, number> {
+  protected readonly apiUrlBase = 'https://localhost:7119/api'; // <<--- AJUSTE SE NECESSÁRIO
+  protected readonly endpoint = 'fornecedores'; // Conforme seu FornecedorController
 
-  private fornecedores: Fornecedor[] = [
-    {
-      id: 1,
-      nome: 'Fornecedor Exemplo',
-      cep: '12345-678',
-      celular: '(11) 99999-9999',
-      id_usuario_criador: 1,
-      id_usuario_modificador: 1,
-      telefone: '(11) 3333-4444',
-      email: 'exemplo@fornecedor.com',
-      logradouro: 'Rua Exemplo',
-      bairro: 'Bairro Exemplo',
-      cidade: 'Cidade Exemplo',
-      numero: '100',
-      pais: 'Brasil',
-      complemento: 'Complemento exemplo'
-    }
-  ];
-
-  constructor() { }
-
-  listar(): Observable<Fornecedor[]> {
-    return of(this.fornecedores);
+  constructor(http: HttpClient) {
+    super(http);
+    console.log(`[FornecedorService] Inicializado para interagir com: ${this.fullApiUrl}`);
   }
 
-  getById(id: number): Observable<Fornecedor> {
-    const fornecedor = this.fornecedores.find(f => f.id === id);
-    if (fornecedor) {
-      return of(fornecedor);
-    } else {
-      return throwError(() => new Error('Fornecedor não encontrado'));
-    }
+  // obterTodos() é herdado e usa GET /api/fornecedores
+  // obterPorId(id: number) é herdado e usa GET /api/fornecedores/{id}
+  // remover(id: number) é herdado e usa DELETE /api/fornecedores/{id}
+
+  // Sobrescrevendo criar para usar FornecedorCriacaoPayload.
+  criarFornecedor(payload: FornecedorCriacaoPayload): Observable<Fornecedor> {
+    return super.criar(payload as Omit<Fornecedor, 'id'>);
+    // Ou, para total controle do payload enviado à API, se houver diferenças sutis:
+    /*
+    return this.http.post<RespostaApi<Fornecedor>>(`${this.fullApiUrl}`, payload, this.getHttpOptions())
+      .pipe(
+        map(response => {
+          if (response.sucesso && response.dados) {
+            return response.dados;
+          }
+          console.error("Erro ao criar fornecedor (resposta API):", response.mensagem, response.erros);
+          throw new Error(response.mensagem || 'Falha ao criar fornecedor.');
+        }),
+        catchError(this.handleError)
+      );
+    */
   }
 
-  adicionar(fornecedor: Fornecedor): Observable<Fornecedor> {
-    const novoId = this.fornecedores.length > 0 ? Math.max(...this.fornecedores.map(f => f.id!)) + 1 : 1;
-    fornecedor.id = novoId;
-    this.fornecedores.push(fornecedor);
-    return of(fornecedor);
-  }
-
-  atualizar(id: number, fornecedorAtualizado: Fornecedor): Observable<Fornecedor> {
-    const index = this.fornecedores.findIndex(f => f.id === id);
-    if (index !== -1) {
-      this.fornecedores[index] = { ...fornecedorAtualizado, id };
-      return of(this.fornecedores[index]);
-    } else {
-      return throwError(() => new Error('Fornecedor não encontrado para atualizar'));
-    }
-  }
-
-  deletar(id: number): Observable<void> {
-    const index = this.fornecedores.findIndex(f => f.id === id);
-    if (index !== -1) {
-      this.fornecedores.splice(index, 1);
-      return of(void 0);
-    } else {
-      return throwError(() => new Error('Fornecedor não encontrado para deletar'));
-    }
+  // Sobrescrevendo atualizar para usar FornecedorAtualizacaoPayload.
+  atualizarFornecedor(id: number, payload: FornecedorAtualizacaoPayload): Observable<Fornecedor> {
+    return this.http.put<RespostaApi<Fornecedor>>(`${this.fullApiUrl}/${id}`, payload, this.getHttpOptions())
+      .pipe(
+        map(response => {
+          if (response.sucesso && response.dados) {
+            return response.dados;
+          }
+          console.error(`Erro ao atualizar fornecedor ${id} (resposta API):`, response.mensagem, response.erros);
+          throw new Error(response.mensagem || `Falha ao atualizar fornecedor ${id}.`);
+        }),
+        catchError(this.handleError)
+      );
   }
 }

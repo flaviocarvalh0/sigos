@@ -129,7 +129,7 @@ export class FormOrdemServicoComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.initForm();
-    this.loadInitialSelectData();
+    //this.loadInitialSelectData();
 
     const routeParamsSub = this.route.params.subscribe((params) => {
       this.isLoading = true;
@@ -306,43 +306,43 @@ ngAfterViewInit() {
     this.subscriptions.add(codigoSub);
   }
 
-  loadInitialSelectData(): void {
-    this.isLoading = true;
-    const requests = [
-      this.empresaService.getEmpresas().pipe(
-        tap((data) => {
-          this.empresas = data;
-          this.applyEmpresaRule();
-        })
-      ),
-      this.clienteService
-        .getClientes()
-        .pipe(tap((data) => (this.clientes = data))),
-      this.prazoGarantiaService
-        .listar()
-        .pipe(tap((data) => (this.prazosGarantia = data))),
-      this.servicoService
-        .listar()
-        .pipe(tap((data) => (this.servicosDisponiveis = data))),
-      this.catalogoPecaService
-        .listar()
-        .pipe(tap((data) => (this.pecasDisponiveis = data))),
+  // loadInitialSelectData(): void {
+  //   this.isLoading = true;
+  //   const requests = [
+  //     this.empresaService.getEmpresas().pipe(
+  //       tap((data) => {
+  //         this.empresas = data;
+  //         this.applyEmpresaRule();
+  //       })
+  //     ),
+  //     this.clienteService
+  //       .getClientes()
+  //       .pipe(tap((data) => (this.clientes = data))),
+  //     this.prazoGarantiaService
+  //       .listar()
+  //       .pipe(tap((data) => (this.prazosGarantia = data))),
+  //     this.servicoService
+  //       .listar()
+  //       .pipe(tap((data) => (this.servicosDisponiveis = data))),
+  //     this.catalogoPecaService
+  //       .listar()
+  //       .pipe(tap((data) => (this.pecasDisponiveis = data))),
 
-      this.marcaService.getMarcas().pipe(tap(data => this.marcas = data)),
-      this.modeloService.getModelos().pipe(tap(data => this.modelos = data))
-    ];
+  //     this.marcaService.getMarcas().pipe(tap(data => this.marcas = data)),
+  //     this.modeloService.getModelos().pipe(tap(data => this.modelos = data))
+  //   ];
 
-    const loadSub = forkJoin(requests).subscribe({
-      complete: () => {
-        if (!this.isEditMode) this.isLoading = false;
-      }, // Só para de carregar se não for edição, pois loadOrdemServicoAndRelatedItems tem seu próprio isLoading
-      error: (err) => {
-        console.error('Erro ao carregar dados iniciais para selects:', err);
-        this.isLoading = false;
-      },
-    });
-    this.subscriptions.add(loadSub);
-  }
+  //   const loadSub = forkJoin(requests).subscribe({
+  //     complete: () => {
+  //       if (!this.isEditMode) this.isLoading = false;
+  //     }, // Só para de carregar se não for edição, pois loadOrdemServicoAndRelatedItems tem seu próprio isLoading
+  //     error: (err) => {
+  //       console.error('Erro ao carregar dados iniciais para selects:', err);
+  //       this.isLoading = false;
+  //     },
+  //   });
+  //   this.subscriptions.add(loadSub);
+  // }
 
   getNomeMarca(idMarca: number): string {
     const marca = this.marcas.find(m => m.id === idMarca);

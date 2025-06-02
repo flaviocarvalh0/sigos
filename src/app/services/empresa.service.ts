@@ -1,67 +1,76 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, of } from 'rxjs';
-
-import { delay, map } from 'rxjs/operators';
-import { Empresa } from '../Models/empresa.model';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
+import { Empresa, EmpresaCriacaoPayload, EmpresaAtualizacaoPayload } from '../Models/empresa.model';
+import { CrudService } from './crud.service';
+import { RespostaApi } from '../Models/reposta-api.model';
 
 @Injectable({
   providedIn: 'root'
 })
-export class EmpresaService {
+export class EmpresaService extends CrudService<Empresa, number> {
+  // Defina a URL base da sua API.
+  protected readonly apiUrlBase = 'https://localhost:7119/api'; // <<--- AJUSTE SE NECESSÁRIO
+  protected readonly endpoint = 'empresas';
 
-  private empresasSubject = new BehaviorSubject<Empresa[]>([
-    {
-      id: 1,
-      razao_social: 'Empresa Exemplo Ltda',
-      cnpj: '12.345.678/0001-90',
-      cep: '12345-678',
-      cidade: 'São Paulo',
-      logradouro: 'Rua Exemplo',
-      numero: '100',
-      complemento: '',
-      bairro: 'Centro',
-      uf: 'SP',
-      pais: 'Brasil',
-      celular: '(11) 99999-9999',
-      email: 'contato@exemplo.com',
-      ativo: true,
-      nome_fantasia: ''
-    }
-  ]);
-
-  private nextId = 2;
-
-  constructor() {}
-
-  getEmpresas(): Observable<Empresa[]> {
-    // Simula delay de requisição
-    return this.empresasSubject.asObservable().pipe(delay(500));
+  constructor(http: HttpClient) {
+    super(http);
+    console.log(`[EmpresaService] Inicializado para interagir com: ${this.fullApiUrl}`);
   }
 
-  getEmpresaById(id: number): Observable<Empresa | undefined> {
-    return this.getEmpresas().pipe(
-      map(empresas => empresas.find(e => e.id === id))
-    );
+  // obterTodos() é herdado e usa GET /api/empresas
+  // obterPorId(id: number) é herdado e usa GET /api/empresas/{id}
+  // remover(id: number) é herdado e usa DELETE /api/empresas/{id}
+
+  // O método 'criar' da classe base CrudService<Empresa, number> espera Omit<Empresa, 'id'>.
+  // EmpresaCriacaoPayload já não tem 'id', então pode ser compatível.
+  // A API POST /api/empresas espera um EmpresaCriacaoDto.
+  // Se EmpresaCriacaoPayload for idêntico ao DTO, podemos usar super.criar.
+  // Caso contrário, sobrescrevemos para garantir o payload correto.
+  criarEmpresa(payload: EmpresaCriacaoPayload): Observable<Empresa> {
+    // O tipo EmpresaCriacaoPayload já está alinhado com o DTO da API.
+    // O CrudService.criar espera Omit<Empresa, 'id'>. Como EmpresaCriacaoPayload não tem id,
+    // e os outros campos devem corresponder (após serialização JSON para camelCase),
+    // podemos tentar usar o método da classe base com um type assertion.
+    return super.criar(payload as Omit<Empresa, 'id'>);
+    // Ou, para maior clareza e controle, fazer a chamada HTTP diretamente:
+    /*
+    return this.http.post<RespostaApi<Empresa>>(`${this.fullApiUrl}`, payload, this.getHttpOptions())
+      .pipe(
+        map(response => {
+          if (response.sucesso && response.dados) {
+            return response.dados;
+          }
+          console.error("Erro ao criar empresa (resposta API):", response.mensagem, response.erros);
+          throw new Error(response.mensagem || 'Falha ao criar empresa.');
+        }),
+        catchError(this.handleError) // handleError é herdado
+      );
+    */
   }
 
-  addEmpresa(empresa: Empresa): Observable<Empresa> {
-    const empresas = this.empresasSubject.getValue();
-    const novaEmpresa = { ...empresa, id: this.nextId++ };
-    this.empresasSubject.next([...empresas, novaEmpresa]);
-    return of(novaEmpresa).pipe(delay(500));
+  // O método 'atualizar' da classe base CrudService<Empresa, number> espera (id, Partial<Empresa> | Empresa).
+  // Seu DTO de atualização (EmpresaAtualizacaoPayload) é específico e inclui 'id' e 'dataUltimaModificacao'.
+  // É melhor sobrescrever para garantir que o payload correto seja enviado.
+  atualizarEmpresa(id: number, payload: EmpresaAtualizacaoPayload): Observable<Empresa> {
+    // A API PUT /api/empresas/{id} espera EmpresaAtualizacaoDto no corpo.
+    // O 'id' no payload deve corresponder ao 'id' na URL (sua API já valida isso).
+    return this.http.put<RespostaApi<Empresa>>(`${this.fullApiUrl}/${id}`, payload, this.getHttpOptions())
+      .pipe(
+        map(response => {
+          if (response.sucesso && response.dados) {
+            return response.dados;
+          }
+          console.error(`Erro ao atualizar empresa ${id} (resposta API):`, response.mensagem, response.erros);
+          throw new Error(response.mensagem || `Falha ao atualizar empresa ${id}.`);
+        }),
+        catchError(this.handleError) // handleError é herdado
+      );
   }
 
-  updateEmpresa(id: number, empresaAtualizada: Empresa): Observable<Empresa | undefined> {
-    let empresas = this.empresasSubject.getValue();
-    empresas = empresas.map(e => e.id === id ? { ...empresaAtualizada, id } : e);
-    this.empresasSubject.next(empresas);
-    return of(empresaAtualizada).pipe(delay(500));
-  }
-
-  deleteEmpresa(id: number): Observable<void> {
-    let empresas = this.empresasSubject.getValue();
-    empresas = empresas.filter(e => e.id !== id);
-    this.empresasSubject.next(empresas);
-    return of(void 0).pipe(delay(500));
-  }
+  // Se você tinha métodos específicos como 'getEmpresas()' no seu serviço mockado original,
+  // eles agora são substituídos por 'obterTodos()'.
+  // Se precisar de métodos adicionais específicos para Empresa, adicione-os aqui.
+  // Ex: obterEmpresaAtiva(): Observable<Empresa | undefined> { ... }
 }

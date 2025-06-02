@@ -141,11 +141,21 @@ export class FormUsuarioComponent implements OnInit, OnDestroy {
     return null; // Nenhuma falha de validação a nível de grupo se tudo estiver ok ou se senha estiver vazia.
   }
 
-  loadEmpresas(): void {
-    const empresaSub = this.empresaService.getEmpresas().subscribe(
-      data => this.empresas = data,
-      err => this.toastService.error('Erro ao carregar empresas. ' + (err.message || ''))
-    );
+ loadEmpresas(): void {
+    this.isLoading = true; // Opcional: indicar carregamento se fizer sentido para a UI
+    const empresaSub = this.empresaService.obterTodos().subscribe({ // Chama obterTodos()
+      next: (data: Empresa[]) => {
+        this.empresas = data;
+        // this.isLoading = false; // Desative o isLoading se ativou
+        console.log('Empresas carregadas:', this.empresas);
+      },
+      error: (err) => {
+        // O método handleError do CrudService já deve ter formatado o err.message
+        this.toastService.error('Erro ao carregar empresas: ' + (err.message || 'Verifique a API.'));
+        console.error('Erro ao carregar empresas:', err);
+        // this.isLoading = false; // Desative o isLoading se ativou
+      }
+    });
     this.subscriptions.add(empresaSub);
   }
 

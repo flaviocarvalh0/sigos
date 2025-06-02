@@ -1,51 +1,67 @@
-<div class="container mt-4">
-  <h2>Fornecedores</h2>
-  <button class="btn btn-primary mb-3" (click)="novo()">Novo Fornecedor</button>
-  <div class="table-responsive">
-    <div *ngIf="carregando" class="text-center">
-      <div class="spinner-border" role="status"><span class="visually-hidden">Carregando...</span></div>
+<div class="container mt-4 mb-5">
+  <div class="card shadow-sm">
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+      <h4 class="mb-0"><i class="fas fa-truck me-2"></i>Lista de Fornecedores</h4>
+      <button class="btn btn-sm btn-light" (click)="navegarParaNovoFornecedor()">
+        <i class="fas fa-plus me-1"></i> Novo Fornecedor
+      </button>
     </div>
-  
-    <div *ngIf="!carregando && fornecedores.length === 0" class="alert alert-info">
-      Nenhuma marca cadastrada.
+    <div class="card-body">
+      <div *ngIf="isLoading" class="text-center my-5">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Carregando fornecedores...</span>
+        </div>
+        <p class="mt-2">Carregando fornecedores...</p>
+      </div>
+
+      <div *ngIf="!isLoading && fornecedores.length === 0 && !error" class="alert alert-info text-center">
+        Nenhum fornecedor cadastrado.
+      </div>
+
+       <div *ngIf="!isLoading && error" class="alert alert-danger">
+        {{ error }}
+      </div>
+
+
+      <div class="table-responsive" *ngIf="!isLoading && fornecedores.length > 0">
+        <table class="table table-hover table-striped table-sm">
+          <thead class="table-light">
+            <tr>
+              <th>ID</th>
+              <th>Razão Social</th>
+              <th>Nome Fantasia</th>
+              <th>CNPJ</th>
+              <th>Email</th>
+              <th>Celular</th>
+              <th>Ativo</th>
+              <th style="width: 120px;" class="text-center">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let fornecedor of fornecedores">
+              <td>{{ fornecedor.id }}</td>
+              <td>{{ fornecedor.razaoSocial }}</td>
+              <td>{{ fornecedor.nomeFantasia || '-' }}</td>
+              <td>{{ (fornecedor.cnpj! | mask: '00.000.000/0000-00') ?? '-' }}</td>
+              <td>{{ fornecedor.email || '-' }}</td>
+              <td>{{ fornecedor.celular ? (fornecedor.celular | mask: '(00) 00000-0000') : '-' }}</td>
+              <td class="text-center">
+                <span class="badge" [ngClass]="fornecedor.ativo ? 'bg-success' : 'bg-secondary'">
+                  {{ fornecedor.ativo ? 'Sim' : 'Não' }}
+                </span>
+              </td>
+              <td class="text-center">
+                <button class="btn btn-sm btn-outline-primary me-2" title="Editar" (click)="editarFornecedor(fornecedor.id)">
+                  <i class="bi bi-pencil"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-danger" title="Excluir" (click)="excluirFornecedor(fornecedor.id, fornecedor.razaoSocial)">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
-  
-    <table *ngIf="!carregando && fornecedores.length > 0" class="table table-bordered">
-    <thead class="table-light">
-      <tr>
-        <th>Nome</th>
-        <th>Celular</th>
-        <th>Email</th>
-        <th>Ações</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let f of fornecedores">
-        <td>{{ f.nome }}</td>
-        <td>{{ f.celular }}</td>
-        <td>{{ f.email }}</td>
-        <td>
-          <!-- Ações com layout responsivo -->
-          <div class="d-flex gap-2">
-            <!-- Botões com texto visíveis em telas md+ -->
-            <button class="btn btn-sm btn-warning d-none d-md-inline" (click)="editar(f.id!)">
-              Editar
-            </button>
-            <button class="btn btn-sm btn-danger d-none d-md-inline" (click)="excluir(f.id!)">
-              Excluir
-            </button>
-        
-            <!-- Ícones visíveis em telas pequenas -->
-            <button class="btn btn-sm btn-warning d-inline d-md-none" title="Editar" (click)="editar(f.id!)">
-              <i class="bi bi-pencil"></i>
-            </button>
-            <button class="btn btn-sm btn-danger d-inline d-md-none" title="Excluir" (click)="excluir(f.id!)">
-              <i class="bi bi-trash"></i>
-            </button>
-          </div>
-        </td>
-        
-      </tr>
-    </tbody>
-  </table>
+  </div>
 </div>

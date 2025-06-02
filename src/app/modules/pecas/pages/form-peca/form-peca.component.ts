@@ -8,6 +8,7 @@ import { PecaService } from '../../../../services/peca.service';
 import { NgIf } from '@angular/common';
 import { FornecedorService } from '../../../../services/fornecedor.service';
 import { ActivatedRoute, Router } from '@angular/router';
+import { Fornecedor } from '../../../../Models/fornecedor.model';
 
 declare const bootstrap: any;
 
@@ -30,6 +31,9 @@ export class FormPecaComponent implements OnInit {
   marcas: any[] = [];
   modelos: any[] = [];
   fornecedores: any[] = [];
+  isLoadingFornecedores: boolean = false;
+  toastService: any;
+  subscriptions: any;
 
 
   constructor(
@@ -80,9 +84,28 @@ export class FormPecaComponent implements OnInit {
       this.modelos = modelos.map(m => ({ id: m.id, nome: m.nome }));
     });
 
-    this.fornecedorService.listar().subscribe(fornecedores => {
-      this.fornecedores = fornecedores.map(f => ({ id: f.id, nome: f.nome }));
+    this.carregarFornecedoresParaSelect();
+  }
+
+  carregarFornecedoresParaSelect(): void {
+    this.isLoadingFornecedores = true;
+    // O método no seu FornecedorService é listar()
+    const sub = this.fornecedorService.obterTodos().subscribe({
+      next: (fornecedoresApi: Fornecedor[]) => {
+        this.fornecedores = fornecedoresApi.map(f => ({
+          id: f.id!, // Usando non-null assertion operator pois o ID deve existir
+          nome: f.nomeFantasia || f.razaoSocial || 'Nome Indefinido' // Prioriza nomeFantasia, depois razaoSocial
+        }));
+        this.isLoadingFornecedores = false;
+        console.log('Fornecedores carregados para select:', this.fornecedores);
+      },
+      error: (err) => {
+        console.error('Erro ao carregar fornecedores:', err);
+        this.toastService.error('Erro ao carregar fornecedores. ' + (err.message || ''));
+        this.isLoadingFornecedores = false;
+      }
     });
+    this.subscriptions.add(sub);
   }
 
   carregarDadosPeca(): void {
