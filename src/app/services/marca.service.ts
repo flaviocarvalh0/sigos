@@ -1,49 +1,71 @@
+// src/app/services/marca.service.ts
+
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, of } from 'rxjs';
-import { Marca } from '../Models/marca.model';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
+
+import { Marca, MarcaCriacaoPayload, MarcaAtualizacaoPayload } from '../Models/marca.model'; // Ajuste o path
+import { RespostaApi } from '../Models/reposta-api.model'; // Ajuste o path
+import { CrudService } from './crud.service';
 
 @Injectable({
   providedIn: 'root'
 })
-export class MarcaService {
-  private marcas: Marca[] = [
-    { id: 1, nome: 'Samsung', id_usuario_criador: 1, id_usuario_modificador: 1 },
-    { id: 2, nome: 'Apple', id_usuario_criador: 1, id_usuario_modificador: 1 },
-    { id: 3, nome: 'Motorola', id_usuario_criador: 1, id_usuario_modificador: 1 }
-  ];
+export class MarcaService extends CrudService<Marca, number> {
+  protected readonly apiUrlBase = 'https://localhost:7119/api'; // Ajuste a URL/porta da sua API
+  protected readonly endpoint = 'marcas'; // Endpoint da API para Marcas
 
-  private marcasSubject = new BehaviorSubject<Marca[]>(this.marcas);
-  private proximoId = 4;
+  constructor(http: HttpClient) {
+    super(http);
+    console.log(`[MarcaService] Inicializado para interagir com: ${this.fullApiUrl}`);
+  }
 
+  // O método obterPorId(id: number): Observable<Marca | undefined> é herdado.
+  // O método obterTodos(queryParams?): Observable<Marca[]> é herdado.
+  // O método remover(id: number): Observable<void> é herdado.
+
+  // Wrapper para manter compatibilidade com chamadas existentes de getMarcas()
+  // Idealmente, os componentes deveriam chamar obterTodos() diretamente.
   getMarcas(): Observable<Marca[]> {
-    return this.marcasSubject.asObservable();
+    return this.obterTodos();
   }
 
-  getMarcaById(id: number): Observable<Marca | undefined> {
-    const marca = this.marcas.find(m => m.id === id);
-    return of(marca);
+  // Sobrescrevendo 'criar' para usar o payload específico MarcaCriacaoPayload.
+  // O Controller C# para Marca espera MarcaCriacaoDto e mapeia para a entidade Marca.
+  override criar(payload: MarcaCriacaoPayload): Observable<Marca> {
+    return this.http.post<RespostaApi<Marca>>(`${this.fullApiUrl}`, payload, this.getHttpOptions())
+      .pipe(
+        map(response => {
+          if (response.sucesso && response.dados) {
+            return response.dados; // API retorna a Marca criada
+          }
+          console.error("Erro ao criar marca (resposta API):", response.mensagem, response.erros);
+          throw new Error(response.mensagem || 'Falha ao criar marca.');
+        }),
+        catchError(this.handleError) // Reutiliza o handleError da classe base
+      );
   }
 
-  salvar(marca: Omit<Marca, 'id'>): Observable<Marca> {
-    const novaMarca = { ...marca, id: this.proximoId++ };
-    this.marcas.push(novaMarca);
-    this.marcasSubject.next(this.marcas);
-    return of(novaMarca);
+  // Sobrescrevendo 'atualizar' para usar o payload específico MarcaAtualizacaoPayload.
+  // Este payload inclui 'dataUltimaModificacao' para controle de concorrência.
+  // O Controller C# para Marca espera MarcaAtualizacaoDto.
+  override atualizar(id: number, payload: MarcaAtualizacaoPayload): Observable<Marca> {
+    return this.http.put<RespostaApi<Marca>>(`${this.fullApiUrl}/${id}`, payload, this.getHttpOptions())
+      .pipe(
+        map(response => {
+          if (response.sucesso && response.dados) {
+            return response.dados; // API retorna a Marca atualizada
+          }
+          // O handleError da classe base já trata erros HTTP, incluindo 409 (Conflito)
+          // se o backend retornar esse status com uma RespostaApi correspondente.
+          console.error(`Erro ao atualizar marca ${id} (resposta API):`, response.mensagem, response.erros);
+          throw new Error(response.mensagem || `Falha ao atualizar marca ${id}.`);
+        }),
+        catchError(this.handleError) // Reutiliza o handleError da classe base
+      );
   }
 
-  atualizar(marcaAtualizada: Marca): Observable<Marca | undefined> {
-    const index = this.marcas.findIndex(m => m.id === marcaAtualizada.id);
-    if (index !== -1) {
-      this.marcas[index] = { ...marcaAtualizada };
-      this.marcasSubject.next(this.marcas);
-      return of(this.marcas[index]);
-    }
-    return of(undefined);
-  }
-
-  excluir(id: number): Observable<void> {
-    this.marcas = this.marcas.filter(m => m.id !== id);
-    this.marcasSubject.next(this.marcas);
-    return of(void 0);
-  }
+  // Se houver métodos específicos para 'Marca' que não são CRUD genéricos,
+  // eles podem ser adicionados aqui.
 }

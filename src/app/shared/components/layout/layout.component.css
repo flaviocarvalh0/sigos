@@ -1,13 +1,13 @@
 /* Sidebar Styles - Cores fixas */
 .sidebar {
   width: 250px;
-  min-width: 250px; /* Adicionado para evitar colapso */
+  min-width: 250px;
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
   transition: transform 0.3s ease, width 0.3s ease;
-  background-color: #0d6efd; /* Azul Bootstrap primary */
-  color: white;
+  background-color: #f8f9fa !important; /* Tom opaco suave */
+  color: #212529;
   border-right: 1px solid rgba(0, 0, 0, 0.1);
 }
 
@@ -22,7 +22,7 @@
 .logo-icon {
   width: 32px;
   height: 32px;
-  background-color: white;
+  background-color: black;
   color: #0d6efd; /* Azul Bootstrap primary */
   border-radius: 6px;
   display: flex;
@@ -34,7 +34,7 @@
 
 /* Itens do menu */
 .sidebar-menu .nav-link {
-  color: black;
+  color: #212529 !important;
   padding: 0.75rem 1rem;
   transition: all 0.2s ease;
   display: flex;
@@ -45,11 +45,11 @@
 }
 
 .sidebar-menu .nav-link:hover {
-  background-color: rgba(255, 255, 255, 0.15);
+  background-color: rgba(0, 0, 0, 0.05);
 }
 
 .sidebar-menu .nav-link.active {
-  background-color: rgba(255, 255, 255, 0.25);
+  background-color: rgba(0, 0, 0, 0.1);
   font-weight: 500;
 }
 
@@ -57,7 +57,7 @@
   width: 20px;
   text-align: center;
   font-size: 1.1rem;
-  color: black;
+  color: #212529 !important;
 }
 
 /* Grupos e labels */
@@ -67,7 +67,7 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(0, 0, 0, 0.6);
 }
 
 /* Perfil do usuário */
@@ -76,11 +76,11 @@
   padding: 0.75rem;
   border-radius: 8px;
   margin-top: auto;
-  color: white;
+  color: #212529;
 }
 
 .user-profile:hover {
-  background-color: rgba(255, 255, 255, 0.15);
+  background-color: rgba(0, 0, 0, 0.05);
 }
 
 .avatar {
@@ -92,8 +92,8 @@
   justify-content: center;
   font-size: 14px;
   font-weight: 500;
-  background-color: rgba(255, 255, 255, 0.2);
-  color: white;
+  background-color: rgba(0, 0, 0, 0.1);
+  color: #212529;
 }
 
 .user-info {
@@ -104,38 +104,66 @@
 .user-name {
   font-size: 0.875rem;
   font-weight: 500;
-  color: black;
+  color: #212529;
 }
 
 .user-email {
   font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(0, 0, 0, 0.6);
+}
+
+/* Acordeons na sidebar */
+.accordion-button,
+.accordion-item {
+  background-color: transparent !important;
+  color: #212529 !important;
+  box-shadow: none !important;
+}
+
+.accordion-button:not(.collapsed) {
+  color: #212529 !important;
+}
+
+.accordion-button::after {
+  filter: none;
 }
 
 /* Conteúdo principal e responsividade */
 .main-content .container-fluid,
 .main-content .container {
-  padding-left: 0; /* Remove padding extra */
+  padding-left: 0;
   padding-right: 0;
 }
 
-/* Ajustes para o grid/tabela de clientes */
+/* Tabelas e grids */
 .table-responsive {
-  margin: 0; /* Remove margens padrão */
+  margin: 0;
   padding: 0;
 }
 
-.sidebar.collapsed ~ .main-content {
-  margin-left: 0;
+/* Navbar fixada no topo */
+.navbar {
+  z-index: 1050;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background-color: #0d6efd !important; /* Azul bootstrap */
+  color: white;
 }
 
-/* Ajustes para telas menores (mobile) */
+/* Ajuste no conteúdo principal para compensar navbar */
+.main-content {
+  padding-top: 56px;
+}
+
+/* Sidebar responsiva (mobile) */
 @media (max-width: 767.98px) {
   .sidebar {
     position: fixed;
-    top: 56px; /* Altura da navbar */
+    top: 56px;
     left: 0;
-    height: calc(100vh - 56px); /* Altura total menos navbar */
+    height: calc(100vh - 56px);
     z-index: 1040;
     transform: translateX(-100%);
     box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
@@ -151,16 +179,6 @@
   }
 }
 
-/* Garantir que a navbar sempre fique no topo */
-.navbar {
-  z-index: 1050; /* Z-index maior que o da sidebar */
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-}
-
-/* Ajuste no conteúdo principal para mobile */
-.main-content {
-  padding-top: 56px; /* Compensa a navbar fixa */
+.sidebar.collapsed ~ .main-content {
+  margin-left: 0;
 }

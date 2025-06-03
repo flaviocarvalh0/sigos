@@ -29,6 +29,8 @@ import { ListUsuarioComponent } from './modules/usuario/pages/list-usuario/list-
 import { EsqueciSenhaComponent } from './modules/usuario/pages/esqueci-senha/esqueci-senha.component';
 import { FormUsuarioComponent } from './modules/usuario/pages/form-usuario/form-usuario.component';
 import { LoginComponent } from './modules/usuario/pages/login/login.component';
+import { ListCategoriaComponent } from './modules/cateogira/pages/list-categoria/list-categoria.component';
+import { FormCategoriaComponent } from './modules/categoria/pages/form-categoria/form-categoria.component';
 
 export const routes: Routes = [
   {
@@ -171,6 +173,14 @@ export const routes: Routes = [
         canActivate: [RoleGuard],
         //data: { expectedRoles: ['admin'] },
       },
+
+      {
+  path: 'categoria',
+  component: ListCategoriaComponent,
+  data: { animation: 'CategoriaPage' },
+},
+{ path: 'categoria/form', component: FormCategoriaComponent },
+{ path: 'categoria/form/:id', component: FormCategoriaComponent },
 
       // Redirecionamentos por último
       { path: '', redirectTo: '/ordem-servico', pathMatch: 'full' },

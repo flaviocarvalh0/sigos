@@ -1,0 +1,42 @@
+<form [formGroup]="formCategoria" (ngSubmit)="onSubmit()" *ngIf="!isLoading" novalidate>
+  <div class="container mt-4 mb-5">
+    <div class="card shadow-sm">
+      <div class="card-header bg-primary text-white">
+        <h4 class="mb-0">
+          <i class="bi bi-bookmark-plus me-2" *ngIf="!isEditando"></i>
+          <i class="bi bi-bookmark-check me-2" *ngIf="isEditando"></i>
+          {{ cardTitle }}
+        </h4>
+      </div>
+      <div class="card-body">
+        <div class="mb-3">
+          <label for="nome" class="form-label">Nome da Categoria <span class="text-danger">*</span></label>
+          <input id="nome" type="text" class="form-control" formControlName="nome"
+                 placeholder="Ex: Smartphones, Acessórios"
+                 [ngClass]="{'is-invalid': isInvalidControl('nome')}">
+          <div *ngIf="isInvalidControl('nome')" class="invalid-feedback">
+            <span *ngIf="getControlErrors('nome')?.['required']">Nome é obrigatório.</span>
+            <span *ngIf="getControlErrors('nome')?.['minlength']">
+              Nome deve ter no mínimo {{ getControlErrors('nome')?.['minlength'].requiredLength }} caracteres.
+            </span>
+            <span *ngIf="getControlErrors('nome')?.['maxlength']">
+              Nome deve ter no máximo {{ getControlErrors('nome')?.['maxlength'].requiredLength }} caracteres.
+            </span>
+          </div>
+        </div>
+
+  
+
+        <div class="d-flex justify-content-end mt-4">
+          <button type="button" class="btn btn-secondary me-2" (click)="onCancelar()">
+            <i class="bi bi-x-lg me-1"></i> Cancelar
+          </button>
+          <button type="submit" class="btn btn-success" [disabled]="formCategoria.invalid || isLoading">
+            <span *ngIf="!isLoading"><i class="bi bi-check-lg me-1"></i> {{ saveButtonText }}</span>
+            <span *ngIf="isLoading"><span class="spinner-border spinner-border-sm me-1"></span> Salvando...</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</form>

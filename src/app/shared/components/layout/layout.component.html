@@ -1,9 +1,6 @@
 <div class="d-flex flex-column vh-100">
   <nav class="navbar navbar-dark bg-primary fixed-top px-3 d-flex align-items-center">
-    <div class="d-flex align-items-center">
-      <button class="btn btn-outline-light me-3" (click)="toggleSidebar()">
-        <i class="bi bi-list"></i>
-      </button>
+    <div class="d-flex align-items-center gap-3">
       <span class="navbar-brand mb-0 h1 d-flex align-items-center gap-2">
         <div class="logo-icon">OS</div>
         <div>
@@ -11,6 +8,9 @@
           <small class="navbar-subtitle">Sistema de OS</small>
         </div>
       </span>
+      <button class="btn btn-outline-light btn-sm" (click)="toggleSidebar()">
+        <i class="bi bi-list"></i>
+      </button>
     </div>
     <div class="ms-auto d-flex align-items-center gap-2">
       <span *ngIf="authService.isLoggedIn() && authService.currentUserValue?.nome" class="text-white me-2 small">
@@ -23,92 +23,169 @@
   </nav>
 
   <div class="d-flex flex-grow-1" style="margin-top: 56px;">
-
-    <nav class="sidebar bg-light p-3 border-end" [class.collapsed]="isSidebarCollapsed">
+    <nav class="sidebar bg-primary p-3 border-end text-white" [class.collapsed]="isSidebarCollapsed">
       <div class="sidebar-menu">
-        <div class="sidebar-group mb-4">
-          <div class="sidebar-group-label text-muted text-uppercase small fw-bold mb-2">Menu Principal</div>
-          <ul class="nav flex-column">
-            <li class="nav-item mb-1">
-              <a routerLink="/ordem-servico" routerLinkActive="active"
-                class="nav-link d-flex align-items-center rounded">
-                <i class="bi bi-clipboard-data me-2"></i>
-                <span>Ordens de Serviço</span>
-              </a>
-            </li>
-            <li class="nav-item mb-1">
-              <a routerLink="/cliente" routerLinkActive="active" class="nav-link d-flex align-items-center rounded">
-                <i class="bi bi-people-fill me-2"></i>
-                <span>Clientes</span>
-              </a>
-            </li>
-            <li class="nav-item mb-1">
-              <a routerLink="/admin/usuarios" routerLinkActive="active"
-                class="nav-link d-flex align-items-center rounded">
-                <i class="bi bi-person-lines-fill me-2"></i>
-                <span>Gerenciar Usuários</span>
-              </a>
-            </li>
-            <li class="nav-item mb-1">
-              <a routerLink="/fornecedor" routerLinkActive="active" class="nav-link d-flex align-items-center rounded">
-                <i class="bi bi-truck me-2"></i>
-                <span>Fornecedores</span>
-              </a>
-            </li>
-            <li class="nav-item mb-1">
-              <a routerLink="/empresa" routerLinkActive="active" class="nav-link d-flex align-items-center rounded">
-                <i class="bi bi-building me-2"></i>
-                <span>Empresa</span>
-              </a>
-            </li>
-            <li class="nav-item mb-1">
-              <a routerLink="/aparelho" routerLinkActive="active" class="nav-link d-flex align-items-center rounded">
-                <i class="bi bi-phone-fill me-2"></i>
-                <span>Aparelhos</span>
-              </a>
-            </li>
-            <li class="nav-item mb-1">
-              <a routerLink="/marca" routerLinkActive="active" class="nav-link d-flex align-items-center rounded">
-                <i class="bi bi-tag me-2"></i>
-                <span>Marcas</span>
-              </a>
-            </li>
-            <li class="nav-item mb-1">
-              <a routerLink="/modelo" routerLinkActive="active" class="nav-link d-flex align-items-center rounded">
-                <i class="bi bi-badge-tm me-2"></i>
-                <span>Modelos</span>
-              </a>
-            </li>
-            <li class="nav-item mb-1">
-              <a routerLink="/servico" routerLinkActive="active" class="nav-link d-flex align-items-center rounded">
-                <i class="bi bi-tools me-2"></i>
-                <span>Serviços</span>
-              </a>
-            </li>
-            <li class="nav-item mb-1">
-              <a routerLink="/peca" routerLinkActive="active" class="nav-link d-flex align-items-center rounded">
-                <i class="bi bi-gear-fill me-2"></i>
-                <span>Peças</span>
-              </a>
-            </li>
-            <li class="nav-item mb-1">
-              <a routerLink="/prazo_garantia" routerLinkActive="active"
-                class="nav-link d-flex align-items-center rounded">
-                <i class="bi bi-calendar-check me-2"></i>
-                <span>Prazo Garantias</span>
-              </a>
-            </li>
-            <li class="nav-item mb-1">
-              <a routerLink="/movimento-estoque" routerLinkActive="active"
-                class="nav-link d-flex align-items-center rounded">
-                <i class="bi bi-arrow-down-up me-2"></i>
-                <span>Movimentações</span>
-              </a>
-            </li>
-          </ul>
+        <div class="accordion" id="sidebarAccordion">
+
+          <!-- Menu Principal (aberto por padrão) -->
+          <div class="accordion-item bg-transparent border-0">
+            <h2 class="accordion-header">
+              <button class="accordion-button bg-transparent text-dark" type="button" data-bs-toggle="collapse"
+                data-bs-target="#menuPrincipal" aria-expanded="true">
+                Menu Principal
+              </button>
+            </h2>
+            <div id="menuPrincipal" class="accordion-collapse collapse show" data-bs-parent="#sidebarAccordion">
+              <ul class="nav flex-column px-2">
+                <li class="nav-item mb-1">
+                  <a routerLink="/ordem-servico" routerLinkActive="active"
+                    class="nav-link d-flex align-items-center rounded">
+                    <i class="bi bi-clipboard-data me-2"></i>
+                    <span>Ordens de Serviço</span>
+                  </a>
+                </li>
+                <li class="nav-item mb-1">
+                  <a routerLink="/cliente" routerLinkActive="active" class="nav-link d-flex align-items-center rounded">
+                    <i class="bi bi-people-fill me-2"></i>
+                    <span>Clientes</span>
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Cadastros Gerais -->
+          <div class="accordion-item bg-transparent border-0">
+            <h2 class="accordion-header">
+              <button class="accordion-button bg-transparent text-dark collapsed" type="button"
+                data-bs-toggle="collapse" data-bs-target="#cadastrosGerais">
+                Cadastros Gerais
+              </button>
+            </h2>
+            <div id="cadastrosGerais" class="accordion-collapse collapse" data-bs-parent="#sidebarAccordion">
+              <ul class="nav flex-column px-2">
+                <li class="nav-item mb-1">
+                  <a routerLink="/empresa" routerLinkActive="active" class="nav-link d-flex align-items-center rounded">
+                    <i class="bi bi-building me-2"></i>
+                    <span>Empresa</span>
+                  </a>
+                </li>
+                <li class="nav-item mb-1">
+                  <a routerLink="/fornecedor" routerLinkActive="active"
+                    class="nav-link d-flex align-items-center rounded">
+                    <i class="bi bi-truck me-2"></i>
+                    <span>Fornecedores</span>
+                  </a>
+                </li>
+                <li class="nav-item mb-1">
+                  <a routerLink="/aparelho" routerLinkActive="active"
+                    class="nav-link d-flex align-items-center rounded">
+                    <i class="bi bi-phone-fill me-2"></i>
+                    <span>Aparelhos</span>
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Catálogo -->
+          <div class="accordion-item bg-transparent border-0">
+            <h2 class="accordion-header">
+              <button class="accordion-button bg-transparent text-dark collapsed" type="button"
+                data-bs-toggle="collapse" data-bs-target="#catalogo">
+                Catálogo
+              </button>
+            </h2>
+            <div id="catalogo" class="accordion-collapse collapse" data-bs-parent="#sidebarAccordion">
+              <ul class="nav flex-column px-2">
+                <li class="nav-item mb-1">
+                  <a routerLink="/marca" routerLinkActive="active" class="nav-link d-flex align-items-center rounded">
+                    <i class="bi bi-tag me-2"></i>
+                    <span>Marcas</span>
+                  </a>
+                </li>
+                <li class="nav-item mb-1">
+                  <a routerLink="/modelo" routerLinkActive="active" class="nav-link d-flex align-items-center rounded">
+                    <i class="bi bi-badge-tm me-2"></i>
+                    <span>Modelos</span>
+                  </a>
+                </li>
+                <li class="nav-item mb-1">
+                  <a routerLink="/categoria" routerLinkActive="active"
+                    class="nav-link d-flex align-items-center rounded">
+                    <i class="bi bi-tags me-2"></i>
+                    <span>Categorias</span>
+                  </a>
+                </li>
+                <li class="nav-item mb-1">
+                  <a routerLink="/servico" routerLinkActive="active" class="nav-link d-flex align-items-center rounded">
+                    <i class="bi bi-tools me-2"></i>
+                    <span>Serviços</span>
+                  </a>
+                </li>
+                <li class="nav-item mb-1">
+                  <a routerLink="/peca" routerLinkActive="active" class="nav-link d-flex align-items-center rounded">
+                    <i class="bi bi-gear-fill me-2"></i>
+                    <span>Peças</span>
+                  </a>
+                </li>
+                <li class="nav-item mb-1">
+                  <a routerLink="/prazo_garantia" routerLinkActive="active"
+                    class="nav-link d-flex align-items-center rounded">
+                    <i class="bi bi-calendar-check me-2"></i>
+                    <span>Prazo Garantias</span>
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Estoque -->
+          <div class="accordion-item bg-transparent border-0">
+            <h2 class="accordion-header">
+              <button class="accordion-button bg-transparent text-dark collapsed" type="button"
+                data-bs-toggle="collapse" data-bs-target="#estoque">
+                Estoque
+              </button>
+            </h2>
+            <div id="estoque" class="accordion-collapse collapse" data-bs-parent="#sidebarAccordion">
+              <ul class="nav flex-column px-2">
+                <li class="nav-item mb-1">
+                  <a routerLink="/movimento-estoque" routerLinkActive="active"
+                    class="nav-link d-flex align-items-center rounded">
+                    <i class="bi bi-arrow-down-up me-2"></i>
+                    <span>Movimentações</span>
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Gerenciamento da Plataforma -->
+          <div class="accordion-item bg-transparent border-0">
+            <h2 class="accordion-header">
+              <button class="accordion-button bg-transparent text-dark collapsed" type="button"
+                data-bs-toggle="collapse" data-bs-target="#plataforma">
+                Gerenciamento da Plataforma
+              </button>
+            </h2>
+            <div id="plataforma" class="accordion-collapse collapse" data-bs-parent="#sidebarAccordion">
+              <ul class="nav flex-column px-2">
+                <li class="nav-item mb-1">
+                  <a routerLink="/admin/usuarios" routerLinkActive="active"
+                    class="nav-link d-flex align-items-center rounded">
+                    <i class="bi bi-person-lines-fill me-2"></i>
+                    <span>Usuários</span>
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+
         </div>
       </div>
 
+      <!-- Rodapé com usuário -->
       <div class="sidebar-footer mt-auto pt-3 border-top">
         <div *ngIf="authService.isLoggedIn() && authService.currentUserValue as user"
           class="user-profile d-flex align-items-center p-2 rounded">
@@ -116,7 +193,7 @@
             {{ user.nome ? user.nome.substring(0,1).toUpperCase() : 'U' }}
           </div>
           <div class="user-info">
-            <div class="user-name fw-bold small">{{ user.nome || user.login }}</div>
+            <div class="user-name fw-bold small text-dark">{{ user.nome || user.login }}</div>
             <div class="user-email text-muted small">{{ user.email }}</div>
           </div>
         </div>
