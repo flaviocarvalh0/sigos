@@ -1,73 +1,97 @@
-<div class="container mt-4">
-  <div class="card shadow">
+<div class="container mt-4 mb-5">
+  <div class="card shadow-sm">
     <div class="card-header bg-primary text-white">
-      <h5 class="mb-0">{{ isEditando ? 'Editar Serviço' : 'Cadastrar Serviço' }}</h5>
+      <h4 class="mb-0">
+        <i class="bi bi-wrench-adjustable-circle me-2"></i> {{ cardTitle }}
+      </h4>
     </div>
     <div class="card-body">
-      <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
-        <!-- Nome do Serviço -->
-        <div class="mb-3">
-          <label for="nome" class="form-label">Nome <span class="text-danger">*</span></label>
-          <input id="nome" type="text" class="form-control" formControlName="nome"
-            [class.is-invalid]="form.get('nome')?.invalid && form.get('nome')?.touched"
-            placeholder="Nome do serviço">
-          <div *ngIf="form.get('nome')?.invalid && form.get('nome')?.touched" class="text-danger small">
-            Nome é obrigatório (mínimo 2 caracteres).
+      <div *ngIf="isLoading" class="text-center my-5">
+        <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+          <span class="visually-hidden">Carregando...</span>
+        </div>
+        <p class="mt-2">Processando dados do serviço...</p>
+      </div>
+
+      <form [formGroup]="formServico" (ngSubmit)="onSubmit()" *ngIf="!isLoading" novalidate>
+        <h5 class="mb-3 text-primary border-bottom pb-2">Detalhes do Serviço</h5>
+        <div class="row">
+          <div class="col-md-12 mb-3">
+            <label for="nome" class="form-label">Nome do Serviço <span class="text-danger">*</span></label>
+            <input id="nome" type="text" class="form-control" formControlName="nome"
+                   placeholder="Ex: Troca de Tela iPhone X"
+                   [ngClass]="{'is-invalid': isInvalidControl('nome')}">
+            <div *ngIf="isInvalidControl('nome')" class="invalid-feedback">
+              <span *ngIf="getControlErrors('nome')?.['required']">Nome é obrigatório.</span>
+              <span *ngIf="getControlErrors('nome')?.['minlength']">
+                Nome deve ter no mínimo {{ getControlErrors('nome')?.['minlength'].requiredLength }} caracteres.
+              </span>
+              <span *ngIf="getControlErrors('nome')?.['maxlength']">
+                Nome deve ter no máximo {{ getControlErrors('nome')?.['maxlength'].requiredLength }} caracteres.
+              </span>
+            </div>
           </div>
         </div>
 
-        <!-- Descrição do Serviço -->
         <div class="mb-3">
           <label for="descricao" class="form-label">Descrição</label>
-          <textarea id="descricao" class="form-control" formControlName="descricao"
-            [class.is-invalid]="form.get('descricao')?.invalid && form.get('descricao')?.touched"
-            placeholder="Descrição do serviço" rows="3"></textarea>
+          <textarea id="descricao" class="form-control" formControlName="descricao" rows="3"
+                    placeholder="Detalhes sobre o serviço (opcional)"
+                    [ngClass]="{'is-invalid': isInvalidControl('descricao')}"></textarea>
+          <div *ngIf="isInvalidControl('descricao')" class="invalid-feedback">
+            <span *ngIf="getControlErrors('descricao')?.['maxlength']">
+              Descrição deve ter no máximo {{ getControlErrors('descricao')?.['maxlength'].requiredLength }} caracteres.
+            </span>
+          </div>
         </div>
 
-        <!-- Duração -->
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label for="precoPadrao" class="form-label">Preço Padrão <span class="text-danger">*</span></label>
+            <div class="input-group">
+              <span class="input-group-text">R$</span>
+              <input id="precoPadrao" type="number" step="0.01" class="form-control" formControlName="precoPadrao"
+                     placeholder="0.00"
+                     [ngClass]="{'is-invalid': isInvalidControl('precoPadrao')}">
+            </div>
+            <div *ngIf="isInvalidControl('precoPadrao')" class="invalid-feedback d-block"> <span *ngIf="getControlErrors('precoPadrao')?.['required']">Preço é obrigatório.</span>
+              <span *ngIf="getControlErrors('precoPadrao')?.['min']">Preço deve ser maior que zero.</span>
+            </div>
+          </div>
+
+          <div class="col-md-6 mb-3">
+            <label for="tempoEstimadoMinutos" class="form-label">Tempo Estimado (minutos) <span class="text-danger">*</span></label>
+            <input id="tempoEstimadoMinutos" type="number" class="form-control" formControlName="tempoEstimadoMinutos"
+                   placeholder="Ex: 60"
+                   [ngClass]="{'is-invalid': isInvalidControl('tempoEstimadoMinutos')}">
+            <div *ngIf="isInvalidControl('tempoEstimadoMinutos')" class="invalid-feedback">
+              <span *ngIf="getControlErrors('tempoEstimadoMinutos')?.['required']">Tempo estimado é obrigatório.</span>
+              <span *ngIf="getControlErrors('tempoEstimadoMinutos')?.['min']">Tempo estimado deve ser maior que zero.</span>
+            </div>
+          </div>
+        </div>
+
         <div class="mb-3">
-          <label for="duracao" class="form-label">Duração (minutos) <span class="text-danger">*</span></label>
-          <input id="duracao" type="number" class="form-control" formControlName="duracao"
-            [class.is-invalid]="form.get('duracao')?.invalid && form.get('duracao')?.touched"
-            placeholder="Duração em minutos">
-          <div *ngIf="form.get('duracao')?.invalid && form.get('duracao')?.touched" class="text-danger small">
-            Duração é obrigatória e deve ser maior que zero.
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="ativo" formControlName="ativo">
+            <label class="form-check-label" for="ativo">Serviço Ativo</label>
           </div>
         </div>
 
-        <!-- Valor -->
-        <div class="mb-3">
-          <label for="valor" class="form-label">Valor <span class="text-danger">*</span></label>
-          <div class="input-group">
-            <span class="input-group-text">R$</span>
-            <input id="valor" type="number" step="0.01" class="form-control" formControlName="valor"
-              [class.is-invalid]="form.get('valor')?.invalid && form.get('valor')?.touched"
-              placeholder="Valor do serviço">
-          </div>
-          <div *ngIf="form.get('valor')?.invalid && form.get('valor')?.touched" class="text-danger small">
-            Valor é obrigatório e deve ser maior que zero.
-          </div>
-        </div>
-
-        <div class="d-flex justify-content-between gap-2 mt-4">
-          <button type="submit" class="btn btn-success flex-fill">
-            Salvar
+        <div class="d-flex justify-content-end mt-4">
+          <button type="button" class="btn btn-secondary me-2" (click)="onCancelar()">
+            <i class="bi bi-x-lg me-1"></i> Cancelar
           </button>
-          <button type="button" class="btn btn-secondary flex-fill" (click)="onCancelar()">Cancelar</button>
-          <button *ngIf="isEditando" type="button" class="btn btn-danger flex-fill"
-            (click)="onExcluir()">Excluir</button>
+          <button *ngIf="isEditando" type="button" class="btn btn-danger me-2" (click)="onExcluir()" [disabled]="isLoading">
+            <span *ngIf="!isLoading"><i class="bi bi-trash me-1"></i> Excluir</span>
+            <span *ngIf="isLoading"><span class="spinner-border spinner-border-sm me-1"></span> Excluindo...</span>
+          </button>
+          <button type="submit" class="btn btn-success" [disabled]="formServico.invalid || isLoading">
+            <span *ngIf="!isLoading"><i class="bi bi-check-lg me-1"></i> {{ saveButtonText }}</span>
+            <span *ngIf="isLoading"><span class="spinner-border spinner-border-sm me-1"></span> Salvando...</span>
+          </button>
         </div>
       </form>
     </div>
-  </div>
-</div>
-
-<!-- Toast de Notificação -->
-<div id="liveToast" class="toast position-fixed bottom-0 end-0 p-3 text-white bg-success border-0" role="alert"
-  aria-live="assertive" aria-atomic="true" style="z-index: 9999;">
-  <div class="d-flex">
-    <div class="toast-body">Mensagem</div>
-    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
-      aria-label="Close"></button>
   </div>
 </div>

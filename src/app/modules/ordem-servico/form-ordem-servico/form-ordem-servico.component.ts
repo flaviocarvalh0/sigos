@@ -28,7 +28,7 @@ import { ClienteService } from '../../../services/cliente.service';
 import { AparelhoService } from '../../../services/aparelho.service';
 import { EmpresaService } from '../../../services/empresa.service';
 import { PrazoGarantiaService } from '../../../services/prazo_garantia.service';
-import { ServicoService as CatalogoServicoService, ServicoService } from '../../../services/service.service';
+import { ServicoService as CatalogoServicoService, ServicoService } from '../../../services/servico.service';
 import { PecaService as CatalogoPecaService } from '../../../services/peca.service';
 
 // Serviços MOCKADOS para os itens da OS
@@ -601,9 +601,9 @@ ngAfterViewInit() {
           const catServico = this.servicosDisponiveis.find(
             (s) => s.id === servicoId
           );
-          if (catServico && typeof catServico.valor === 'number') {
-            servicoForm.get('valor_unitario')?.setValue(catServico.valor);
-          }
+          // if (catServico && typeof catServico.valor === 'number') {
+          //   servicoForm.get('valor_unitario')?.setValue(catServico.valor);
+          // }
         }
         this.updateSubtotalItem(
           servicoForm,

@@ -1,48 +1,83 @@
-<div class="container mt-4">
-  <h2>Lista de Serviços</h2>
-  <button class="btn btn-primary mb-3" (click)="novoServico()">Novo Serviço</button>
-
-  <div class="table-responsive">
-    <div *ngIf="servicos.length === 0" class="alert alert-info">
-      Nenhum serviço cadastrado.
+<div class="container mt-4 mb-5">
+  <div class="card shadow-sm">
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+      <h4 class="mb-0"><i class="bi bi-tools me-2"></i>Lista de Serviços</h4>
+      <button class="btn btn-sm btn-light" (click)="navegarParaNovoServico()">
+        <i class="bi bi-plus-lg me-1"></i> Novo Serviço
+      </button>
     </div>
+    <div class="card-body">
+      <div class="row gx-2 gy-2 mb-3 align-items-end">
+        <div class="col-md-5">
+          <label for="filtroNome" class="form-label mb-1 small">Nome do Serviço</label>
+          <input type="text" id="filtroNome" class="form-control form-control-sm"
+                 [(ngModel)]="filtroNome" placeholder="Filtrar por nome..."
+                 (keydown.enter)="aplicarFiltros()">
+        </div>
+        <div class="col-md-5">
+          <label for="filtroDescricao" class="form-label mb-1 small">Descrição</label>
+          <input type="text" id="filtroDescricao" class="form-control form-control-sm"
+                 [(ngModel)]="filtroDescricao" placeholder="Filtrar por descrição..."
+                 (keydown.enter)="aplicarFiltros()">
+        </div>
+        <div class="col-md-2 d-flex align-items-end">
+          <button class="btn btn-sm btn-info w-100 me-1" (click)="aplicarFiltros()" title="Aplicar Filtros">
+            <i class="bi bi-search"></i> Buscar
+          </button>
+          <button class="btn btn-sm btn-outline-secondary w-100" (click)="limparFiltros()" title="Limpar Filtros">
+            <i class="bi bi-eraser"></i> Limpar
+          </button>
+        </div>
+      </div>
 
-    <table *ngIf="servicos.length > 0" class="table table-bordered">
-      <thead class="table-light">
-        <tr>
-          <th>Nome</th>
-          <th>Descrição</th>
-          <th>Duração (min)</th>
-          <th>Valor (R$)</th>
-          <th style="width: 160px;">Ações</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let servico of servicos">
-          <td>{{ servico.nome }}</td>
-          <td>{{ servico.descricao }}</td>
-          <td>{{ servico.duracao }}</td>
-          <td>{{ servico.valor | currency:'BRL':'symbol':'1.2-2' }}</td>
-          <td>
-            <button class="btn btn-sm btn-warning me-2 d-none d-md-inline" (click)="editarServico(servico.id!)">Editar</button>
-            <button class="btn btn-sm btn-danger d-none d-md-inline" (click)="excluir(servico.id!)">Excluir</button>
+      <div *ngIf="isLoading" class="text-center my-5">
+        <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+          <span class="visually-hidden">Carregando serviços...</span>
+        </div>
+        <p class="mt-2">Carregando serviços...</p>
+      </div>
 
-            <button class="btn btn-sm btn-warning me-2 d-inline d-md-none" title="Editar" (click)="editarServico(servico.id!)">
-              <i class="bi bi-pencil"></i>
-            </button>
-            <button class="btn btn-sm btn-danger d-inline d-md-none" title="Excluir" (click)="excluir(servico.id!)">
-              <i class="bi bi-trash"></i>
-            </button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-</div>
+      <div *ngIf="!isLoading && servicosFiltrados.length === 0" class="alert alert-info text-center">
+        Nenhum serviço encontrado com os filtros aplicados ou nenhum serviço cadastrado.
+      </div>
 
-<div #toast class="toast align-items-center text-bg-success border-0 position-fixed bottom-0 end-0 m-3" role="alert">
-  <div class="d-flex">
-    <div class="toast-body">Serviço excluído com sucesso!</div>
-    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+      <div class="table-responsive" *ngIf="!isLoading && servicosFiltrados.length > 0">
+        <table class="table table-hover table-striped table-sm">
+          <thead class="table-light">
+            <tr>
+              <th>ID</th>
+              <th>Nome</th>
+              <th>Descrição</th>
+              <th class="text-end">Preço Padrão (R$)</th>
+              <th class="text-center">Tempo (min)</th>
+              <th class="text-center">Ativo</th>
+              <th class="text-center" style="width: 100px;">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let servico of servicosFiltrados">
+              <td>{{ servico.id }}</td>
+              <td>{{ servico.nome }}</td>
+              <td>{{ servico.descricao || '-' }}</td>
+              <td class="text-end">{{ (servico.precoPadrao !== null && servico.precoPadrao !== undefined) ? (servico.precoPadrao | currency:'BRL':'symbol':'1.2-2') : '-' }}</td>
+              <td class="text-center">{{ servico.tempoEstimadoMinutos || '-' }}</td>
+              <td class="text-center">
+                <span class="badge" [ngClass]="servico.ativo ? 'bg-success' : 'bg-danger'">
+                  {{ servico.ativo ? 'Sim' : 'Não' }}
+                </span>
+              </td>
+              <td class="text-center">
+                <button class="btn btn-sm btn-outline-primary me-1" title="Editar" (click)="editarServico(servico.id)">
+                  <i class="bi bi-pencil"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-danger" title="Excluir" (click)="excluirServico(servico.id, servico.nome)">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
   </div>
 </div>
