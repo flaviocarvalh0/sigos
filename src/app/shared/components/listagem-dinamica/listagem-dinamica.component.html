@@ -1,0 +1,81 @@
+<div class="container mt-4 mb-5">
+  <div class="card shadow-sm">
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+      <h4 class="mb-0">
+        <i class="bi bi-list-ul me-2"></i>{{ titulo || 'Listagem' }}
+      </h4>
+      <button class="btn btn-sm btn-light" (click)="onCriar()">
+        <i class="bi bi-plus-lg me-1"></i> Novo
+      </button>
+    </div>
+
+    <div class="card-body">
+      <div class="row gx-2 gy-2 mb-3 align-items-end">
+        <div class="col-md-4">
+          <label for="colunaFiltro" class="form-label mb-1 small">Filtrar por:</label>
+          <select id="colunaFiltro" class="form-select form-select-sm" [(ngModel)]="colunaSelecionada">
+            <option value="">Selecione...</option>
+            <option *ngFor="let col of colunasFiltraveis" [value]="col.campo">
+              {{ col.titulo }}
+            </option>
+          </select>
+        </div>
+
+        <div class="col-md-5">
+          <label class="form-label mb-1 small">{{ nomeCampoSelecionado || 'Valor do filtro' }}</label>
+          <input type="text" class="form-control form-control-sm" [(ngModel)]="valorFiltro"
+            [placeholder]="placeholderFiltro">
+        </div>
+
+        <div class="col-md-3 d-flex gap-2 align-items-end">
+          <button class="btn btn-sm btn-outline-primary w-100" (click)="aplicarFiltro()"
+            [disabled]="!colunaSelecionada || !valorFiltro">
+            <i class="bi bi-search"></i> Buscar
+          </button>
+          <button class="btn btn-sm btn-outline-secondary w-100" (click)="limparFiltros()">
+            <i class="bi bi-eraser"></i> Limpar
+          </button>
+        </div>
+      </div>
+
+
+      <div *ngIf="carregando" class="text-center my-5">
+        <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;"></div>
+        <p class="mt-2">Carregando dados...</p>
+      </div>
+
+      <div *ngIf="!carregando && dadosFiltrados.length === 0" class="alert alert-info text-center">
+        <span>Nenhum item encontrado com os filtros aplicados.</span>
+      </div>
+
+      <div class="table-responsive" *ngIf="!carregando && dadosFiltrados.length > 0">
+        <table class="table table-hover table-striped table-sm">
+          <thead class="table-light">
+            <tr>
+              <th *ngFor="let col of colunas" scope="col" (click)="onSort(col.campo)" class="sortable-header"
+                [style.cursor]="col.ordenavel ? 'pointer' : 'default'">
+                {{ col.titulo }}
+                <i *ngIf="sortColumn === col.campo" class="bi" [class.bi-arrow-up]="sortDirection === 'asc'"
+                  [class.bi-arrow-down]="sortDirection === 'desc'"></i>
+              </th>
+              <th class="text-center" style="width: 100px;">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of dadosFiltrados">
+              <td *ngFor="let col of colunas">{{ item[col.campo] }}</td>
+              <td class="text-center">
+                <button class="btn btn-sm btn-outline-primary me-1" title="Editar" (click)="onEditar(item[campoId])">
+                  <i class="bi bi-pencil"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-danger" title="Excluir" (click)="onExcluir(item[campoId])">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
