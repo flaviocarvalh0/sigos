@@ -14,8 +14,14 @@
     </div>
     <div class="ms-auto d-flex align-items-center gap-2">
       <span *ngIf="authService.isLoggedIn() && authService.currentUserValue?.nome" class="text-white me-2 small">
-        Olá, {{ authService.currentUserValue?.nome }}
+        Olá, {{ abreviarNome(authService.currentUserValue?.nome || '') }}
       </span>
+
+      <button class="btn btn-sm btn-outline-light" (click)="router.navigate(['/admin/usuarios'])"
+        title="Gerenciar Usuários">
+        <i class="bi bi-gear text-white"></i>
+      </button>
+
       <button *ngIf="authService.isLoggedIn()" class="btn btn-outline-light btn-sm" (click)="authService.logout()">
         Logout
       </button>
@@ -160,44 +166,22 @@
               </ul>
             </div>
           </div>
-
-          <!-- Gerenciamento da Plataforma -->
-          <div class="accordion-item bg-transparent border-0">
-            <h2 class="accordion-header">
-              <button class="accordion-button bg-transparent text-dark collapsed" type="button"
-                data-bs-toggle="collapse" data-bs-target="#plataforma">
-                Gerenciamento da Plataforma
-              </button>
-            </h2>
-            <div id="plataforma" class="accordion-collapse collapse" data-bs-parent="#sidebarAccordion">
-              <ul class="nav flex-column px-2">
-                <li class="nav-item mb-1">
-                  <a routerLink="/admin/usuarios" routerLinkActive="active"
-                    class="nav-link d-flex align-items-center rounded">
-                    <i class="bi bi-person-lines-fill me-2"></i>
-                    <span>Usuários</span>
-                  </a>
-                </li>
-              </ul>
-            </div>
-          </div>
-
         </div>
       </div>
 
       <!-- Rodapé com usuário -->
-      <div class="sidebar-footer mt-auto pt-3 border-top">
-        <div *ngIf="authService.isLoggedIn() && authService.currentUserValue as user"
-          class="user-profile d-flex align-items-center p-2 rounded">
-          <div class="avatar bg-secondary text-white me-2">
-            {{ user.nome ? user.nome.substring(0,1).toUpperCase() : 'U' }}
-          </div>
-          <div class="user-info">
-            <div class="user-name fw-bold small text-dark">{{ user.nome || user.login }}</div>
-            <div class="user-email text-muted small">{{ user.email }}</div>
-          </div>
+      <div *ngIf="authService.isLoggedIn() && authService.currentUserValue as user"
+        class="user-profile d-flex align-items-center p-2 rounded" style="cursor: pointer;"
+        (click)="router.navigate(['admin/usuarios/editar', user.id])">
+        <div class="avatar bg-secondary text-white me-2">
+          {{ user.nome ? user.nome.substring(0,1).toUpperCase() : 'U' }}
+        </div>
+        <div class="user-info">
+          <div class="user-name fw-bold small text-dark">{{ abreviarNome(user.nome) || user.login }}</div>
+          <div class="user-email text-muted small">{{ user.email }}</div>
         </div>
       </div>
+
     </nav>
 
     <main class="main-content flex-grow-1 overflow-auto p-0">

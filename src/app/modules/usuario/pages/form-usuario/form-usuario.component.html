@@ -6,7 +6,7 @@
         {{ isEditMode ? 'Editar Usuário' : 'Cadastrar Novo Usuário' }}
       </h4>
     </div>
-    <div class="card-body">
+    <div class="card-body" *ngIf="form">
       <div *ngIf="isLoading" class="text-center my-3">
         <div class="spinner-border text-primary" role="status">
           <span class="visually-hidden">Carregando...</span>
@@ -14,11 +14,12 @@
         <p>Processando...</p>
       </div>
 
-      <form [formGroup]="form" (ngSubmit)="onSubmit()" *ngIf="!isLoading" novalidate>
+      <form *ngIf="form && !isLoading" [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
         <div class="row">
           <div class="col-md-6 mb-3">
             <label for="nome" class="form-label">Nome Completo <span class="text-danger">*</span></label>
-            <input type="text" id="nome" class="form-control" formControlName="nome" placeholder="Nome completo do usuário">
+            <input type="text" id="nome" class="form-control" formControlName="nome"
+              placeholder="Nome completo do usuário">
             <div *ngIf="isInvalidControl('nome')" class="text-danger small">
               <span *ngIf="form.get('nome')?.errors?.['required']">Nome é obrigatório.</span>
             </div>
@@ -35,7 +36,8 @@
         <div class="row">
           <div class="col-md-6 mb-3">
             <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
-            <input type="email" id="email" class="form-control" formControlName="email" placeholder="endereco@email.com">
+            <input type="email" id="email" class="form-control" formControlName="email"
+              placeholder="endereco@email.com">
             <div *ngIf="isInvalidControl('email')" class="text-danger small">
               <span *ngIf="form.get('email')?.errors?.['required']">Email é obrigatório.</span>
               <span *ngIf="form.get('email')?.errors?.['email']">Email inválido.</span>
@@ -47,7 +49,8 @@
           <div class="col-md-6 mb-3">
             <label for="senha" class="form-label">Senha <span *ngIf="!isEditMode" class="text-danger">*</span></label>
             <div class="input-group">
-              <input [type]="senhaVisivel ? 'text' : 'password'" id="senha" class="form-control" formControlName="senha" placeholder="{{ isEditMode ? 'Nova senha (deixe em branco para não alterar)' : 'Mínimo 6 caracteres' }}">
+              <input [type]="senhaVisivel ? 'text' : 'password'" id="senha" class="form-control" formControlName="senha"
+                placeholder="{{ isEditMode ? 'Nova senha (deixe em branco para não alterar)' : 'Mínimo 6 caracteres' }}">
               <button class="btn btn-outline-secondary" type="button" (click)="toggleSenhaVisivel()">
                 <i class="bi" [ngClass]="senhaVisivel ? 'bi-eye-slash' : 'bi-eye'"></i>
               </button>
@@ -58,17 +61,22 @@
             </div>
           </div>
           <div class="col-md-6 mb-3">
-            <label for="confirmarSenha" class="form-label">Confirmar Senha <span *ngIf="!isEditMode || form.get('senha')?.value" class="text-danger">*</span></label>
-             <div class="input-group">
-              <input [type]="confirmaSenhaVisivel ? 'text' : 'password'" id="confirmarSenha" class="form-control" formControlName="confirmarSenha" placeholder="Confirme a senha">
-               <button class="btn btn-outline-secondary" type="button" (click)="toggleConfirmaSenhaVisivel()">
+            <label for="confirmarSenha" class="form-label">Confirmar Senha <span
+                *ngIf="!isEditMode || form.get('senha')?.value" class="text-danger">*</span></label>
+            <div class="input-group">
+              <input [type]="confirmaSenhaVisivel ? 'text' : 'password'" id="confirmarSenha" class="form-control"
+                formControlName="confirmarSenha" placeholder="Confirme a senha">
+              <button class="btn btn-outline-secondary" type="button" (click)="toggleConfirmaSenhaVisivel()">
                 <i class="bi" [ngClass]="confirmaSenhaVisivel ? 'bi-eye-slash' : 'bi-eye'"></i>
               </button>
             </div>
-            <div *ngIf="form.hasError('senhasNaoCombinam') && (form.get('confirmarSenha')?.touched || form.get('senha')?.touched)" class="text-danger small">
+            <div
+              *ngIf="form.hasError('senhasNaoCombinam') && (form.get('confirmarSenha')?.touched || form.get('senha')?.touched)"
+              class="text-danger small">
               As senhas não combinam.
             </div>
-             <div *ngIf="isInvalidControl('confirmarSenha') && form.get('confirmarSenha')?.errors?.['required']" class="text-danger small">
+            <div *ngIf="isInvalidControl('confirmarSenha') && form.get('confirmarSenha')?.errors?.['required']"
+              class="text-danger small">
               Confirmação de senha é obrigatória.
             </div>
           </div>
@@ -76,14 +84,9 @@
 
         <div class="row">
           <div class="col-md-6 mb-3">
-            <label for="id_empresa" class="form-label">Empresa</label>
-            <ng-select id="id_empresa"
-                       [items]="empresas"
-                       bindLabel="razao_social"
-                       bindValue="id"
-                       formControlName="id_empresa"
-                       placeholder="Selecione a Empresa"
-                       [clearable]="true">
+            <label for="idEmpresa" class="form-label">Empresa</label>
+            <ng-select id="idEmpresa" [items]="empresas" bindLabel="razaoSocial" bindValue="id"
+              formControlName="idEmpresa" placeholder="Selecione a Empresa" [clearable]="true">
             </ng-select>
           </div>
           <!-- <div class="col-md-6 mb-3">
@@ -123,12 +126,13 @@
       </form>
     </div>
   </div>
-   <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1090">
+  <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1090">
     <div id="liveToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
-        <div class="d-flex">
-            <div class="toast-body"></div>
-            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-        </div>
+      <div class="d-flex">
+        <div class="toast-body"></div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+          aria-label="Close"></button>
+      </div>
     </div>
   </div>
 </div>

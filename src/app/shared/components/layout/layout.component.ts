@@ -4,15 +4,21 @@ import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Router, RouterModule, NavigationEnd } from '@angular/router'; // RouterModule para routerLink
 import { AuthService } from '../../../services/auth/auth.service'; // Importe seu AuthService
 import { filter } from 'rxjs/operators';
-import { ConfirmationDialogComponent } from "../confirmation-dialog/confirmation-dialog.component";
-import { ToastsContainerComponent } from "../toats-container/toasts-container.component";
+import { ConfirmationDialogComponent } from '../confirmation-dialog/confirmation-dialog.component';
+import { ToastsContainerComponent } from '../toats-container/toasts-container.component';
 
 @Component({
   selector: 'app-layout',
   standalone: true,
-  imports: [CommonModule, RouterModule, ConfirmationDialogComponent, ToastsContainerComponent], // Adicione RouterModule aqui
+  imports: [
+    CommonModule,
+    RouterModule,
+    ConfirmationDialogComponent,
+    ToastsContainerComponent,
+    RouterModule,
+  ], // Adicione RouterModule aqui
   templateUrl: './layout.component.html',
-  styleUrls: ['./layout.component.css']
+  styleUrls: ['./layout.component.css'],
 })
 export class LayoutComponent implements OnInit {
   isSidebarCollapsed = false;
@@ -20,22 +26,31 @@ export class LayoutComponent implements OnInit {
 
   constructor(
     public authService: AuthService, // Tornar público para acesso no template, ou usar getters
-    private router: Router,
+    public router: Router,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {}
 
   ngOnInit(): void {
     // Opcional: Lógica para fechar sidebar em telas pequenas ao navegar
-    this.router.events.pipe(
-      filter(event => event instanceof NavigationEnd)
-    ).subscribe(() => {
-      if (isPlatformBrowser(this.platformId)) {
-        if (window.innerWidth < 768) { // Exemplo de breakpoint para fechar sidebar
-          this.isSidebarCollapsed = true;
+    this.router.events
+      .pipe(filter((event) => event instanceof NavigationEnd))
+      .subscribe(() => {
+        if (isPlatformBrowser(this.platformId)) {
+          if (window.innerWidth < 768) {
+            // Exemplo de breakpoint para fechar sidebar
+            this.isSidebarCollapsed = true;
+          }
         }
-      }
-    });
+      });
   }
+
+ abreviarNome(nomeCompleto: string): string {
+  if (!nomeCompleto) return '';
+  const partes = nomeCompleto.trim().split(/\s+/);
+  if (partes.length >= 2) return `${partes[0]} ${partes[1]}`;
+  return partes[0];
+}
+
 
   toggleSidebar(): void {
     this.isSidebarCollapsed = !this.isSidebarCollapsed;

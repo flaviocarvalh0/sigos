@@ -52,23 +52,18 @@ export class FormUsuarioComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    this.initForm();
-    this.loadEmpresas();
-    // this.loadGruposDisponiveis(); // Removido
-
-    const routeSub = this.route.paramMap.subscribe(params => {
-      const id = params.get('id');
-      if (id) {
-        this.usuarioId = +id;
-        this.isEditMode = true;
-        this.loadUsuarioParaEdicao();
-      } else {
-        this.isEditMode = false;
-        // Valores default são definidos em initForm
-      }
-    });
-    this.subscriptions.add(routeSub);
-  }
+  this.loadEmpresas().then(() => {
+    const id = this.route.snapshot.paramMap.get('id');
+    if (id) {
+      this.usuarioId = +id;
+      this.isEditMode = true;
+      this.loadUsuarioParaEdicao(); // aqui já carrega com empresas disponíveis
+    } else {
+      this.isEditMode = false;
+      this.initForm(); // só chama aqui, depois de ter empresas
+    }
+  });
+}
 
   initForm(usuario?: Usuario): void {
     // Na criação (isEditMode é false), senha é obrigatória.
@@ -85,7 +80,7 @@ export class FormUsuarioComponent implements OnInit, OnDestroy {
       email: [usuario?.email || '', [Validators.required, Validators.email]],
       senha: ['', senhaValidators], // Validador é condicional
       confirmarSenha: ['', confirmarSenhaValidators], // Validador é condicional
-      id_empresa: [usuario?.idEmpresa || null],
+      idEmpresa: [usuario?.idEmpresa || null],
       ativo: [usuario ? usuario.ativo : true, Validators.required],
       // id_grupos: [usuario?.grupos?.map(g => g.id) || []], // Removido
     }, {
@@ -141,23 +136,29 @@ export class FormUsuarioComponent implements OnInit, OnDestroy {
     return null; // Nenhuma falha de validação a nível de grupo se tudo estiver ok ou se senha estiver vazia.
   }
 
- loadEmpresas(): void {
-    this.isLoading = true; // Opcional: indicar carregamento se fizer sentido para a UI
-    const empresaSub = this.empresaService.obterTodos().subscribe({ // Chama obterTodos()
+ loadEmpresas(): Promise<void> {
+  return new Promise((resolve) => {
+    const empresaSub = this.empresaService.obterTodos().subscribe({
       next: (data: Empresa[]) => {
         this.empresas = data;
-        // this.isLoading = false; // Desative o isLoading se ativou
-        console.log('Empresas carregadas:', this.empresas);
+         const idEmpresaAtual = this.form?.get('idEmpresa')?.value;
+if (idEmpresaAtual) {
+  const empresaExiste = this.empresas.some(e => e.id === idEmpresaAtual);
+  if (!empresaExiste) {
+    this.form.get('idEmpresa')?.setValue(null); // limpa se não existir mais
+  }
+}
+        resolve();
       },
       error: (err) => {
-        // O método handleError do CrudService já deve ter formatado o err.message
         this.toastService.error('Erro ao carregar empresas: ' + (err.message || 'Verifique a API.'));
-        console.error('Erro ao carregar empresas:', err);
-        // this.isLoading = false; // Desative o isLoading se ativou
+        resolve(); // resolve mesmo com erro, para não travar a tela
       }
     });
     this.subscriptions.add(empresaSub);
-  }
+  });
+
+}
 
   // loadGruposDisponiveis(): void { /* Removido */ }
 
@@ -197,7 +198,7 @@ export class FormUsuarioComponent implements OnInit, OnDestroy {
         login: formValue.login,
         email: formValue.email,
         ativo: formValue.ativo,
-        idEmpresa: formValue.id_empresa || null,
+        idEmpresa: formValue.idEmpresa || null,
         // matricula: formValue.matricula || null, // Adicionar se matricula fizer parte do DTO de atualização
         dataUltimaModificacao: this.dataModificacaoUsuarioAtual, // Enviando o valor original para concorrência
       };
@@ -218,7 +219,7 @@ export class FormUsuarioComponent implements OnInit, OnDestroy {
         email: formValue.email,
         senha: formValue.senha, // Senha é obrigatória e validada
         ativo: formValue.ativo,
-        idEmpresa: formValue.id_empresa || null,
+        idEmpresa: formValue.idEmpresa || null,
         // matricula: formValue.matricula || null,
       };
       const createSub = this.usuarioService.criarUsuario(payload).subscribe({
