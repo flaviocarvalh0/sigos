@@ -1,7 +1,22 @@
 export interface Modelo {
   id: number;
   nome: string;
-  id_marca: number;
-  id_usuario_criador: number;
-  id_usuario_modificador: number;
+  idMarca: number;
+  nomeMarca?: string;
+  dataCriacao?: string;
+  dataModificacao?: string;
+  criadoPor?: string;
+  modificadoPor?: string;
+}
+
+export interface ModeloCriacaoPayload {
+  nome: string;
+  idMarca: number;
+}
+
+export interface ModeloAtualizacaoPayload {
+  id: number;
+  nome: string;
+  idMarca: number;
+  dataUltimaModificacao: string;
 }

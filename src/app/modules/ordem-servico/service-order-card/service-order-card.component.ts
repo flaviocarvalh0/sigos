@@ -110,14 +110,14 @@ export class ServiceOrderCardComponent {
       },
     });
 
-    this.modeloService.getModelos().subscribe({
-      next: (data) => {
-        this.modelos = data;
-      },
-      error: (err) => {
-        console.error('Erro ao carregar modelos', err);
-      },
-    });
+    // this.modeloService.getModelos().subscribe({
+    //   next: (data) => {
+    //     this.modelos = data;
+    //   },
+    //   error: (err) => {
+    //     console.error('Erro ao carregar modelos', err);
+    //   },
+    // });
   }
   @Input() order!: OrdemServico;
   @Output() onViewDetails = new EventEmitter<OrdemServico>();

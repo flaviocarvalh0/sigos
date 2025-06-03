@@ -172,7 +172,7 @@ export class FormAparelhoComponent implements OnInit, OnDestroy {
     );
 
     this.subscriptions.add(
-      this.modeloService.getModelos().subscribe({ // Assumindo que getModelos existe e retorna Modelo[]
+      this.modeloService.obterTodos().subscribe({ // Assumindo que getModelos existe e retorna Modelo[]
         next: modelos => { this.modelos = modelos; checkAllLoaded(); },
         error: err => { this.toastService.error('Erro ao carregar modelos.'); console.error(err); checkAllLoaded(); }
       })
@@ -184,7 +184,7 @@ export class FormAparelhoComponent implements OnInit, OnDestroy {
     if (marcaId) {
       // Idealmente, o serviço de modelo deveria ter um método para buscar por marcaId.
       // Se não, filtramos a lista completa de modelos.
-      this.modelosFiltrados = this.modelos.filter(m => m.id_marca === marcaId); // Assumindo que Modelo tem idMarca
+      this.modelosFiltrados = this.modelos.filter(m => m.idMarca === marcaId); // Assumindo que Modelo tem idMarca
       if (!isInitialLoad) {
           this.formAparelho.get('idModelo')?.setValue(null); // Resetar modelo se não for carga inicial
       }

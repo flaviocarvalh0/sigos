@@ -66,6 +66,16 @@ export class MarcaService extends CrudService<Marca, number> {
       );
   }
 
+  obterParaSelecao(): Observable<{ id: number, descricao: string }[]> {
+    return this.http.get<RespostaApi<{ id: number, descricao: string }[]>>(`${this.fullApiUrl}/selecao`, this.getHttpOptions())
+      .pipe(
+        map(response => {
+          if (response.sucesso && response.dados) return response.dados;
+          throw new Error(response.mensagem || 'Falha ao obter seleção de modelos.');
+        }),
+        catchError(this.handleError)
+      );
+  }
   // Se houver métodos específicos para 'Marca' que não são CRUD genéricos,
   // eles podem ser adicionados aqui.
 }

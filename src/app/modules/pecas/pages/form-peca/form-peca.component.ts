@@ -80,7 +80,7 @@ export class FormPecaComponent implements OnInit {
       this.marcas = marcas.map(m => ({ id: m.id, nome: m.nome }));
     });
 
-    this.modeloService.getModelos().subscribe(modelos => {
+    this.modeloService.obterTodos().subscribe(modelos => {
       this.modelos = modelos.map(m => ({ id: m.id, nome: m.nome }));
     });
 

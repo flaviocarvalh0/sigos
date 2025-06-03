@@ -1,108 +1,116 @@
-import { Component, inject, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup , Validators } from '@angular/forms';
-import { ReactiveFormsModule} from '@angular/forms';
+import { Component, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ModeloService } from '../../../../services/modelo.service';
 import { MarcaService } from '../../../../services/marca.service';
-import { Marca } from '../../../../Models/marca.model';
+import { ToastService } from '../../../../services/toast.service';
 import { CommonModule } from '@angular/common';
 import { NgSelectModule } from '@ng-select/ng-select';
 
-declare const bootstrap: any;
-
 @Component({
-    selector: 'app-form-modelo',
-    templateUrl: './form-modelo.component.html',
-    styleUrls: ['./form-modelo.component.css'],
-    standalone: true,
-    imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    NgSelectModule
-  ],
+ selector: 'app-form-modelo',
+  templateUrl: './form-modelo.component.html',
+  styleUrls: ['./form-modelo.component.css'],
+  standalone: true,
+  imports: [CommonModule, FormsModule, NgSelectModule, ReactiveFormsModule]
 })
 export class FormModeloComponent implements OnInit {
-  private fb = inject(FormBuilder);
+  formModelo!: FormGroup;
   isEditando = false;
-  form: FormGroup;
-  marcas: Marca[] = [];
-  modeloId: number | null = null;
+  isLoading = false;
+  cardTitle = 'Cadastrar Modelo';
+  saveButtonText = 'Salvar';
+  idModelo?: number;
+  marcas: { id: number, nome: string }[] = [];
 
   constructor(
+    private fb: FormBuilder,
+    private route: ActivatedRoute,
+    private router: Router,
     private modeloService: ModeloService,
     private marcaService: MarcaService,
-    private route: ActivatedRoute,
-    private router: Router
-  ) {
-    this.form = this.fb.group({
-      nome: ['', [Validators.required, Validators.minLength(2)]],
-      id_marca: [null as number | null, Validators.required]
-    });
-  }
+    private toastService: ToastService
+  ) {}
 
   ngOnInit(): void {
+    this.idModelo = Number(this.route.snapshot.paramMap.get('id'));
+    this.inicializarFormulario();
     this.carregarMarcas();
 
-    this.route.paramMap.subscribe(params => {
-      const id = params.get('id');
-      if (id) {
-        this.modeloId = +id;
-        this.carregarModelo(this.modeloId);
-        this.isEditando = true;
-      }
+    if (this.idModelo) {
+      this.isEditando = true;
+      this.cardTitle = 'Editar Modelo';
+      this.saveButtonText = 'Atualizar';
+      this.carregarModelo(this.idModelo);
+    }
+  }
+
+  inicializarFormulario(): void {
+    this.formModelo = this.fb.group({
+      nome: ['', [Validators.required, Validators.minLength(2)]],
+      idMarca: [null, Validators.required],
+      dataUltimaModificacao: [null]
     });
   }
 
   carregarMarcas(): void {
-    this.marcaService.getMarcas().subscribe(marcas => {
-      this.marcas = marcas;
+    this.marcaService.obterParaSelecao().subscribe({
+      next: (marcas) => this.marcas = marcas.map(m => ({ id: m.id, nome: m.descricao })),
+      error: err => this.toastService.error(err.message || 'Erro ao carregar marcas.')
     });
   }
 
   carregarModelo(id: number): void {
-    this.modeloService.getModeloById(id).subscribe(modelo => {
-      if (modelo) {
-        this.form.patchValue({
+    this.isLoading = true;
+    this.modeloService.obterPorId(id).subscribe({
+      next: modelo => {
+        if (!modelo) return;
+        this.formModelo.patchValue({
           nome: modelo.nome,
-          id_marca: modelo.id_marca
+          idMarca: modelo.idMarca,
+          dataUltimaModificacao: modelo.dataModificacao
         });
+        this.isLoading = false;
+      },
+      error: err => {
+        this.toastService.error(err.message || 'Erro ao carregar modelo.');
+        this.isLoading = false;
       }
     });
   }
 
   onSubmit(): void {
-    if (this.form.valid) {
-      const formData = this.form.value;
-      const modeloData = {
-        ...formData,
-        id_marca: Number(formData.id_marca) // Conversão explícita
-      };
+    if (this.formModelo.invalid) {
+      this.formModelo.markAllAsTouched();
+      return;
+    }
+    this.isLoading = true;
 
-      if (this.isEditando && this.modeloId) {
-        this.modeloService.atualizar(this.modeloId, modeloData).subscribe({
-          next: () => {
-            this.showToast('Modelo atualizado com sucesso!');
-            this.router.navigate(['/modelo']);
-          },
-          error: (err) => {
-            console.error('Erro ao atualizar modelo:', err);
-            this.showToast('Erro ao atualizar modelo');
-          }
-        });
-      } else {
-        this.modeloService.criar(modeloData).subscribe({
-          next: () => {
-            this.showToast('Modelo criado com sucesso!');
-            this.router.navigate(['/modelo']);
-          },
-          error: (err) => {
-            console.error('Erro ao criar modelo:', err);
-            this.showToast('Erro ao criar modelo');
-          }
-        });
-      }
+    const payload = this.formModelo.value;
+
+    if (this.isEditando && this.idModelo) {
+      payload.id = this.idModelo;
+      this.modeloService.atualizar(this.idModelo, payload).subscribe({
+        next: () => {
+          this.toastService.success('Modelo atualizado com sucesso!');
+          this.router.navigate(['/modelo']);
+        },
+        error: err => {
+          this.toastService.error(err.message || 'Erro ao atualizar modelo.');
+          this.isLoading = false;
+        }
+      });
     } else {
-      this.form.markAllAsTouched();
+      this.modeloService.criar(payload).subscribe({
+        next: () => {
+          this.toastService.success('Modelo criado com sucesso!');
+          this.router.navigate(['/modelo']);
+        },
+        error: err => {
+          this.toastService.error(err.message || 'Erro ao criar modelo.');
+          this.isLoading = false;
+        }
+      });
     }
   }
 
@@ -111,30 +119,31 @@ export class FormModeloComponent implements OnInit {
   }
 
   onExcluir(): void {
-    if (confirm('Tem certeza que deseja excluir este modelo?')) {
-      if (this.modeloId) {
-        this.modeloService.excluir(this.modeloId).subscribe({
-          next: () => {
-            this.showToast('Modelo excluído com sucesso!');
-            this.router.navigate(['/modelo']);
-          },
-          error: (err) => {
-            console.error('Erro ao excluir modelo:', err);
-            this.showToast('Erro ao excluir modelo');
-          }
-        });
+    if (!this.idModelo) return;
+
+    this.isLoading = true;
+    this.modeloService.remover(this.idModelo).subscribe({
+      next: () => {
+        this.toastService.success('Modelo excluído com sucesso!');
+        this.router.navigate(['/modelo']);
+      },
+      error: err => {
+        this.toastService.error(err.message || 'Erro ao excluir modelo.');
+        this.isLoading = false;
       }
-    }
+    });
   }
 
-  private showToast(message: string): void {
-    const toastEl = document.getElementById('liveToast');
-    if (toastEl) {
-      const toastBody = toastEl.querySelector('.toast-body');
-      if (toastBody) toastBody.textContent = message;
+  isInvalidControl(controlName: string): boolean {
+    const control = this.formModelo.get(controlName);
+    return !!(control && control.invalid && (control.dirty || control.touched));
+  }
 
-      const toast = new bootstrap.Toast(toastEl);
-      toast.show();
-    }
+  getControlErrors(controlName: string): any {
+    return this.formModelo.get(controlName)?.errors;
+  }
+
+  get f() {
+    return this.formModelo.controls;
   }
 }

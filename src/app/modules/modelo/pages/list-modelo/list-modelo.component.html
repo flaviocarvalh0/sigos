@@ -1,49 +1,83 @@
-<div class="container mt-4">
-  <h2>Lista de Modelos</h2>
-  <button class="btn btn-primary mb-3" (click)="novoModelo()">Novo Modelo</button>
-
-  <div class="table-responsive">
-    <div *ngIf="carregando" class="text-center">
-      <div class="spinner-border" role="status"><span class="visually-hidden">Carregando...</span></div>
+<div class="container mt-4 mb-5">
+  <div class="card shadow-sm">
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+      <h4 class="mb-0"><i class="bi bi-box-seam me-2"></i>Lista de Modelos</h4>
+      <button class="btn btn-sm btn-light" (click)="novoModelo()">
+        <i class="bi bi-plus-lg me-1"></i> Novo Modelo
+      </button>
     </div>
 
-    <div *ngIf="!carregando && modelos.length === 0" class="alert alert-info">
-      Nenhum modelo cadastrado.
+    <div class="card-body">
+      <div class="row gx-2 gy-2 mb-3 align-items-end">
+        <div class="col-md-5">
+          <label for="filtroId" class="form-label mb-1 small">Filtrar por ID</label>
+          <input type="text" id="filtroId" class="form-control form-control-sm" [(ngModel)]="filtroId"
+            placeholder="Digite o ID do modelo..." (input)="onIdFilterChange()" (keydown.enter)="aplicarFiltros()">
+        </div>
+        <div class="col-md-5">
+          <label for="filtroNome" class="form-label mb-1 small">Filtrar por Nome</label>
+          <input type="text" id="filtroNome" class="form-control form-control-sm" [(ngModel)]="filtroNome"
+            placeholder="Digite o nome do modelo..." (input)="aplicarFiltros()" (keydown.enter)="aplicarFiltros()">
+        </div>
+        <div class="col-md-2 d-flex align-items-end">
+          <button class="btn btn-sm btn-outline-secondary w-100" (click)="limparFiltros()" title="Limpar Filtros">
+            <i class="bi bi-eraser"></i> Limpar
+          </button>
+        </div>
+      </div>
+
+      <div *ngIf="carregando" class="text-center my-5">
+        <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+          <span class="visually-hidden">Carregando modelos...</span>
+        </div>
+        <p class="mt-2">Carregando modelos...</p>
+      </div>
+
+      <div *ngIf="!carregando && modelosFiltrados.length === 0" class="alert alert-info text-center">
+        <span *ngIf="filtroId || filtroNome">Nenhum modelo encontrado com os filtros aplicados.</span>
+        <span *ngIf="!(filtroId || filtroNome)">Nenhum modelo cadastrado.</span>
+      </div>
+
+      <div class="table-responsive" *ngIf="!carregando && modelosFiltrados.length > 0">
+        <table class="table table-hover table-striped table-sm">
+          <thead class="table-light">
+            <tr>
+              <th scope="col" (click)="onSort('id')" class="sortable-header" style="width: 80px;">
+                ID
+                <i *ngIf="sortColumn === 'id'" class="bi" [class.bi-arrow-up]="sortDirection === 'asc'"
+                  [class.bi-arrow-down]="sortDirection === 'desc'"></i>
+              </th>
+              <th scope="col" (click)="onSort('nome')" class="sortable-header">
+                Nome
+                <i *ngIf="sortColumn === 'nome'" class="bi" [class.bi-arrow-up]="sortDirection === 'asc'"
+                  [class.bi-arrow-down]="sortDirection === 'desc'"></i>
+              </th>
+              <th scope="col" (click)="onSort('nomeMarca')" class="sortable-header">
+                Marca
+                <i *ngIf="sortColumn === 'nomeMarca'" class="bi" [class.bi-arrow-up]="sortDirection === 'asc'"
+                  [class.bi-arrow-down]="sortDirection === 'desc'"></i>
+              </th>
+              <th scope="col" class="text-center" style="width: 100px;">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let modelo of modelosFiltrados">
+              <td>{{ modelo.id }}</td>
+              <td>{{ modelo.nome }}</td>
+              <td>{{ modelo.nomeMarca }}</td>
+              <td class="text-center">
+                <button class="btn btn-sm btn-outline-primary me-1" title="Editar" (click)="editarModelo(modelo.id)">
+                  <i class="bi bi-pencil"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-danger" title="Excluir"
+                  (click)="excluirModelo(modelo.id, modelo.nome)">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
-
-    <table *ngIf="!carregando && modelos.length > 0" class="table table-bordered">
-      <thead class="table-light">
-        <tr>
-          <th>Nome</th>
-          <th>Marca</th>
-          <th style="width: 160px;">Ações</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let modelo of modelos">
-          <td>{{ modelo.nome }}</td>
-          <td>{{ getNomeMarca(modelo.id_marca) }}</td>
-          <td>
-            <button class="btn btn-sm btn-warning me-2 d-none d-md-inline" (click)="editarModelo(modelo.id!)">Editar</button>
-            <button class="btn btn-sm btn-danger d-none d-md-inline" (click)="excluir(modelo.id!)">Excluir</button>
-
-            <button class="btn btn-sm btn-warning me-2 d-inline d-md-none" title="Editar" (click)="editarModelo(modelo.id!)">
-              <i class="bi bi-pencil"></i>
-            </button>
-            <button class="btn btn-sm btn-danger d-inline d-md-none" title="Excluir" (click)="excluir(modelo.id!)">
-              <i class="bi bi-trash"></i>
-            </button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-</div>
-
-
-<div #toast class="toast align-items-center text-bg-success border-0 position-fixed bottom-0 end-0 m-3" role="alert">
-  <div class="d-flex">
-    <div class="toast-body">Modelo excluído com sucesso!</div>
-    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
   </div>
 </div>

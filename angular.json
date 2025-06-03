@@ -80,7 +80,7 @@
           "defaultConfiguration": "development",
           "options": { 
             "allowedHosts": [
-              "7a27-2804-29b8-50ba-3212-5ca2-c2a-48e0-1963.ngrok-free.app",
+              "42f7-2804-29b8-50ba-35d7-7166-3bd3-afec-7dc4.ngrok-free.app",
               "localhost", 
               "127.0.0.1"  
             ],

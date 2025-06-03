@@ -127,13 +127,11 @@ export class FormUsuarioComponent implements OnInit, OnDestroy {
         return { senhasNaoCombinamGlobal: true }; // Indica erro no grupo
     }
 
-    // Limpa o erro específico do campo 'confirmarSenha' se as condições de erro não forem mais verdadeiras
     if (senha === confirmarSenha && group.get('confirmarSenha')?.hasError('senhasNaoCombinam')) {
         group.get('confirmarSenha')?.setErrors(null);
     }
-    // Se o campo 'senha' limpou o erro 'required' por outra lógica, mas ainda está vazio e 'confirmarSenha' não,
-    // o erro 'required' em 'senha' deve ser mantido pelo validador do próprio campo.
-    return null; // Nenhuma falha de validação a nível de grupo se tudo estiver ok ou se senha estiver vazia.
+
+    return null; 
   }
 
  loadEmpresas(): Promise<void> {

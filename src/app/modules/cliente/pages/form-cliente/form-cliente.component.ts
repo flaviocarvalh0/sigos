@@ -763,7 +763,7 @@ export class FormClienteComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   carregarModelos(): void {
-    const modeloSub = this.modeloService.getModelos().subscribe({
+    const modeloSub = this.modeloService.obterTodos().subscribe({
       next: (data: Modelo[]) => {
         this.modelos = data;
         this.carregouModelos = true;
