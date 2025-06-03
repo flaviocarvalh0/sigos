@@ -25,7 +25,7 @@ export class ListMovimentoEstoqueComponent {
 
   ngOnInit(): void {
     this.carregarMovimentacoes();
-    this.pecaService.listar().subscribe((pecas) => {
+    this.pecaService.obterTodos().subscribe((pecas) => {
       pecas.forEach((p) => {
         this.nomePecas[p.id!] = p.nome;
       });

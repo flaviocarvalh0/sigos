@@ -682,8 +682,8 @@ ngAfterViewInit() {
       .subscribe((pecaId) => {
         if (pecaId) {
           const catPeca = this.pecasDisponiveis.find((p) => p.id === pecaId);
-          if (catPeca && typeof catPeca.preco_venda === 'number') {
-            pecaForm.get('valor_unitario')?.setValue(catPeca.preco_venda);
+          if (catPeca && typeof catPeca.precoVenda === 'number') {
+            pecaForm.get('valor_unitario')?.setValue(catPeca.precoVenda);
           }
         }
         this.updateSubtotalItem(

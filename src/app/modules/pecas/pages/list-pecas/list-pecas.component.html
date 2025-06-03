@@ -1,59 +1,87 @@
-<div class="container mt-4">
-  <h2>Lista de Peças</h2>
-  <button class="btn btn-primary mb-3" (click)="novaPeca()">Nova Peça</button>
-
-  <div class="table-responsive">
-
-    <div *ngIf="pecas.length === 0" class="alert alert-info">
-      Nenhuma peça cadastrada.
+<div class="container mt-4 mb-5">
+  <div class="card shadow-sm">
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+      <h4 class="mb-0"><i class="bi bi-gear-fill me-2"></i>Lista de Peças</h4>
+      <button class="btn btn-sm btn-light" (click)="novaPeca()">
+        <i class="bi bi-plus-lg me-1"></i> Nova Peça
+      </button>
     </div>
 
-    <table *ngIf="pecas.length > 0" class="table table-bordered">
-      <thead class="table-light">
-        <tr>
-          <th>Nome</th>
-          <th>Preço Custo</th>
-          <th>Preço Venda</th>
-          <th>Localização</th>
-          <th>Quantidade Atual em Estoque</th>
-          <th>Quantidade Mínima Estoque</th>
-          <th style="width: 160px;">Ações</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let peca of pecas">
-          <td>{{ peca.nome }}</td>
-          <td>{{ peca.preco_custo | currency:'BRL' }}</td>
-          <td>{{ peca.preco_venda | currency:'BRL' }}</td>
-          <td>{{ peca.localizacao_fisica || '-' }}</td>
-          <td>{{ peca.quantidade_atual_estoque || '-' }}</td>
-          <td>{{ peca.quantidade_minima_estoque || '-' }}</td>
-          <td>
-            <!-- Versão Desktop (texto) -->
-            <button class="btn btn-sm btn-warning me-2 d-none d-md-inline"
-                    (click)="editarPeca(peca.id!)">Editar</button>
-            <button class="btn btn-sm btn-danger d-none d-md-inline"
-                    (click)="excluirPeca(peca.id!)">Excluir</button>
+    <div class="card-body">
+      <div class="row gx-2 gy-2 mb-3 align-items-end">
+        <div class="col-md-5">
+          <label for="filtroId" class="form-label mb-1 small">Filtrar por ID</label>
+          <input type="text" id="filtroId" class="form-control form-control-sm" [(ngModel)]="filtroId"
+            placeholder="Digite o ID da peça..." (input)="onIdFilterChange()" (keydown.enter)="aplicarFiltros()">
+        </div>
+        <div class="col-md-5">
+          <label for="filtroNome" class="form-label mb-1 small">Filtrar por Nome</label>
+          <input type="text" id="filtroNome" class="form-control form-control-sm" [(ngModel)]="filtroNome"
+            placeholder="Digite o nome da peça..." (input)="aplicarFiltros()" (keydown.enter)="aplicarFiltros()">
+        </div>
+        <div class="col-md-2 d-flex align-items-end">
+          <button class="btn btn-sm btn-outline-secondary w-100" (click)="limparFiltros()" title="Limpar Filtros">
+            <i class="bi bi-eraser"></i> Limpar
+          </button>
+        </div>
+      </div>
 
-            <!-- Versão Mobile (ícones) -->
-            <button class="btn btn-sm btn-warning me-2 d-inline d-md-none"
-                    title="Editar" (click)="editarPeca(peca.id!)">
-              <i class="bi bi-pencil"></i>
-            </button>
-            <button class="btn btn-sm btn-danger d-inline d-md-none"
-                    title="Excluir" (click)="excluirPeca(peca.id!)">
-              <i class="bi bi-trash"></i>
-            </button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-</div>
+      <div *ngIf="carregando" class="text-center my-5">
+        <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+          <span class="visually-hidden">Carregando peças...</span>
+        </div>
+        <p class="mt-2">Carregando peças...</p>
+      </div>
 
-<div #toast class="toast align-items-center text-bg-success border-0 position-fixed bottom-0 end-0 m-3" role="alert">
-  <div class="d-flex">
-    <div class="toast-body">Peça excluída com sucesso!</div>
-    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+      <div *ngIf="!carregando && pecasFiltradas.length === 0" class="alert alert-info text-center">
+        <span *ngIf="filtroId || filtroNome">Nenhuma peça encontrada com os filtros aplicados.</span>
+        <span *ngIf="!(filtroId || filtroNome)">Nenhuma peça cadastrada.</span>
+      </div>
+
+      <div class="table-responsive" *ngIf="!carregando && pecasFiltradas.length > 0">
+        <table class="table table-hover table-striped table-sm">
+          <thead class="table-light">
+            <tr>
+              <th scope="col" (click)="onSort('id')" class="sortable-header" style="width: 80px;">
+                ID
+                <i *ngIf="sortColumn === 'id'" class="bi" [class.bi-arrow-up]="sortDirection === 'asc'"
+                  [class.bi-arrow-down]="sortDirection === 'desc'"></i>
+              </th>
+              <th scope="col" (click)="onSort('nome')" class="sortable-header">
+                Nome
+                <i *ngIf="sortColumn === 'nome'" class="bi" [class.bi-arrow-up]="sortDirection === 'asc'"
+                  [class.bi-arrow-down]="sortDirection === 'desc'"></i>
+              </th>
+              <th scope="col">Preço Custo</th>
+              <th scope="col">Preço Venda</th>
+              <th scope="col">Localização</th>
+              <th scope="col">Qtd Estoque</th>
+              <th scope="col">Qtd Mínima</th>
+              <th scope="col" class="text-center" style="width: 100px;">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let peca of pecasFiltradas">
+              <td>{{ peca.id }}</td>
+              <td>{{ peca.nome }}</td>
+              <td>{{ peca.precoCusto| currency:'BRL' }}</td>
+              <td>{{ peca.precoVenda | currency:'BRL' }}</td>
+              <td>{{ peca.localizacaoFisica || '-' }}</td>
+              <td>{{ peca.quantidadeEstoque || '-' }}</td>
+              <td>{{ peca.quantidadeMinimaEstoque || '-' }}</td>
+              <td class="text-center">
+                <button class="btn btn-sm btn-outline-primary me-1" title="Editar" (click)="editarPeca(peca.id)">
+                  <i class="bi bi-pencil"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-danger" title="Excluir"
+                  (click)="excluirPeca(peca.id, peca.nome)">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
   </div>
 </div>

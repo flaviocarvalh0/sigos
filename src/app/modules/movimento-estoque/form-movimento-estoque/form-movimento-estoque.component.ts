@@ -37,7 +37,7 @@ export class FormMovimentoEstoqueComponent {
   }
 
   ngOnInit(): void {
-    this.pecaService.listar().subscribe(pecas => this.pecas = pecas);
+    this.pecaService.obterTodos().subscribe(pecas => this.pecas = pecas);
 
     this.route.params.subscribe(params => {
       const id = params['id'];

@@ -27,13 +27,13 @@ export class MovimentacaoEstoqueService {
   }
 
 criar(mov: MovimentacaoEstoque): Observable<MovimentacaoEstoque> {
-  return this.pecaService.buscarPorId(mov.id_peca).pipe(
+  return this.pecaService.obterPorId(mov.id_peca).pipe(
     switchMap(peca => {
       if (!peca) {
         return throwError(() => new Error('Peça não encontrada'));
       }
 
-      if (mov.tipo_de_movimentacao === 'SAIDA' && peca.quantidade_atual_estoque! < mov.quantidade) {
+      if (mov.tipo_de_movimentacao === 'SAIDA' && peca.quantidadeEstoque! < mov.quantidade) {
         return throwError(() => new Error('Estoque insuficiente para essa saída'));
       }
 
@@ -98,12 +98,12 @@ criar(mov: MovimentacaoEstoque): Observable<MovimentacaoEstoque> {
     quantidadeMovimentada: number,
     tipo: 'ENTRADA' | 'SAIDA'
   ): void {
-    this.pecaService.buscarPorId(pecaId).subscribe((peca) => {
+    this.pecaService.obterPorId(pecaId).subscribe((peca) => {
       if (!peca) {
         throw new Error('Peça não encontrada');
       }
 
-      let quantidadeAtual = peca.quantidade_atual_estoque ?? 0;
+      let quantidadeAtual = peca.quantidadeEstoque ?? 0;
 
       if (tipo === 'ENTRADA') {
         quantidadeAtual += quantidadeMovimentada;
@@ -114,7 +114,7 @@ criar(mov: MovimentacaoEstoque): Observable<MovimentacaoEstoque> {
         quantidadeAtual -= quantidadeMovimentada;
       }
 
-      this.pecaService.atualizarQuantidade(pecaId, quantidadeAtual);
+      //this.pecaService.atualizar(pecaId, quantidadeAtual);
     });
   }
 
@@ -123,20 +123,20 @@ criar(mov: MovimentacaoEstoque): Observable<MovimentacaoEstoque> {
     quantidade: number,
     tipo: 'ENTRADA' | 'SAIDA'
   ): void {
-    const peca = this.pecaService.buscarPorId(id_peca);
+    const peca = this.pecaService.obterPorId(id_peca);
 
     if (peca instanceof Observable) {
       peca.subscribe((p) => {
         if (!p) throw new Error('Peça não encontrada');
 
-        const atual = p.quantidade_atual_estoque ?? 0;
+        const atual = p.quantidadeEstoque ?? 0;
 
         if (tipo === 'ENTRADA') {
           // Reverter entrada = subtrair
-          p.quantidade_atual_estoque = atual - quantidade;
+          p.quantidadeEstoque = atual - quantidade;
         } else if (tipo === 'SAIDA') {
           // Reverter saída = somar
-          p.quantidade_atual_estoque = atual + quantidade;
+          p.quantidadeEstoque = atual + quantidade;
         }
 
         // Atualiza a peça no "banco de dados"

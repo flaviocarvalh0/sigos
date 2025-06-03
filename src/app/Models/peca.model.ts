@@ -1,17 +1,37 @@
-// src/app/models/peca.model.ts
 export interface Peca {
-  id?: number;
+  id: number;
   nome: string;
-  preco_custo: number;
-  preco_venda: number;
-  localizacao_fisica?: string;
-  quantidade_minima_estoque?: number;
-  quantidade_atual_estoque?: number;
-  id_marca?: number;
-  id_modelo?: number;
-  id_fornecedor?: number;
-  id_usuario_criador?: number;
-  id_usuario_modificador?: number;
-  data_criacao?: Date;
-  data_modificacao?: Date;
+  localizacaoFisica: string;
+  idCategoria: number;
+  idMarca: number;
+  idModelo: number;
+  quantidadeMinimaEstoque: number;
+  quantidadeEstoque: number;
+  precoCusto: number;
+  precoVenda: number;
+  idFornecedor: number;
+  nomeCategoria?: string;
+  nomeMarca?: string;
+  nomeModelo?: string;
+  criadoPor?: string;
+  modificadoPor?: string;
+  dataCriacao?: Date;
+  dataModificacao?: Date;
+}
+
+export interface PecaCriacaoPayload {
+  nome: string;
+  localizacaoFisica?: string;
+  idCategoria: number;
+  idMarca: number;
+  idModelo: number;
+  quantidadeMinimaEstoque: number;
+  precoCusto: number;
+  precoVenda: number;
+  idFornecedor: number;
+}
+
+export interface PecaAtualizacaoPayload extends PecaCriacaoPayload {
+  id: number;
+  dataUltimaModificacao?: Date;
 }

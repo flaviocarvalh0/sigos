@@ -1,182 +1,196 @@
-import { NgSelectModule } from '@ng-select/ng-select';
-import { Component, OnInit, ViewChild } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Peca } from '../../../../Models/peca.model';
-import { MarcaService } from '../../../../services/marca.service';
-import { ModeloService } from '../../../../services/modelo.service';
-import { PecaService } from '../../../../services/peca.service';
-import { NgIf } from '@angular/common';
-import { FornecedorService } from '../../../../services/fornecedor.service';
+import { Component, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { ModeloService } from '../../../../services/modelo.service';
+import { MarcaService } from '../../../../services/marca.service';
+import { PecaService } from '../../../../services/peca.service';
+import { FornecedorService } from '../../../../services/fornecedor.service';
+import { ToastService } from '../../../../services/toast.service';
+import { CommonModule } from '@angular/common';
+import { NgSelectModule } from '@ng-select/ng-select';
 import { Fornecedor } from '../../../../Models/fornecedor.model';
-
-declare const bootstrap: any;
+import { CategoriaService } from '../../../../services/categoria.service';
+import { Peca } from '../../../../Models/peca.model';
 
 @Component({
-  selector: 'app-peca-form',
+  selector: 'app-form-peca',
   templateUrl: './form-peca.component.html',
   styleUrls: ['./form-peca.component.css'],
   standalone: true,
-  imports: [NgSelectModule, ReactiveFormsModule, NgIf]
+  imports: [CommonModule, FormsModule, NgSelectModule, ReactiveFormsModule]
 })
 export class FormPecaComponent implements OnInit {
-  @ViewChild('toast') toastEl: any;
-  toast: any;
-  toastMessage = '';
-
-  form: FormGroup;
+  form!: FormGroup;
   isEditando = false;
-  pecaId: number | null = null;
+  isLoading = false;
+  cardTitle = 'Cadastrar Peça';
+  saveButtonText = 'Salvar';
+  idPeca?: number;
+  dataUltimaModificacao?: Date;
 
-  marcas: any[] = [];
-  modelos: any[] = [];
-  fornecedores: any[] = [];
-  isLoadingFornecedores: boolean = false;
-  toastService: any;
-  subscriptions: any;
-
+  marcas: { id: number, nome: string }[] = [];
+  modelos: { id: number, nome: string }[] = [];
+  fornecedores: { id: number, nome: string }[] = [];
+  categorias: { id: number, nome: string }[] = [];
 
   constructor(
     private fb: FormBuilder,
-    private pecaService: PecaService,
-    private marcaService: MarcaService,
-    private modeloService: ModeloService,
-    private fornecedorService: FornecedorService,
     private route: ActivatedRoute,
-    private router: Router
-  ) {
-    this.form = this.fb.group({
-      nome: ['', [Validators.required, Validators.minLength(2)]],
-      preco_custo: [0, [Validators.required, Validators.min(0)]],
-      preco_venda: [0, [Validators.required, Validators.min(0)]],
-      localizacao_fisica: [''],
-      quantidade_minima_estoque: [0, [Validators.min(0)]],
-      id_marca: [null],
-      id_modelo: [null],
-      id_fornecedor: [null]
-    });
-  }
+    private router: Router,
+    private modeloService: ModeloService,
+    private marcaService: MarcaService,
+    private pecaService: PecaService,
+    private fornecedorService: FornecedorService,
+    private categoriaService: CategoriaService,
+    private toastService: ToastService
+  ) {}
 
   ngOnInit(): void {
-  this.route.paramMap.subscribe(params => {
-    const id = params.get('id')
+    this.idPeca = Number(this.route.snapshot.paramMap.get('id'));
+    this.inicializarFormulario();
+    this.carregarDadosParaSelects();
 
-    if (id !== null && id !== undefined && !isNaN(+id)) {
-      this.pecaId = +id;
+    if (this.idPeca) {
       this.isEditando = true;
-      console.log('[DEBUG] Modo EDICAO ativado. ID:', this.pecaId);
-      this.carregarDadosPeca();
-    } else {
-      this.pecaId = null;
-      this.isEditando = false;
+      this.cardTitle = 'Editar Peça';
+      this.saveButtonText = 'Atualizar';
+      this.carregarPeca(this.idPeca);
     }
-  });
-
-  this.carregarDadosSelects();
-}
-
-  carregarDadosSelects(): void {
-    this.marcaService.getMarcas().subscribe(marcas => {
-      this.marcas = marcas.map(m => ({ id: m.id, nome: m.nome }));
-    });
-
-    this.modeloService.obterTodos().subscribe(modelos => {
-      this.modelos = modelos.map(m => ({ id: m.id, nome: m.nome }));
-    });
-
-    this.carregarFornecedoresParaSelect();
   }
 
-  carregarFornecedoresParaSelect(): void {
-    this.isLoadingFornecedores = true;
-    // O método no seu FornecedorService é listar()
-    const sub = this.fornecedorService.obterTodos().subscribe({
-      next: (fornecedoresApi: Fornecedor[]) => {
-        this.fornecedores = fornecedoresApi.map(f => ({
-          id: f.id!, // Usando non-null assertion operator pois o ID deve existir
-          nome: f.nomeFantasia || f.razaoSocial || 'Nome Indefinido' // Prioriza nomeFantasia, depois razaoSocial
+  inicializarFormulario(): void {
+    this.form = this.fb.group({
+      nome: ['', [Validators.required, Validators.minLength(2)]],
+      precoCusto: [0, [Validators.required, Validators.min(0.01)]],
+      precoVenda: [0, [Validators.required, Validators.min(0.01)]],
+      localizacaoFisica: [''],
+      quantidadeMinimaEstoque: [0, [Validators.min(0)]],
+      idMarca: [null],
+      idModelo: [null],
+      idFornecedor: [null],
+      idCategoria: [null],
+      dataUltimaModificacao: [null]
+    });
+  }
+
+  carregarDadosParaSelects(): void {
+    this.marcaService.getMarcas().subscribe({
+      next: marcas => this.marcas = marcas.map(m => ({ id: m.id, nome: m.nome })),
+      error: err => this.toastService.error(err.message || 'Erro ao carregar marcas.')
+    });
+
+    this.modeloService.obterTodos().subscribe({
+      next: modelos => this.modelos = modelos.map(m => ({ id: m.id, nome: m.nome })),
+      error: err => this.toastService.error(err.message || 'Erro ao carregar modelos.')
+    });
+
+    this.fornecedorService.obterTodos().subscribe({
+      next: (fornecedores: Fornecedor[]) => {
+        this.fornecedores = fornecedores.map(f => ({
+          id: f.id!,
+          nome: f.nomeFantasia || f.razaoSocial || 'Nome Indefinido'
         }));
-        this.isLoadingFornecedores = false;
-        console.log('Fornecedores carregados para select:', this.fornecedores);
       },
-      error: (err) => {
-        console.error('Erro ao carregar fornecedores:', err);
-        this.toastService.error('Erro ao carregar fornecedores. ' + (err.message || ''));
-        this.isLoadingFornecedores = false;
+      error: err => this.toastService.error(err.message || 'Erro ao carregar fornecedores.')
+    });
+
+    this.categoriaService.obterTodos().subscribe({
+      next: categorias => this.categorias = categorias.map(c => ({ id: c.id, nome: c.nome })),
+      error: err => this.toastService.error(err.message || 'Erro ao carregar categorias.')
+    });
+  }
+
+  carregarPeca(id: number): void {
+    this.isLoading = true;
+    this.pecaService.obterPorId(id).subscribe({
+      next: (peca: Peca | undefined) => {
+        if (!peca) return;
+        this.form.patchValue({
+          nome: peca.nome,
+          precoCusto: peca.precoCusto,
+          precoVenda: peca.precoVenda,
+          localizacaoFisica: peca.localizacaoFisica,
+          quantidadeMinimaEstoque: peca.quantidadeMinimaEstoque,
+          idMarca: peca.idMarca,
+          idModelo: peca.idModelo,
+          idFornecedor: peca.idFornecedor,
+          idCategoria: peca.idCategoria,
+          dataUltimaModificacao: peca.dataModificacao 
+        });
+        this.dataUltimaModificacao = peca.dataModificacao 
+        this.isLoading = false;
+      },
+      error: err => {
+        this.toastService.error(err.message || 'Erro ao carregar peça.');
+        this.isLoading = false;
       }
     });
-    this.subscriptions.add(sub);
-  }
-
-  carregarDadosPeca(): void {
-    console.log('Iniciando carregamento da peça com ID:', this.pecaId);
-    if (this.pecaId) {
-      this.pecaService.buscarPorId(this.pecaId).subscribe(peca => {
-        if (peca) {
-          console.log('Dados da peça:', peca);
-          this.form.patchValue(peca);
-        }
-      });
-    }
   }
 
   onSubmit(): void {
-    if (this.form.valid) {
-      const peca: Peca = this.form.value;
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
+    }
+    this.isLoading = true;
+    const payload = this.form.value;
 
-      const operacao = this.isEditando && this.pecaId ?
-        this.pecaService.atualizar(this.pecaId, peca) :
-        this.pecaService.criar(peca);
-
-      operacao.subscribe({
+    if (this.isEditando && this.idPeca) {
+      payload.id = this.idPeca;
+      payload.dataUltimaModificacao = this.dataUltimaModificacao;
+      this.pecaService.atualizar(this.idPeca, payload).subscribe({
         next: () => {
-          this.showToast (this.isEditando ? 'Peça atualizada com sucesso!' : 'Peça cadastrada com sucesso!');
-          if (!this.isEditando) this.form.reset();
+          this.toastService.success('Peça atualizada com sucesso!');
           this.router.navigate(['/peca']);
         },
-        error: () => {
-          this.toastMessage = 'Erro ao salvar peça';
-          this.toast.show();
+        error: err => {
+          this.toastService.error(err.message || 'Erro ao atualizar peça.');
+          this.isLoading = false;
         }
       });
     } else {
-      this.marcarCamposComoSucios();
+      this.pecaService.criar(payload).subscribe({
+        next: () => {
+          this.toastService.success('Peça criada com sucesso!');
+          this.router.navigate(['/peca']);
+        },
+        error: err => {
+          this.toastService.error(err.message || 'Erro ao criar peça.');
+          this.isLoading = false;
+        }
+      });
     }
   }
 
   onCancelar(): void {
-    history.back();
+    this.router.navigate(['/peca']);
   }
 
   onExcluir(): void {
-    if (this.pecaId && confirm('Tem certeza que deseja excluir esta peça?')) {
-      this.pecaService.excluir(this.pecaId).subscribe({
-        next: () => {
-          this.showToast("Peça excluída com sucesso!");
-          this.onCancelar();
-        },
-        error: () => {
-          this.toastMessage = 'Erro ao excluir peça';
-          this.toast.show();
-        }
-      });
-    }
-  }
-
-  private showToast(message: string): void {
-    const toastEl = document.getElementById('liveToast');
-    if (toastEl) {
-      const toastBody = toastEl.querySelector('.toast-body');
-      if (toastBody) toastBody.textContent = message;
-
-      const toast = new bootstrap.Toast(toastEl);
-      toast.show();
-    }
-  }
-
-  private marcarCamposComoSucios(): void {
-    Object.keys(this.form.controls).forEach(campo => {
-      this.form.get(campo)?.markAsTouched();
+    if (!this.idPeca) return;
+    this.isLoading = true;
+    this.pecaService.remover(this.idPeca).subscribe({
+      next: () => {
+        this.toastService.success('Peça excluída com sucesso!');
+        this.router.navigate(['/peca']);
+      },
+      error: err => {
+        this.toastService.error(err.message || 'Erro ao excluir peça.');
+        this.isLoading = false;
+      }
     });
+  }
+
+  isInvalidControl(controlName: string): boolean {
+    const control = this.form.get(controlName);
+    return !!(control && control.invalid && (control.dirty || control.touched));
+  }
+
+  getControlErrors(controlName: string): any {
+    return this.form.get(controlName)?.errors;
+  }
+
+  get f() {
+    return this.form.controls;
   }
 }

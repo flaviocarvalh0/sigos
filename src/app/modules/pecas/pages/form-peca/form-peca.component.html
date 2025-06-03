@@ -1,119 +1,121 @@
-<div class="container mt-4">
-  <div class="card shadow">
+<div class="container mt-4 mb-5">
+  <div class="card shadow-sm">
     <div class="card-header bg-primary text-white">
-      <h5 class="mb-0">{{ isEditando ? 'Editar Peça' : 'Cadastrar Peça' }}</h5>
+      <h4 class="mb-0">
+        <i class="bi bi-bookmark-plus me-2" *ngIf="!isEditando"></i>
+        <i class="bi bi-bookmark-check me-2" *ngIf="isEditando"></i>
+        {{ isEditando ? 'Editar Peça' : 'Cadastrar Peça' }}
+      </h4>
     </div>
     <div class="card-body">
-      <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
-        <!-- Nome da Peça -->
-        <div class="mb-3">
-          <label for="nome" class="form-label">Nome <span class="text-danger">*</span></label>
-          <input id="nome" type="text" class="form-control" formControlName="nome"
-            [class.is-invalid]="form.get('nome')?.invalid && form.get('nome')?.touched"
-            placeholder="Nome da peça">
-          <div *ngIf="form.get('nome')?.invalid && form.get('nome')?.touched" class="invalid-feedback">
-            Nome é obrigatório (mínimo 2 caracteres).
+      <div *ngIf="isLoading" class="text-center my-5">
+        <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+          <span class="visually-hidden">Carregando...</span>
+        </div>
+        <p class="mt-2">Processando dados da peça...</p>
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" *ngIf="!isLoading" novalidate>
+        <h5 class="mb-3 text-primary border-bottom pb-2">Dados da Peça</h5>
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label for="nome" class="form-label">Nome <span class="text-danger">*</span></label>
+            <input id="nome" type="text" class="form-control" formControlName="nome" placeholder="Nome da Peça"
+              [ngClass]="{'is-invalid': form.get('nome')?.invalid && form.get('nome')?.touched}">
+            <div *ngIf="form.get('nome')?.invalid && form.get('nome')?.touched" class="invalid-feedback">
+              Nome é obrigatório (mínimo 2 caracteres).
+            </div>
+          </div>
+
+          <div class="col-md-6 mb-3">
+            <label for="localizacaoFisica" class="form-label">Localização Física</label>
+            <input id="localizacaoFisica" type="text" class="form-control" formControlName="localizacaoFisica"
+              placeholder="Localização no estoque">
           </div>
         </div>
 
-        <!-- Preço de Custo -->
-        <div class="mb-3">
-          <label for="preco_custo" class="form-label">Preço de Custo <span class="text-danger">*</span></label>
-          <div class="input-group">
-            <span class="input-group-text">R$</span>
-            <input id="preco_custo" type="number" step="0.01" class="form-control" formControlName="preco_custo"
-              [class.is-invalid]="form.get('preco_custo')?.invalid && form.get('preco_custo')?.touched"
-              placeholder="0,00">
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label for="precoCusto" class="form-label">Preço de Custo <span class="text-danger">*</span></label>
+            <div class="input-group">
+              <span class="input-group-text">R$</span>
+              <input id="precoCusto" type="number" step="0.01" class="form-control" formControlName="precoCusto"
+                placeholder="0,00"
+                [ngClass]="{'is-invalid': form.get('precoCusto')?.invalid && form.get('precoCusto')?.touched}">
+            </div>
+            <div *ngIf="form.get('precoCusto')?.invalid && form.get('precoCusto')?.touched" class="invalid-feedback">
+              Preço de custo é obrigatório e deve ser positivo.
+            </div>
           </div>
-          <div *ngIf="form.get('preco_custo')?.invalid && form.get('preco_custo')?.touched" class="invalid-feedback">
-            Preço de custo é obrigatório e deve ser positivo.
+
+          <div class="col-md-6 mb-3">
+            <label for="precoVenda" class="form-label">Preço de Venda <span class="text-danger">*</span></label>
+            <div class="input-group">
+              <span class="input-group-text">R$</span>
+              <input id="precoVenda" type="number" step="0.01" class="form-control" formControlName="precoVenda"
+                placeholder="0,00"
+                [ngClass]="{'is-invalid': form.get('precoVenda')?.invalid && form.get('precoVenda')?.touched}">
+            </div>
+            <div *ngIf="form.get('precoVenda')?.invalid && form.get('precoVenda')?.touched" class="invalid-feedback">
+              Preço de venda é obrigatório e deve ser positivo.
+            </div>
           </div>
         </div>
 
-        <!-- Preço de Venda -->
-        <div class="mb-3">
-          <label for="preco_venda" class="form-label">Preço de Venda <span class="text-danger">*</span></label>
-          <div class="input-group">
-            <span class="input-group-text">R$</span>
-            <input id="preco_venda" type="number" step="0.01" class="form-control" formControlName="preco_venda"
-              [class.is-invalid]="form.get('preco_venda')?.invalid && form.get('preco_venda')?.touched"
-              placeholder="0,00">
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label for="quantidadeMinimaEstoque" class="form-label">Qtd. Mínima Estoque</label>
+            <input id="quantidadeMinimaEstoque" type="number" class="form-control"
+              formControlName="quantidadeMinimaEstoque" min="0" placeholder="Quantidade mínima para alerta">
           </div>
-          <div *ngIf="form.get('preco_venda')?.invalid && form.get('preco_venda')?.touched" class="invalid-feedback">
-            Preço de venda é obrigatório e deve ser positivo.
+
+          <div class="col-md-6 mb-3">
+            <label for="idMarca" class="form-label">Marca</label>
+            <ng-select id="idMarca" [items]="marcas" bindLabel="nome" bindValue="id" placeholder="Selecione a marca"
+              formControlName="idMarca" [searchable]="true" [clearable]="true"
+              [ngClass]="{'is-invalid': form.get('idMarca')?.invalid && form.get('idMarca')?.touched}">
+            </ng-select>
           </div>
         </div>
 
-        <!-- Localização Física -->
-        <div class="mb-3">
-          <label for="localizacao_fisica" class="form-label">Localização Física</label>
-          <input id="localizacao_fisica" type="text" class="form-control" formControlName="localizacao_fisica"
-            placeholder="Localização no estoque">
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label for="idModelo" class="form-label">Modelo</label>
+            <ng-select id="idModelo" [items]="modelos" bindLabel="nome" bindValue="id" placeholder="Selecione o modelo"
+              formControlName="idModelo" [searchable]="true" [clearable]="true"
+              [ngClass]="{'is-invalid': form.get('idModelo')?.invalid && form.get('idModelo')?.touched}">
+            </ng-select>
+          </div>
+
+          <div class="col-md-6 mb-3">
+            <label for="idFornecedor" class="form-label">Fornecedor</label>
+            <ng-select id="idFornecedor" [items]="fornecedores" bindLabel="nome" bindValue="id"
+              placeholder="Selecione o fornecedor" formControlName="idFornecedor" [searchable]="true" [clearable]="true"
+              [ngClass]="{'is-invalid': form.get('idFornecedor')?.invalid && form.get('idFornecedor')?.touched}">
+            </ng-select>
+          </div>
+
+          <!-- Dropdown Categoria -->
+          <div class="mb-3">
+            <label for="id_categoria" class="form-label">Categoria</label>
+            <ng-select id="id_categoria" [items]="categorias" bindLabel="nome" bindValue="id"
+              placeholder="Selecione a categoria" formControlName="idCategoria" [searchable]="true" [clearable]="true"
+              [class.is-invalid]="isInvalidControl('idCategoria')">
+            </ng-select>
+          </div>
+
         </div>
 
-        <!-- Quantidade Mínima em Estoque -->
-        <div class="mb-3">
-          <label for="quantidade_minima_estoque" class="form-label">Quantidade Mínima em Estoque</label>
-          <input id="quantidade_minima_estoque" type="number" class="form-control"
-            formControlName="quantidade_minima_estoque" min="0"
-            placeholder="Quantidade mínima para alerta">
-        </div>
-
-        <!-- Dropdown Marca -->
-        <div class="mb-3">
-          <label for="id_marca" class="form-label">Marca</label>
-          <ng-select
-            id="id_marca"
-            [items]="marcas"
-            bindLabel="nome"
-            bindValue="id"
-            placeholder="Selecione a marca"
-            formControlName="id_marca"
-            [searchable]="true"
-            [clearable]="true"
-            [class.is-invalid]="form.get('id_marca')?.invalid && form.get('id_marca')?.touched">
-          </ng-select>
-        </div>
-
-        <!-- Dropdown Modelo -->
-        <div class="mb-3">
-          <label for="id_modelo" class="form-label">Modelo</label>
-          <ng-select
-            id="id_modelo"
-            [items]="modelos"
-            bindLabel="nome"
-            bindValue="id"
-            placeholder="Selecione o modelo"
-            formControlName="id_modelo"
-            [searchable]="true"
-            [clearable]="true"
-            [class.is-invalid]="form.get('id_modelo')?.invalid && form.get('id_modelo')?.touched">
-          </ng-select>
-        </div>
-
-        <!-- Dropdown Fornecedor -->
-        <div class="mb-3">
-          <label for="id_fornecedor" class="form-label">Fornecedor</label>
-          <ng-select
-            id="id_fornecedor"
-            [items]="fornecedores"
-            bindLabel="nome"
-            bindValue="id"
-            placeholder="Selecione o fornecedor"
-            formControlName="id_fornecedor"
-            [searchable]="true"
-            [clearable]="true"
-            [class.is-invalid]="form.get('id_fornecedor')?.invalid && form.get('id_fornecedor')?.touched">
-          </ng-select>
-        </div>
-
-        <div class="d-flex justify-content-between gap-2 mt-4">
-          <button type="submit" class="btn btn-success flex-fill" [disabled]="form.invalid">
-            Salvar
+        <div class="d-flex justify-content-end mt-4">
+          <button type="button" class="btn btn-secondary me-2" (click)="onCancelar()">
+            <i class="bi bi-x-lg me-1"></i> Cancelar
           </button>
-          <button type="button" class="btn btn-secondary flex-fill" (click)="onCancelar()">Cancelar</button>
-          <button *ngIf="isEditando" type="button" class="btn btn-danger flex-fill"
-            (click)="onExcluir()">Excluir</button>
+          <button *ngIf="isEditando" type="button" class="btn btn-danger me-2" (click)="onExcluir()">
+            <i class="bi bi-trash me-1"></i> Excluir
+          </button>
+          <button type="submit" class="btn btn-success" [disabled]="form.invalid">
+            <i class="bi bi-check-lg me-1"></i> Salvar
+          </button>
         </div>
       </form>
     </div>
@@ -129,4 +131,3 @@
       aria-label="Close"></button>
   </div>
 </div>
-
