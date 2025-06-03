@@ -43,7 +43,7 @@ export class ListAparelhoComponent implements OnInit {
 
   ngOnInit(): void {
     this.carregando = true;
-    this.carregarClientes();
+    //this.carregarClientes();
     this.carregarAparelhos();
     this.carregarMarcas();
     this.carregarModelos();
@@ -64,20 +64,20 @@ export class ListAparelhoComponent implements OnInit {
     });
   }
 
-  carregarClientes(): void {
-    this.clienteService.getClientes().subscribe({
-      next: data => {
-        this.clientes = data;
-        this.carregouClientes = true;
-        this.verificarCarregamento();
-      },
-      error: err => {
-        console.error('Erro ao carregar clientes', err);
-        this.carregouClientes = true;
-        this.verificarCarregamento();
-      }
-    });
-  }
+  // carregarClientes(): void {
+  //   this.clienteService.getClientes().subscribe({
+  //     next: data => {
+  //       this.clientes = data;
+  //       this.carregouClientes = true;
+  //       this.verificarCarregamento();
+  //     },
+  //     error: err => {
+  //       console.error('Erro ao carregar clientes', err);
+  //       this.carregouClientes = true;
+  //       this.verificarCarregamento();
+  //     }
+  //   });
+  // }
 
   carregarMarcas(): void {
     this.marcaService.getMarcas().subscribe({
@@ -132,7 +132,7 @@ export class ListAparelhoComponent implements OnInit {
 
   getNomeCliente(idCliente: number): string {
     const cliente = this.clientes.find(c => c.id === idCliente);
-    return cliente ? cliente.nome_completo : 'Desconhecido';
+    return cliente ? cliente.nomeCompleto : 'Desconhecido';
   }
 
   editarParalho(id: number) {

@@ -90,14 +90,7 @@ export class ServiceOrderCardComponent {
   ) {}
 
   ngOnInit(): void {
-    this.clienteService.getClientes().subscribe({
-      next: (data) => {
-        this.client = data;
-      },
-      error: (err) => {
-        console.error('Erro ao carregar clientes', err);
-      },
-    });
+    this.getClientes();
 
     this.aparelhoService.listar().subscribe({
       next: (data) => {
@@ -144,9 +137,24 @@ export class ServiceOrderCardComponent {
     }
   }
 
+  getClientes() : void{
+    this.clienteService.obterTodos().subscribe({ // Ou this.clienteService.obterTodos() se você mudou a chamada no card
+  next: (data: Cliente[]) => {
+    this.client = data; // Atribui os clientes carregados à propriedade do componente
+    // this.isLoadingClientes = false;
+    console.log('Clientes carregados para o card:', this.client);
+  },
+  error: (err: any) => {
+    console.error('Erro ao carregar clientes para o card:', err);
+    // this.toastService.error(err.message || 'Falha ao carregar clientes para o card.'); // Exemplo com ToastService
+    // this.isLoadingClientes = false;
+  }
+});
+  }
+
   getNomeClienteById(id: number): string {
     const cliente = this.client.find((c) => c.id === id);
-    return cliente ? cliente.nome_completo : 'Cliente Desconhecido';
+    return cliente ? cliente.nomeCompleto : 'Cliente Desconhecido';
   }
   getNomeMarca(idAparelho: number): string {
     const aparelho = this.aparelho.find((a) => a.id === idAparelho);

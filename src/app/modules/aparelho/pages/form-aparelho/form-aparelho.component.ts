@@ -96,9 +96,9 @@ export class FormAparelhoComponent implements OnInit {
   }
 
   carregarDadosIniciais(): void {
-    this.clienteService.getClientes().subscribe(clientes => {
-      this.clientes = clientes;
-    });
+    // this.clienteService.getClientes().subscribe(clientes => {
+    //   this.clientes = clientes;
+    // });
 
     this.marcaService.getMarcas().subscribe(marcas => {
       this.marcas = marcas;

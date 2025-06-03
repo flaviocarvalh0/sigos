@@ -1,237 +1,322 @@
 <ul class="nav nav-tabs" id="clienteTabs" role="tablist">
   <li class="nav-item" role="presentation">
-    <button class="nav-link active" id="dados-tab" data-bs-toggle="tab" data-bs-target="#dados" type="button" role="tab"
-      aria-controls="dados" aria-selected="true">
-      Dados do Cliente
+    <button class="nav-link active" id="dados-tab" data-bs-toggle="tab" data-bs-target="#dadosPane" type="button"
+      role="tab" aria-controls="dadosPane" aria-selected="true">
+      <i class="bi bi-user-edit me-1"></i> Dados do Cliente
     </button>
   </li>
   <li class="nav-item" role="presentation">
-    <button class="nav-link" id="aparelhos-tab" data-bs-toggle="tab" data-bs-target="#aparelhos" type="button"
-      role="tab" aria-controls="aparelhos" aria-selected="false">
-      Aparelhos
+    <button class="nav-link" id="aparelhos-tab" data-bs-toggle="tab" data-bs-target="#aparelhosPane" type="button"
+      role="tab" aria-controls="aparelhosPane" aria-selected="false" [disabled]="!isEditando || !clienteId">
+      <i class="bi bi-mobile-alt me-1"></i> Aparelhos
     </button>
   </li>
 </ul>
 
-<div class="tab-content pt-3" id="clienteTabsContent">
-  <div class="tab-pane fade show active" id="dados" role="tabpanel" aria-labelledby="dados-tab">
-    <div class="container mt-4">
-      <div class="card shadow">
+<div class="tab-content pt-2" id="clienteTabsContent">
+  <div class="tab-pane fade show active" id="dadosPane" role="tabpanel" aria-labelledby="dados-tab">
+    <div class="container mt-3 mb-4">
+      <div class="card shadow-sm">
         <div class="card-header bg-primary text-white">
-          <h5 class="mb-0">Cliente</h5>
+          <h4 class="mb-0">
+            <i class="bi bi-user-plus me-2" *ngIf="!isEditando"></i>
+            <i class="bi bi-user-edit me-2" *ngIf="isEditando"></i>
+            {{ cardTitle }}
+          </h4>
         </div>
         <div class="card-body">
-          <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
-            <div class="container py-3" style="max-width: 600px;">
-              <!-- Nome completo -->
-              <div class="mb-3">
-                <label for="nome_completo" class="form-label">Nome Completo <span class="text-danger">*</span></label>
-                <input id="nome_completo" type="text" class="form-control" formControlName="nome_completo"
-                  placeholder="Digite o nome completo" />
-                <div *ngIf="form.get('nome_completo')?.touched && form.get('nome_completo')?.invalid"
-                  class="text-danger small">
-                  Nome é obrigatório e deve ter no mínimo 3 caracteres.
+          <div *ngIf="isLoading && !loadingCep" class="text-center my-5">
+            <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+              <span class="visually-hidden">Carregando...</span>
+            </div>
+            <p class="mt-2">Processando dados do cliente...</p>
+          </div>
+
+          <form [formGroup]="form" (ngSubmit)="onSubmit()" *ngIf="!isLoading || loadingCep" novalidate>
+
+            <h5 class="mb-3 text-primary border-bottom pb-2">Dados Pessoais</h5>
+            <div class="row">
+              <div class="col-md-7 mb-3">
+                <label for="nomeCompleto" class="form-label">Nome Completo <span class="text-danger">*</span></label>
+                <input id="nomeCompleto" type="text" class="form-control" formControlName="nomeCompleto"
+                  placeholder="Nome completo do cliente" [ngClass]="{'is-invalid': isInvalidControl('nomeCompleto')}" />
+                <div *ngIf="isInvalidControl('nomeCompleto')" class="invalid-feedback">
+                  <span *ngIf="getControlErrors('nomeCompleto')?.['required']">Nome completo é obrigatório.</span>
+                  <span *ngIf="getControlErrors('nomeCompleto')?.['minlength']">
+                    Deve ter no mínimo {{ getControlErrors('nomeCompleto')?.['minlength'].requiredLength }} caracteres.
+                  </span>
                 </div>
               </div>
-
-              <!-- Apelido -->
-              <div class="mb-3">
+              <div class="col-md-5 mb-3">
                 <label for="apelido" class="form-label">Apelido</label>
                 <input id="apelido" type="text" class="form-control" formControlName="apelido"
-                  placeholder="Apelido (opcional)" />
+                  placeholder="Como o cliente é conhecido (opcional)"
+                  [ngClass]="{'is-invalid': isInvalidControl('apelido')}" />
               </div>
+            </div>
 
-              <!-- CEP -->
-              <div class="mb-3">
-                <label for="cep" class="form-label">CEP</label>
-                <input id="cep" type="text" class="form-control" formControlName="cep" placeholder="00000-000"
-                  mask="00000-000" (blur)="onCepBlur()" />
-                <div *ngIf="cepError" class="text-danger small mt-1">{{ cepError }}</div>
-                <div *ngIf="loadingCep" class="text-info small mt-1">Buscando endereço...</div>
-              </div>
-
-              <!-- Cidade -->
-              <div class="mb-3">
-                <label for="cidade" class="form-label">Cidade</label>
-                <input id="cidade" type="text" class="form-control" formControlName="cidade" />
-              </div>
-
-              <!-- Logradouro -->
-              <div class="mb-3">
-                <label for="logradouro" class="form-label">Logradouro</label>
-                <input id="logradouro" type="text" class="form-control" formControlName="logradouro"
-                  placeholder="Rua, Avenida, etc" />
-              </div>
-
-              <!-- Número e Complemento lado a lado -->
-              <div class="row mb-3">
-                <div class="col-6">
-                  <label for="numero" class="form-label">Número</label>
-                  <input id="numero" type="text" class="form-control" formControlName="numero" placeholder="Número" />
-                </div>
-                <div class="col-6">
-                  <label for="complemento" class="form-label">Complemento</label>
-                  <input id="complemento" type="text" class="form-control" formControlName="complemento"
-                    placeholder="Apto, bloco..." />
-                </div>
-              </div>
-
-              <!-- Bairro e UF lado a lado -->
-              <div class="row mb-3">
-                <div class="col-8">
-                  <label for="bairro" class="form-label">Bairro</label>
-                  <input id="bairro" type="text" class="form-control" formControlName="bairro" placeholder="Bairro" />
-                </div>
-                <div class="col-4">
-                  <label for="uf" class="form-label">UF</label>
-                  <input id="uf" type="text" class="form-control" formControlName="uf" placeholder="UF" maxlength="2" />
-                </div>
-              </div>
-
-              <!-- País -->
-              <div class="mb-3">
-                <label for="pais" class="form-label">País</label>
-                <input id="pais" type="text" class="form-control" formControlName="pais" />
-              </div>
-
-              <!-- Celular -->
-              <div class="mb-3">
+            <h5 class="mb-3 mt-3 text-primary border-bottom pb-2">Contato</h5>
+            <div class="row">
+              <div class="col-md-4 mb-3">
                 <label for="celular" class="form-label">Celular <span class="text-danger">*</span></label>
                 <input id="celular" type="text" class="form-control" formControlName="celular"
-                  placeholder="(00) 00000-0000" mask="(00) 00000-0000" />
-                <div *ngIf="form.get('celular')?.touched && form.get('celular')?.invalid" class="text-danger small">
-                  Celular é obrigatório.
+                  placeholder="(00) 00000-0000" mask="(00) 00000-0000"
+                  [ngClass]="{'is-invalid': isInvalidControl('celular')}" />
+                <div *ngIf="isInvalidControl('celular')" class="invalid-feedback">
+                  <span *ngIf="getControlErrors('celular')?.['required']">Celular é obrigatório.</span>
                 </div>
               </div>
-
-              <!-- Email -->
-              <div class="mb-3">
+              <div class="col-md-4 mb-3">
                 <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
                 <input id="email" type="email" class="form-control" formControlName="email"
-                  placeholder="email@exemplo.com" />
-                <div *ngIf="form.get('email')?.touched && form.get('email')?.invalid" class="text-danger small">
-                  E-mail é obrigatório.
-                </div>
-                <div *ngIf="form.get('email')?.touched && form.get('email')?.invalid" class="text-danger small">
-                  E-mail inválido.
+                  placeholder="email@exemplo.com" [ngClass]="{'is-invalid': isInvalidControl('email')}" />
+                <div *ngIf="isInvalidControl('email')" class="invalid-feedback">
+                  <span *ngIf="getControlErrors('email')?.['required']">E-mail é obrigatório.</span>
+                  <span *ngIf="getControlErrors('email')?.['email']">Formato de e-mail inválido.</span>
                 </div>
               </div>
+              <div class="col-md-4 mb-3">
+                <label for="telefone" class="form-label">Telefone Fixo <span class="text-danger">*</span></label>
+                <input id="telefone" type="text" class="form-control" formControlName="telefone"
+                  placeholder="(00) 0000-0000" mask="(00) 0000-0000"
+                  [ngClass]="{'is-invalid': isInvalidControl('telefone')}" />
+              </div>
+            </div>
 
-              <!-- Tipo de pessoa -->
-              <div class="mb-3">
-                <label for="tipo_de_pessoa" class="form-label">Tipo de Pessoa</label>
-                <select id="tipo_de_pessoa" class="form-select" formControlName="tipo_de_pessoa">
-                  <option value="">Selecione</option>
+            <h5 class="mb-3 mt-3 text-primary border-bottom pb-2">Documentação</h5>
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="tipoPessoa" class="form-label">Tipo de Pessoa <span class="text-danger">*</span></label>
+                <select id="tipoPessoa" class="form-select" formControlName="tipoPessoa"
+                  [ngClass]="{'is-invalid': isInvalidControl('tipoPessoa')}">
                   <option value="Física">Pessoa Física</option>
                   <option value="Jurídica">Pessoa Jurídica</option>
                 </select>
+                <div *ngIf="isInvalidControl('tipoPessoa')" class="invalid-feedback">
+                  <span *ngIf="getControlErrors('tipoPessoa')?.['required']">Tipo de pessoa é obrigatório.</span>
+                </div>
               </div>
 
-              <!-- Ativo -->
-              <div class="form-check form-switch mb-3">
-                <input class="form-check-input" type="checkbox" id="ativo" formControlName="ativo" />
-                <label class="form-check-label" for="ativo">Ativo</label>
+              <div class="col-md-6 mb-3">
+                <div *ngIf="form.get('tipoPessoa')?.value === 'Física'">
+                  <label for="cpf" class="form-label">CPF <span class="text-danger">*</span></label>
+                  <input id="cpf" type="text" class="form-control" formControlName="cpf" placeholder="000.000.000-00"
+                    mask="000.000.000-00" [ngClass]="{'is-invalid': isInvalidControl('cpf')}" />
+                  <div *ngIf="isInvalidControl('cpf')" class="invalid-feedback">
+                    <span *ngIf="getControlErrors('cpf')?.['required']">CPF é obrigatório.</span>
+                    <span *ngIf="getControlErrors('cpf')?.['cpfInvalid']">
+                      {{ getControlErrors('cpf')?.['message'] || 'CPF inválido.' }}
+                    </span>
+                  </div>
+                </div>
+
+                <div *ngIf="form.get('tipoPessoa')?.value === 'Jurídica'">
+                  <label for="cnpj" class="form-label">CNPJ <span class="text-danger">*</span></label>
+                  <input id="cnpj" type="text" class="form-control" formControlName="cnpj"
+                    placeholder="00.000.000/0000-00" mask="00.000.000/0000-00"
+                    [ngClass]="{'is-invalid': isInvalidControl('cnpj')}" />
+                  <div *ngIf="isInvalidControl('cnpj')" class="invalid-feedback">
+                    <span *ngIf="getControlErrors('cnpj')?.['required']">CNPJ é obrigatório.</span>
+                    <span *ngIf="getControlErrors('cnpj')?.['cnpjInvalid']">
+                      {{ getControlErrors('cnpj')?.['message'] || 'CNPJ inválido.' }}
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
-            <div class="d-flex justify-content-between gap-2 mt-4">
-              <button type="submit" class="btn btn-success flex-fill">Salvar</button>
-              <button type="button" class="btn btn-secondary flex-fill" (click)="onCancelar()">Fechar</button>
-              <button *ngIf="isEditando" type="button" class="btn btn-danger flex-fill"
-                (click)="onExcluir()">Excluir</button>
+
+
+            <hr class="my-4">
+            <h5 class="mb-3 text-primary border-bottom pb-2">Endereço</h5>
+            <div class="row">
+              <div class="col-md-4 mb-3">
+                <label for="cep" class="form-label">CEP</label>
+                <input id="cep" type="text" class="form-control" formControlName="cep" placeholder="00000-000"
+                  mask="00000-000" (blur)="onCepBlur()"
+                  [ngClass]="{'is-invalid': isInvalidControl('cep') || cepError}" />
+                <div *ngIf="cepError && !loadingCep" class="text-danger small mt-1">{{ cepError }}</div>
+                <div *ngIf="loadingCep" class="text-info small mt-1">
+                  <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                  Buscando...
+                </div>
+                <div *ngIf="isInvalidControl('cep')" class="invalid-feedback">
+                </div>
+              </div>
+              <div class="col-md-8 mb-3">
+                <label for="logradouro" class="form-label">Logradouro</label>
+                <input id="logradouro" type="text" class="form-control" formControlName="logradouro"
+                  placeholder="Rua, Avenida, etc." [ngClass]="{'is-invalid': isInvalidControl('logradouro')}" />
+                <div *ngIf="isInvalidControl('logradouro')" class="invalid-feedback">
+                  <span *ngIf="getControlErrors('logradouro')?.['required']">Logradouro é obrigatório (se CEP
+                    informado).</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-3 mb-3">
+                <label for="numero" class="form-label">Número</label>
+                <input id="numero" type="text" class="form-control" formControlName="numero" placeholder="Nº"
+                  [ngClass]="{'is-invalid': isInvalidControl('numero')}" />
+                <div *ngIf="isInvalidControl('numero')" class="invalid-feedback">
+                  <span *ngIf="getControlErrors('numero')?.['required']">Número é obrigatório (se CEP informado).</span>
+                </div>
+              </div>
+              <div class="col-md-5 mb-3">
+                <label for="complemento" class="form-label">Complemento</label>
+                <input id="complemento" type="text" class="form-control" formControlName="complemento"
+                  placeholder="Apto, Bloco, Sala" [ngClass]="{'is-invalid': isInvalidControl('complemento')}" />
+              </div>
+              <div class="col-md-4 mb-3">
+                <label for="bairro" class="form-label">Bairro</label>
+                <input id="bairro" type="text" class="form-control" formControlName="bairro"
+                  [ngClass]="{'is-invalid': isInvalidControl('bairro')}" />
+                <div *ngIf="isInvalidControl('bairro')" class="invalid-feedback">
+                  <span *ngIf="getControlErrors('bairro')?.['required']">Bairro é obrigatório (se CEP informado).</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-5 mb-3">
+                <label for="cidade" class="form-label">Cidade</label>
+                <input id="cidade" type="text" class="form-control" formControlName="cidade"
+                  [ngClass]="{'is-invalid': isInvalidControl('cidade')}" />
+                <div *ngIf="isInvalidControl('cidade')" class="invalid-feedback">
+                  <span *ngIf="getControlErrors('cidade')?.['required']">Cidade é obrigatória (se CEP informado).</span>
+                </div>
+              </div>
+              <div class="col-md-3 mb-3">
+                <label for="uf" class="form-label">UF</label>
+                <input id="uf" type="text" class="form-control" formControlName="uf" placeholder="UF" maxlength="2"
+                  [ngClass]="{'is-invalid': isInvalidControl('uf')}" />
+                <div *ngIf="isInvalidControl('uf')" class="invalid-feedback">
+                  <span *ngIf="getControlErrors('uf')?.['required']">UF é obrigatório (se CEP informado).</span>
+                </div>
+              </div>
+              <div class="col-md-4 mb-3">
+                <label for="pais" class="form-label">País</label>
+                <input id="pais" type="text" class="form-control" formControlName="pais"
+                  [ngClass]="{'is-invalid': isInvalidControl('pais')}" />
+                <div *ngIf="isInvalidControl('pais')" class="invalid-feedback">
+                  <span *ngIf="getControlErrors('pais')?.['required']">País é obrigatório.</span>
+                </div>
+              </div>
+            </div>
+
+            <hr class="my-4">
+            <h5 class="mb-3 text-primary border-bottom pb-2">Configurações</h5>
+            <div class="mb-3">
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="ativo" formControlName="ativo" />
+                <label class="form-check-label" for="ativo">Cliente Ativo</label>
+              </div>
+            </div>
+
+            <div class="d-flex justify-content-end mt-5">
+              <button type="button" class="btn btn-secondary me-2" (click)="onCancelar()">
+                <i class="bi bi-x-lg me-1"></i> Fechar
+              </button>
+              <button *ngIf="isEditando" type="button" class="btn btn-danger me-2" (click)="onExcluir()"
+                [disabled]="isLoading">
+                <span *ngIf="!isLoading"><i class="bi bi-trash me-1"></i> Excluir</span>
+                <span *ngIf="isLoading"><span class="spinner-border spinner-border-sm me-1"></span> Excluindo...</span>
+              </button>
+              <button type="submit" class="btn btn-success" [disabled]="form.invalid || isLoading">
+                <span *ngIf="!isLoading"><i class="bi bi-check-lg me-1"></i> {{ saveButtonText }}</span>
+                <span *ngIf="isLoading"><span class="spinner-border spinner-border-sm me-1"></span> Salvando...</span>
+              </button>
             </div>
           </form>
         </div>
       </div>
     </div>
-    <!-- Toast -->
-    <div class="toast-container position-fixed bottom-0 end-0 p-3">
-      <div id="liveToast" class="toast align-items-center text-white bg-success border-0" role="alert"
-        aria-live="assertive" aria-atomic="true">
-        <div class="d-flex">
-          <div class="toast-body">
-            <!-- Mensagem do toast -->
+  </div>
+  <div class="tab-pane fade" id="aparelhosPane" role="tabpanel" aria-labelledby="aparelhos-tab">
+    <div class="container mt-3 mb-4">
+      <div class="card shadow-sm">
+        <div class="card-header bg-light">
+          <div class="d-flex justify-content-between align-items-center">
+            <h4 class="mb-0 text-primary">
+              <i class="bi bi-mobile-alt me-2"></i> Aparelhos do Cliente
+            </h4>
+            <button *ngIf="isEditando && clienteId && !isModal" class="btn btn-sm btn-primary"
+              (click)="abrirModalNovoAparelhoParaCliente()">
+              <i class="bi bi-plus me-1"></i> Adicionar Aparelho
+            </button>
           </div>
-          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
-            aria-label="Fechar"></button>
+        </div>
+        <div class="card-body">
+          <div *ngIf="isModal && clienteId" class="alert alert-info small">
+            Para adicionar ou gerenciar aparelhos, por favor, salve o cliente e acesse a tela de edição completa do
+            cliente ou adicione diretamente na Ordem de Serviço.
+          </div>
+
+          <div *ngIf="!clienteId && !isModal" class="alert alert-warning small">
+            Salve o cliente primeiro para poder adicionar aparelhos.
+          </div>
+
+          <div *ngIf="clienteId">
+            <div class="table-responsive">
+              <table class="table table-striped table-hover table-sm caption-top">
+                <caption>{{ aparelhos.length > 0 ? aparelhos.length + ' aparelho(s) encontrado(s)' : 'Nenhum aparelho
+                  cadastrado' }}</caption>
+                <thead class="table-light">
+                  <tr>
+                    <th>Marca</th>
+                    <th>Modelo</th>
+                    <th>IMEI 1</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let aparelho of aparelhos">
+                    <td>{{ getNomeMarca(aparelho.id_marca) }}</td>
+                    <td>{{ getNomeModelo(aparelho.id_modelo) }}</td>
+                    <td>{{ aparelho.imei_1 || '-' }}</td>
+                    <td>
+                      <button class="btn btn-sm btn-outline-primary me-1" title="Editar Aparelho"
+                        (click)="editarAparelho(aparelho.id!)">
+                        <i class="bi bi-pencil"></i>
+                      </button>
+                      <button class="btn btn-sm btn-outline-danger" title="Excluir Aparelho"
+                        (click)="excluirAparelho(aparelho.id!)">
+                        <i class="bi bi-trash"></i>
+                      </button>
+                    </td>
+                  </tr>
+                  <tr *ngIf="aparelhos.length === 0">
+                    <td colspan="4" class="text-center text-muted py-3">
+                      <i class="bi bi-folder-open fa-2x mb-2"></i><br>
+                      Nenhum aparelho cadastrado para este cliente.
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   </div>
-
-  <!-- Aba 2: Aparelhos -->
-  <!-- Na aba de aparelhos -->
-  <div class="tab-pane fade" id="aparelhos" role="tabpanel" aria-labelledby="aparelhos-tab">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-      <h5 class="mb-0">Aparelhos do Cliente</h5>
-      <button *ngIf="!isModal && clienteId" class="btn btn-sm btn-primary" (click)="abrirModalNovoAparelhoParaCliente()">
-      <i class="fas fa-plus me-1"></i> Adicionar Aparelho
-    </button>
-
-      <div *ngIf="isModal && clienteId" class="text-muted small">
-      (Para adicionar aparelhos, feche este modal e use a opção na Ordem de Serviço)
-    </div>
-    </div>
-
-    <div class="table-responsive">
-      <table class="table table-striped table-hover table-sm">
-        <thead class="table-light">
-          <tr>
-            <th>Marca</th>
-            <th>Modelo</th>
-            <th>IMEI 1</th>
-            <th>Ações</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let aparelho of aparelhos">
-            <td>{{ getNomeMarca(aparelho.id_marca) }}</td>
-            <td>{{ getNomeModelo(aparelho.id_modelo) }}</td>
-            <td>{{ aparelho.imei_1 || '-' }}</td>
-            <td>
-              <!-- Botões visíveis em telas md+ -->
-              <button class="btn btn-sm btn-warning me-2 d-none d-md-inline" (click)="editarAparelho(aparelho.id!)">
-                Editar
-              </button>
-              <button class="btn btn-sm btn-danger d-none d-md-inline" (click)="excluirAparelho(aparelho.id!)">
-                Excluir
-              </button>
-
-              <!-- Ícones visíveis em telas pequenas (sm e xs) -->
-              <button class="btn btn-sm btn-warning me-2 d-inline d-md-none" title="Editar"
-                (click)="editarAparelho(aparelho.id!)">
-                <i class="bi bi-pencil"></i>
-              </button>
-              <button class="btn btn-sm btn-danger d-inline d-md-none" title="Excluir"
-                (click)="excluirAparelho(aparelho.id!)">
-                <i class="bi bi-trash"></i>
-              </button>
-            </td>
-          </tr>
-          <tr *ngIf="aparelhos.length === 0">
-            <td colspan="4" class="text-center text-muted py-3">
-              Nenhum aparelho cadastrado para este cliente.
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-  <div class="modal fade" id="modalFormAparelhoCliente" tabindex="-1" aria-labelledby="modalFormAparelhoClienteLabel"
-    aria-hidden="true" #modalFormAparelhoRef>
-    <div class="modal-dialog modal-lg">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="modalFormAparelhoClienteLabel">{{ editandoAparelhoId ? 'Editar Aparelho' :
-            'Cadastrar Novo Aparelho' }}</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
-            (click)="fecharModalNovoClienteManual()"></button>
-        </div>
-        <div class="modal-body">
-          <app-form-aparelho *ngIf="exibirConteudoModalAparelho" [clienteId]="clienteId" [modoEmbedded]="true"
-            (salvar)="handleAparelhoSalvoOuCancelado()" (cancelar)="handleAparelhoSalvoOuCancelado()">
-          </app-form-aparelho>
-        </div>
+</div>
+<div class="modal fade" id="modalFormAparelhoCliente" tabindex="-1" aria-labelledby="modalFormAparelhoClienteLabel"
+  aria-hidden="true" #modalFormAparelhoRef>
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalFormAparelhoClienteLabel">
+          <i class="bi bi-mobile-alt me-2"></i>
+          {{ editandoAparelhoId ? 'Editar Aparelho' : 'Cadastrar Novo Aparelho' }}
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
+          (click)="fecharModalNovoClienteManual()"></button>
+      </div>
+      <div class="modal-body">
+        <app-form-aparelho *ngIf="exibirConteudoModalAparelho" [clienteId]="clienteId"
+          [aparelhoIdParaEditar]="editandoAparelhoId" [modoEmbedded]="true" (salvo)="handleAparelhoSalvoOuCancelado()"
+          (cancelado)="handleAparelhoSalvoOuCancelado()">
+        </app-form-aparelho>
       </div>
     </div>
   </div>
