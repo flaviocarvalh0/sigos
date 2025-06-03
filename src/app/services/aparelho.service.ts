@@ -1,62 +1,71 @@
-import { Injectable } from '@angular/core';
-import { Observable, of, throwError } from 'rxjs';
-import { delay, map } from 'rxjs/operators';
-import { Aparelho } from '../Models/aparelho.model';
+// src/app/services/aparelho.service.ts
 
+import { Injectable } from '@angular/core';
+import { HttpClient, HttpParams } from '@angular/common/http'; // HttpParams pode ser necessário se usado diretamente
+import { Observable } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
+import { Aparelho, AparelhoCriacaoPayload, AparelhoAtualizacaoPayload } from '../Models/aparelho.model';
+import { RespostaApi } from '../Models/reposta-api.model'; // Ajuste o path se seu modelo RespostaApi estiver 
+import { CrudService } from './crud.service';
 
 @Injectable({
   providedIn: 'root'
 })
-export class AparelhoService {
-  private aparelhos: Aparelho[] = [
-    {
-      id: 1, imei_1: '123456789012345', imei_2: '987654321098765', cor: 'Preto', id_modelo: 1, id_marca: 1,
-      id_cliente: 1
-    },
-    {
-      id: 2, imei_1: '111111111111111', imei_2: '222222222222222', cor: 'Branco', id_modelo: 2, id_marca: 2,
-      id_cliente: 2
-    }
-  ];
+export class AparelhoService extends CrudService<Aparelho, number> {
+  // Definindo as propriedades abstratas da classe base
+  protected readonly apiUrlBase = 'https://localhost:7119/api'; // Ajuste a porta se necessário
+  protected readonly endpoint = 'aparelhos';
 
-  private proximoId = 3;
-
-  listar(): Observable<Aparelho[]> {
-    // Simula atraso de 500ms
-    return of(this.aparelhos).pipe(delay(500));
+  constructor(http: HttpClient) {
+    super(http); // Chama o construtor da classe base
+    console.log(`[AparelhoService] Inicializado para interagir com: ${this.fullApiUrl}`);
   }
 
-buscarPorCliente(clienteId: number): Observable<Aparelho[]> {
-  const aparelhosDoCliente = this.aparelhos.filter(a => a.id_cliente === clienteId);
-  return of(aparelhosDoCliente).pipe(delay(300));
-}
+  override criar(payload: AparelhoCriacaoPayload): Observable<Aparelho> {
 
-buscarPorId(id: number): Observable<Aparelho | undefined> {
-  const aparelho = this.aparelhos.find(a => a.id === id);
-  return of(aparelho).pipe(delay(300));
-}
-
-  criar(aparelho: Aparelho): Observable<Aparelho> {
-    aparelho.id = this.proximoId++;
-    this.aparelhos.push(aparelho);
-    return of(aparelho).pipe(delay(300));
+    return this.http.post<RespostaApi<Aparelho>>(`${this.fullApiUrl}`, payload, this.getHttpOptions())
+      .pipe(
+        map(response => {
+          if (response.sucesso && response.dados) {
+            return response.dados; // A API do AparelhoCelularController retorna o Aparelho criado
+          }
+          console.error("Erro ao criar aparelho (resposta API):", response.mensagem, response.erros);
+          throw new Error(response.mensagem || 'Falha ao criar aparelho.');
+        }),
+        catchError(this.handleError) // Reutiliza o handleError da classe base
+      );
   }
 
-  atualizar(id: number, aparelhoAtualizado: Aparelho): Observable<Aparelho> {
-    const index = this.aparelhos.findIndex(a => a.id === id);
-    if (index === -1) {
-      return throwError(() => new Error('Aparelho não encontrado'));
-    }
-    this.aparelhos[index] = { ...aparelhoAtualizado, id };
-    return of(this.aparelhos[index]).pipe(delay(300));
+  // Sobrescrevendo 'atualizar' para usar o payload específico AparelhoAtualizacaoPayload
+  // e gerenciar o campo dataUltimaModificacao para controle de concorrência.
+  override atualizar(id: number, payload: AparelhoAtualizacaoPayload): Observable<Aparelho> {
+    // O CrudService.atualizar espera Partial<T> | T.
+    // AparelhoAtualizacaoPayload é um DTO específico que inclui dataUltimaModificacao.
+    return this.http.put<RespostaApi<Aparelho>>(`${this.fullApiUrl}/${id}`, payload, this.getHttpOptions())
+      .pipe(
+        map(response => {
+          if (response.sucesso && response.dados) {
+            return response.dados;
+          }
+          // O handleError da classe base já deve tratar erros HTTP como 409 (conflito).
+          // A mensagem de erro do backend "Os dados foram modificados por outro usuário..."
+          // será capturada por handleError.
+          console.error(`Erro ao atualizar aparelho ${id} (resposta API):`, response.mensagem, response.erros);
+          throw new Error(response.mensagem || `Falha ao atualizar aparelho ${id}.`);
+        }),
+        catchError(this.handleError) // Reutiliza o handleError da classe base
+      );
   }
 
+  buscarPorCliente(clienteId: number): Observable<Aparelho[]> {
+    // Usando o obterTodos herdado
+    return this.obterTodos().pipe(
+      map(aparelhos => aparelhos.filter(aparelho => aparelho.idCliente === clienteId)),
+      catchError(this.handleError) // Adiciona tratamento de erro caso obterTodos falhe
+    );
+  }
   excluir(id: number): Observable<void> {
-    const index = this.aparelhos.findIndex(a => a.id === id);
-    if (index === -1) {
-      return throwError(() => new Error('Aparelho não encontrado'));
-    }
-    this.aparelhos.splice(index, 1);
-    return of(undefined).pipe(delay(300));
+    console.warn("Método `excluir(id)` está obsoleto, use `remover(id)` que é herdado do CrudService.");
+    return this.remover(id);
   }
 }

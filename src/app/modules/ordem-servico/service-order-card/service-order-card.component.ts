@@ -46,7 +46,7 @@ import { Modelo } from '../../../Models/modelo.model';
 
           <div class="d-flex align-items-center gap-2 text-muted small mb-2">
             <i class="bi bi-phone"></i>
-            <span class="text-truncate">{{ getNomeModelo(order.id_aparelho) }}</span>
+            <span class="text-truncate"></span>
           </div>
 
           <div class="d-flex align-items-center gap-2 text-muted small mb-3">
@@ -92,14 +92,14 @@ export class ServiceOrderCardComponent {
   ngOnInit(): void {
     this.getClientes();
 
-    this.aparelhoService.listar().subscribe({
-      next: (data) => {
-        this.aparelho = data;
-      },
-      error: (err) => {
-        console.error('Erro ao carregar aparelhos', err);
-      },
-    });
+    // this.aparelhoService.listar().subscribe({
+    //   next: (data) => {
+    //     this.aparelho = data;
+    //   },
+    //   error: (err) => {
+    //     console.error('Erro ao carregar aparelhos', err);
+    //   },
+    // });
 
     this.marcaService.getMarcas().subscribe({
       next: (data) => {
@@ -156,17 +156,17 @@ export class ServiceOrderCardComponent {
     const cliente = this.client.find((c) => c.id === id);
     return cliente ? cliente.nomeCompleto : 'Cliente Desconhecido';
   }
-  getNomeMarca(idAparelho: number): string {
-    const aparelho = this.aparelho.find((a) => a.id === idAparelho);
-    const marca = this.marcas.find((m) => m.id === aparelho!.id_marca);
-    return marca ? marca.nome : 'Desconhecida';
-  }
+  // getNomeMarca(idAparelho: number): string {
+  //   const aparelho = this.aparelho.find((a) => a.id === idAparelho);
+  //   const marca = this.marcas.find((m) => m.id === aparelho!.id_marca);
+  //   return marca ? marca.nome : 'Desconhecida';
+  // }
 
-  getNomeModelo(idAparelho: number): string {
-    const aparelho = this.aparelho.find((a) => a.id === idAparelho);
-    const modelo = this.modelos.find((m) => m.id === aparelho?.id_modelo);
-    return modelo ? modelo.nome : 'Desconhecido';
-  }
+  // getNomeModelo(idAparelho: number): string {
+  //   const aparelho = this.aparelho.find((a) => a.id === idAparelho);
+  //   const modelo = this.modelos.find((m) => m.id === aparelho?.id_modelo);
+  //   return modelo ? modelo.nome : 'Desconhecido';
+  // }
   formatStatus(status: string): string {
     switch (status.toLowerCase()) {
       case 'pendente':

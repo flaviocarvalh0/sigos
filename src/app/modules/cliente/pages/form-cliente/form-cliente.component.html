@@ -80,6 +80,9 @@
                 <input id="telefone" type="text" class="form-control" formControlName="telefone"
                   placeholder="(00) 0000-0000" mask="(00) 0000-0000"
                   [ngClass]="{'is-invalid': isInvalidControl('telefone')}" />
+                <div *ngIf="isInvalidControl('telefone')" class="invalid-feedback">
+                  <span *ngIf="getControlErrors('telefone')?.['required']">Telefone Fixo é obrigatório.</span>
+                </div>
               </div>
             </div>
 
@@ -259,8 +262,7 @@
           <div *ngIf="clienteId">
             <div class="table-responsive">
               <table class="table table-striped table-hover table-sm caption-top">
-                <caption>{{ aparelhos.length > 0 ? aparelhos.length + ' aparelho(s) encontrado(s)' : 'Nenhum aparelho
-                  cadastrado' }}</caption>
+                <caption>{{ aparelhos.length > 0 ? aparelhos.length + ' aparelho(s) encontrado(s)' : 'Nenhum aparelho cadastrado' }}</caption>
                 <thead class="table-light">
                   <tr>
                     <th>Marca</th>
@@ -271,9 +273,9 @@
                 </thead>
                 <tbody>
                   <tr *ngFor="let aparelho of aparelhos">
-                    <td>{{ getNomeMarca(aparelho.id_marca) }}</td>
-                    <td>{{ getNomeModelo(aparelho.id_modelo) }}</td>
-                    <td>{{ aparelho.imei_1 || '-' }}</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
                     <td>
                       <button class="btn btn-sm btn-outline-primary me-1" title="Editar Aparelho"
                         (click)="editarAparelho(aparelho.id!)">
@@ -313,7 +315,7 @@
           (click)="fecharModalNovoClienteManual()"></button>
       </div>
       <div class="modal-body">
-        <app-form-aparelho *ngIf="exibirConteudoModalAparelho" [clienteId]="clienteId"
+        <app-form-aparelho *ngIf="exibirConteudoModalAparelho" [clienteIdInput]="clienteId"
           [aparelhoIdParaEditar]="editandoAparelhoId" [modoEmbedded]="true" (salvo)="handleAparelhoSalvoOuCancelado()"
           (cancelado)="handleAparelhoSalvoOuCancelado()">
         </app-form-aparelho>

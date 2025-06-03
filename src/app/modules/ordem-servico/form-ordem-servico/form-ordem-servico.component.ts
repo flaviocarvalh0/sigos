@@ -273,10 +273,10 @@ ngAfterViewInit() {
       this.modalAparelhoOsInstance?.hide(); // O listener 'hidden.bs.modal' recarregará a lista
     }
     if (aparelho && aparelho.id) {
-      this.showToast(`Aparelho "${this.getNomeMarca(aparelho.id_marca)} ${this.getNomeModelo(aparelho.id_modelo)}" salvo com sucesso!`, 'success');
-      // A lista de aparelhosDoCliente será atualizada pelo listener 'hidden.bs.modal'.
-      // Seleciona o aparelho recém-criado/editado no select da OS.
-      this.form.get('id_aparelho')?.setValue(aparelho.id);
+      // this.showToast(`Aparelho "${this.getNomeMarca(aparelho.id_marca)} ${this.getNomeModelo(aparelho.id_modelo)}" salvo com sucesso!`, 'success');
+      // // A lista de aparelhosDoCliente será atualizada pelo listener 'hidden.bs.modal'.
+      // // Seleciona o aparelho recém-criado/editado no select da OS.
+      // this.form.get('id_aparelho')?.setValue(aparelho.id);
     }
   }
 
