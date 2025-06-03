@@ -405,11 +405,11 @@ ngAfterViewInit() {
       if (
         prazoSelecionado &&
         !isNaN(dataConclusao.getTime()) &&
-        prazoSelecionado.quantidade_de_dias
+        prazoSelecionado.prazoEmDias
       ) {
         const dataExpiracao = new Date(dataConclusao);
         dataExpiracao.setDate(
-          dataConclusao.getDate() + prazoSelecionado.quantidade_de_dias
+          dataConclusao.getDate() + prazoSelecionado.prazoEmDias
         );
         this.form
           .get('data_expiracao_garantia')

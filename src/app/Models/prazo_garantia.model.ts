@@ -1,10 +1,31 @@
+// prazo-garantia.model.ts
+
 export interface PrazoGarantia {
-  id?: number;
-  quantidade_de_dias: number;
-  ativo: boolean; 
+  id: number;
+  prazoEmDias: number;
   descricao: string;
-  id_usuario_criador?: number;
-  id_usuario_modificador?: number;
-  data_criacao?: Date;
-  data_modificacao?: Date;
+  ativo: boolean;
+  dataCriacao?: Date;
+  dataModificacao?: Date;
+  criadoPor?: string;
+  modificadoPor?: string;
+}
+
+export interface PrazoGarantiaCriacao {
+  prazoEmDias: number;
+  descricao: string;
+  ativo: boolean;
+}
+
+export interface PrazoGarantiaAtualizacao {
+  id: number;
+  prazoEmDias: number;
+  descricao: string;
+  ativo: boolean;
+  dataUltimaModificacao: Date;
+}
+
+export interface SelectItemDto {
+  id: number;
+  descricao: string;
 }

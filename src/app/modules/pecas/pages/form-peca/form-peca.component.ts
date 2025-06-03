@@ -58,6 +58,7 @@ export class FormPecaComponent implements OnInit {
     }
   }
 
+
   inicializarFormulario(): void {
     this.form = this.fb.group({
       nome: ['', [Validators.required, Validators.minLength(2)]],
@@ -115,9 +116,9 @@ export class FormPecaComponent implements OnInit {
           idModelo: peca.idModelo,
           idFornecedor: peca.idFornecedor,
           idCategoria: peca.idCategoria,
-          dataUltimaModificacao: peca.dataModificacao 
+          dataUltimaModificacao: peca.dataModificacao
         });
-        this.dataUltimaModificacao = peca.dataModificacao 
+        this.dataUltimaModificacao = peca.dataModificacao
         this.isLoading = false;
       },
       error: err => {

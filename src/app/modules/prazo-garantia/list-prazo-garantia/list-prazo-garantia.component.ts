@@ -1,77 +1,111 @@
-
-import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
-import { Router, RouterModule } from '@angular/router';
-import { ReactiveFormsModule } from '@angular/forms';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { PrazoGarantia } from '../../../Models/prazo_garantia.model';
 import { PrazoGarantiaService } from '../../../services/prazo_garantia.service';
-
-declare const bootstrap: any;
+import { PrazoGarantia } from '../../../Models/prazo_garantia.model';
+import { ListagemDinamicaComponent } from '../../../shared/components/listagem-dinamica/listagem-dinamica.component';
+import { ToastService } from '../../../services/toast.service';
+import { ConfirmationService } from '../../../services/confirmation.service';
+import { ConfirmationConfig } from '../../../Models/confirmation.model';
+import { Subscription } from 'rxjs';
 
 @Component({
-    selector: 'app-list-prazo-garantia',
-    templateUrl: './list-prazo-garantia.component.html',
-    styleUrl: './list-prazo-garantia.component.css',
-    imports: [RouterModule, CommonModule],
-    standalone: true,
+  selector: 'app-list-prazo-garantia',
+  template: `<app-listagem-dinamica
+              titulo="Lista de Prazo de Garantia"
+              [dados]="dados"
+              [colunas]="colunas"
+              [carregando]="loading()"
+              (editar)="editar($event)"
+              (excluir)="excluir($event)"
+              (criarNovo)="novo()">
+            </app-listagem-dinamica>`,
+  standalone: true,
+  imports: [CommonModule, ListagemDinamicaComponent]
 })
-export class ListPrazoGarantiaComponent implements OnInit {
-  @ViewChild('toast') toastElement!: ElementRef;
-  prazoGarantia: PrazoGarantia[] = [];
-  carregando = true;
+export class ListPrazoGarantiaComponent implements OnInit, OnDestroy {
+  dados: PrazoGarantia[] = [];
+  carregando = false;
+  subscriptions = new Subscription();
+
+  colunas = [
+    { campo: 'id', titulo: 'Id', ordenavel: true, filtro: true },
+    { campo: 'descricao', titulo: 'Descrição', ordenavel: true, filtro: true },
+    { campo: 'prazoEmDias', titulo: 'Prazo (dias)', ordenavel: true, filtro: false },
+    { campo: 'ativo', titulo: 'Ativo', ordenavel: true, filtro: false },
+  ];
 
   constructor(
     private prazoGarantiaService: PrazoGarantiaService,
+    private toastService: ToastService,
+    private confirmationService: ConfirmationService,
     private router: Router
   ) {}
 
   ngOnInit(): void {
+    this.carregarDados();
+  }
+
+  loading(): boolean{
+    return this.carregando;
+  }
+
+  ngOnDestroy(): void {
+    this.subscriptions.unsubscribe();
+  }
+
+  carregarDados(): void {
     this.carregando = true;
-    this.prazoGarantiaService.listar().subscribe({
-      next: (data) => {
-        this.prazoGarantia = data;
-        this.verificarFimCarregamento();
+    this.prazoGarantiaService.obterTodos().subscribe({
+      next: (res) => {
+        this.dados = res;
+        this.carregando = false;
       },
-      error: () => this.verificarFimCarregamento(),
+      error: () => this.carregando = false
     });
   }
 
-  pendentes = 2;
-  verificarFimCarregamento() {
-    this.pendentes--;
-    if (this.pendentes === 0) {
-      this.carregando = false;
-    }
-  }
-
-  editarPrazoGarantia(id: number) {
+  editar(id: number): void {
     this.router.navigate(['/prazo_garantia/form', id]);
   }
 
-  novoPrazoGarantia() {
+  novo(): void {
     this.router.navigate(['/prazo_garantia/form']);
   }
 
-  excluir(id: number) {
-    if (confirm('Tem certeza que deseja excluir este modelo?')) {
-      this.prazoGarantiaService.excluir(id).subscribe(() => {
-        this.prazoGarantia = this.prazoGarantia.filter((p) => p.id !== id);
-        this.showToast('Prazo de garantia excluído com sucesso!');
-      }, error => {
-        console.error('Erro ao excluir prazo de garantia', error);
-        this.showToast('Erro ao excluir prazo de garantia');
-      });
+  excluir(id: number): void {
+    const item = this.dados.find(x => x.id === id);
+    if (!item) {
+      this.toastService.warning('Prazo de garantia não encontrado para exclusão.');
+      return;
     }
-  }
 
-  private showToast(message: string): void {
-    const toastEl = document.getElementById('liveToast');
-    if (toastEl) {
-      const toastBody = toastEl.querySelector('.toast-body');
-      if (toastBody) toastBody.textContent = message;
+    const config: ConfirmationConfig = {
+      title: 'Confirmar Exclusão',
+      message: `Deseja realmente excluir o prazo "${item.descricao}"?`,
+      acceptButtonText: 'Sim, Excluir',
+      cancelButtonText: 'Cancelar',
+      acceptButtonClass: 'btn-danger',
+      cancelButtonClass: 'btn-secondary'
+    };
 
-      const toast = new bootstrap.Toast(toastEl);
-      toast.show();
-    }
+    const sub = this.confirmationService.confirm(config).subscribe(confirmado => {
+      if (confirmado) {
+        this.carregando = true;
+        this.prazoGarantiaService.remover(id).subscribe({
+          next: () => {
+            this.toastService.success(`Prazo "${item.descricao}" excluído com sucesso!`);
+            this.carregarDados();
+            this.carregando = false;
+          },
+          error: (err) => {
+            this.toastService.error(err.message || 'Erro ao excluir prazo.');
+            this.carregando = false;
+          }
+        });
+      }
+    });
+
+    this.subscriptions.add(sub);
   }
 }
