@@ -1,70 +1,94 @@
+// list-movimentacao-estoque.component.ts
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { ListagemDinamicaComponent } from '../../../shared/components/listagem-dinamica/listagem-dinamica.component';
+import { ToastService } from '../../../services/toast.service';
 import { MovimentacaoEstoque } from '../../../Models/movimento_estoque.model';
 import { MovimentacaoEstoqueService } from '../../../services/movimentacao_estoque.service';
-import { PecaService } from '../../../services/peca.service';
-import { CommonModule, NgClass, NgFor, NgIf } from '@angular/common';
-
-declare const bootstrap: any;
 
 @Component({
   selector: 'app-list-movimento-estoque',
-  imports: [NgClass, [NgIf,NgFor], CommonModule],
-  templateUrl: './list-movimento-estoque.component.html',
-  styleUrl: './list-movimento-estoque.component.css',
+  template: `<app-listagem-dinamica
+              titulo="Movimentações de Estoque"
+              [dados]="dados"
+              [colunas]="colunas"
+              [mostrarAcoes]="false"
+              [mostrarFiltros]="false"
+              (criarNovo)="novaMovimentacao()">
+            </app-listagem-dinamica>`,
+  standalone: true,
+  imports: [CommonModule, ListagemDinamicaComponent]
 })
-export class ListMovimentoEstoqueComponent {
-  movimentacoes: MovimentacaoEstoque[] = [];
-  nomePecas: Record<number, string> = {};
+export class ListMovimentoEstoqueComponent implements OnInit {
+  dados: MovimentacaoEstoque[] = [];
+  carregando = false;
+
+colunas = [
+  {
+    campo: 'id',
+    titulo: 'ID',
+    ordenavel: true,
+    filtro: true,
+    largura: '80px',
+    tipo: 'texto' as const
+  },
+  {
+    campo: 'nomePeca',
+    titulo: 'Peça',
+    ordenavel: true,
+    filtro: true,
+    tipo: 'texto' as const
+  },
+  {
+    campo: 'tipoMovimentacao',
+    titulo: 'Tipo',
+    ordenavel: true,
+    filtro: true,
+    tipo: 'texto' as const
+  },
+  {
+    campo: 'quantidade',
+    titulo: 'Quantidade',
+    ordenavel: true,
+    tipo: 'texto' as const
+  },
+  {
+    campo: 'observacao',
+    titulo: 'Observação',
+    filtro: false,
+    tipo: 'texto' as const
+  },
+  {
+    campo: 'dataMovimentacao',
+    titulo: 'Data',
+    tipo: 'data' as const,
+    ordenavel: true
+  }
+];
+
 
   constructor(
-    private movimentacaoService: MovimentacaoEstoqueService,
-    private pecaService: PecaService,
+    private movimentacaoEstoqueService: MovimentacaoEstoqueService,
+    private toastService: ToastService,
     private router: Router
   ) {}
 
   ngOnInit(): void {
-    this.carregarMovimentacoes();
-    this.pecaService.obterTodos().subscribe((pecas) => {
-      pecas.forEach((p) => {
-        this.nomePecas[p.id!] = p.nome;
-      });
+    this.carregando = true;
+    this.movimentacaoEstoqueService.obterTodos().subscribe({
+      next: (res) => {
+        this.dados = res;
+        this.carregando = false;
+      },
+      error: () => {
+        this.toastService.error('Erro ao carregar movimentações.');
+        this.carregando = false;
+      }
     });
-  }
-
-  carregarMovimentacoes(): void {
-    this.movimentacaoService.listarTodos().subscribe((m) => {
-      this.movimentacoes = m;
-    });
-  }
-
-  getNomePeca(id: number): string {
-    return this.nomePecas[id] || '...';
   }
 
   novaMovimentacao(): void {
     this.router.navigate(['/movimento-estoque/form']);
-  }
-
-  editarMovimentacao(id: number): void {
-    this.router.navigate(['/movimento-estoque/form', id]);
-  }
-
-  excluir(id: number): void {
-    if (confirm('Tem certeza que deseja excluir esta movimentação?')) {
-      this.movimentacaoService.excluir(id).subscribe(() => {
-        this.carregarMovimentacoes();
-        this.showToast('Movimentação excluída com sucesso!');
-      });
-    }
-  }
-
-  showToast(mensagem: string): void {
-    const toastEl = document.getElementById('liveToast');
-    if (toastEl) {
-      toastEl.querySelector('.toast-body')!.textContent = mensagem;
-      const toast = new bootstrap.Toast(toastEl);
-      toast.show();
-    }
   }
 }

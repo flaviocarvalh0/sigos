@@ -4,7 +4,7 @@
       <h4 class="mb-0">
         <i class="bi bi-list-ul me-2"></i>{{ titulo || 'Listagem' }}
       </h4>
-      <button class="btn btn-sm btn-light" (click)="onCriar()">
+      <button class="btn btn-sm btn-light" (click)="onCriar()" *ngIf="mostrarNovo">
         <i class="bi bi-plus-lg me-1"></i> Novo
       </button>
     </div>
@@ -38,21 +38,22 @@
         </div>
       </div>
 
-    <!-- Carregando -->
-    <div *ngIf="carregando" class="text-center my-5">
-      <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;"></div>
-      <p class="mt-2">Carregando dados...</p>
-    </div>
+      <!-- Carregando -->
+      <div *ngIf="carregando" class="text-center my-5">
+        <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;"></div>
+        <p class="mt-2">Carregando dados...</p>
+      </div>
 
-    <!-- Nenhum item na base -->
-    <div *ngIf="!carregando && dados.length === 0" class="alert alert-info text-center">
-      Nenhum item cadastrado.
-    </div>
+      <!-- Nenhum item na base -->
+      <div *ngIf="!carregando && dados.length === 0" class="alert alert-info text-center">
+        Nenhum item cadastrado.
+      </div>
 
-    <!-- Nenhum resultado com os filtros -->
-    <div *ngIf="!carregando && dados.length > 0 && dadosFiltrados.length === 0" class="alert alert-warning text-center">
-      Nenhum item encontrado com os filtros aplicados.
-    </div>
+      <!-- Nenhum resultado com os filtros -->
+      <div *ngIf="!carregando && dados.length > 0 && dadosFiltrados.length === 0"
+        class="alert alert-warning text-center">
+        Nenhum item encontrado com os filtros aplicados.
+      </div>
 
 
       <div class="table-responsive" *ngIf="!carregando && dadosFiltrados.length > 0">
@@ -65,33 +66,51 @@
                 <i *ngIf="sortColumn === col.campo" class="bi" [class.bi-arrow-up]="sortDirection === 'asc'"
                   [class.bi-arrow-down]="sortDirection === 'desc'"></i>
               </th>
-              <th class="text-center" style="width: 100px;">Ações</th>
+              <th *ngIf="mostrarAcoes" class="text-end" style="width: 100px;">Ações</th>
             </tr>
           </thead>
           <tbody>
             <tr *ngFor="let item of dadosFiltrados">
               <td *ngFor="let col of colunas">
                 <ng-container [ngSwitch]="col.campo">
-                  <!-- Campo 'ativo' com badge colorida -->
+                  <!-- Campo 'ativo' tratado explicitamente -->
                   <span *ngSwitchCase="'ativo'" class="badge px-2 py-1" [ngClass]="{
-            'bg-success': item[col.campo] === true,
-            'bg-danger': item[col.campo] === false
-          }">
+      'bg-success': item[col.campo] === true,
+      'bg-danger': item[col.campo] === false
+    }">
                     {{ item[col.campo] ? 'Sim' : 'Não' }}
                   </span>
 
-                  <!-- Demais campos padrão -->
-                  <span *ngSwitchDefault>{{ item[col.campo] }}</span>
+                  <!-- Formatação por tipo da coluna -->
+                  <span *ngSwitchDefault>
+                    <ng-container [ngSwitch]="col.tipo">
+                      <span *ngSwitchCase="'moeda'">{{ item[col.campo] | currency:'BRL':'symbol':'1.2-2' }}</span>
+                      <span *ngSwitchCase="'data'">{{ item[col.campo] | date:'dd/MM/yyyy' }}</span>
+                      <span *ngSwitchCase="'dataHora'">{{ item[col.campo] | date:'dd/MM/yyyy HH:mm' }}</span>
+                      <span *ngSwitchCase="'boolean'">
+                        <span class="badge px-2 py-1" [ngClass]="{
+        'bg-success': item[col.campo] === true,
+        'bg-danger': item[col.campo] === false
+      }">
+                          {{ item[col.campo] ? 'Sim' : 'Não' }}
+                        </span>
+                      </span>
+                      <span *ngSwitchDefault>{{ item[col.campo] }}</span>
+                    </ng-container>
+                  </span>
+
                 </ng-container>
               </td>
-              <td class="text-center">
-                <button class="btn btn-sm btn-outline-primary me-1" title="Editar" (click)="onEditar(item[campoId])">
+
+              <td *ngIf="mostrarAcoes" class="text-end">
+                <button class="btn btn-sm btn-outline-primary me-1" (click)="editar.emit(item.id)">
                   <i class="bi bi-pencil"></i>
                 </button>
-                <button class="btn btn-sm btn-outline-danger" title="Excluir" (click)="onExcluir(item[campoId])">
+                <button class="btn btn-sm btn-outline-danger" (click)="excluir.emit(item.id)">
                   <i class="bi bi-trash"></i>
                 </button>
               </td>
+
             </tr>
           </tbody>
         </table>

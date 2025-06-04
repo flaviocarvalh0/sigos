@@ -39,6 +39,7 @@ export class ListPecaComponent implements OnInit {
       ordenavel: true,
       largura: '80px',
       filtro: true,
+      tipo: 'texto'
     },
     { campo: 'nome', titulo: 'Nome', ordenavel: true, filtro: true },
     {

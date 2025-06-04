@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { Cliente, ClienteCriacaoPayload, ClienteAtualizacaoPayload } from '../Models/cliente.model';
 
-import { Aparelho } from '../Models/aparelho.model'; // Se o buscarPorCliente do AparelhoService for movido para cá ou referenciado
+// Se o buscarPorCliente do AparelhoService for movido para cá ou referenciado
 import { CrudService } from './crud.service';
 import { RespostaApi } from '../Models/reposta-api.model';
 

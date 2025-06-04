@@ -14,14 +14,18 @@ export class ListagemDinamicaComponent {
   @Input() titulo = 'Lista';
   @Input() dados: any[] = [];
   @Input() colunas: {
-    campo: string;
-    titulo: string;
-    ordenavel?: boolean;
-    filtro?: boolean;
-  }[] = [];
+  campo: string;
+  titulo: string;
+  ordenavel?: boolean;
+  filtro?: boolean;
+  tipo?: 'texto' | 'moeda' | 'data' | 'dataHora' | 'boolean';
+}[] = [];
   @Input() carregando = false;
   @Input() campoId = 'id';
   @Input() campoNome = 'nome';
+  @Input() mostrarAcoes = true;
+  @Input() mostrarNovo = true;
+  @Input() mostrarFiltros = true;
 
   @Output() criarNovo = new EventEmitter<void>();
   @Output() editar = new EventEmitter<number>();

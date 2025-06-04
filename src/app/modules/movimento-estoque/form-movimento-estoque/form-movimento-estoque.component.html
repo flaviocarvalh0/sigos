@@ -1,53 +1,66 @@
 <div class="container mt-4">
   <div class="card shadow">
     <div class="card-header bg-primary text-white">
-      <h5 class="mb-0">{{ isEditando ? 'Editar Movimentação' : 'Cadastrar Movimentação' }}</h5>
+      <h5 class="mb-0">Nova Movimentação de Estoque</h5>
     </div>
+
     <div class="card-body">
       <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+        <!-- Peça -->
         <div class="mb-3">
-          <label for="id_peca" class="form-label">Peça <span class="text-danger">*</span></label>
+          <label for="idPeca" class="form-label">Peça <span class="text-danger">*</span></label>
           <ng-select
             [items]="pecas"
-            bindLabel="nome"
+            bindLabel="descricao"
             bindValue="id"
-            formControlName="id_peca"
+            formControlName="idPeca"
             placeholder="Selecione a peça"
             [searchable]="true"
-            [clearable]="true"
             class="form-control">
           </ng-select>
+          <div *ngIf="form.get('idPeca')?.invalid && form.get('idPeca')?.touched" class="text-danger small">
+            Peça é obrigatória.
+          </div>
         </div>
 
+        <!-- Tipo de Movimentação -->
         <div class="mb-3">
-          <label for="tipo" class="form-label">Tipo de Movimentação</label>
-          <select class="form-select" formControlName="tipo_de_movimentacao">
+          <label for="tipoMovimentacao" class="form-label">Tipo de Movimentação <span class="text-danger">*</span></label>
+          <select id="tipoMovimentacao" class="form-select" formControlName="tipoMovimentacao">
+            <option value="">Selecione</option>
             <option value="ENTRADA">ENTRADA</option>
             <option value="SAIDA">SAÍDA</option>
           </select>
+          <div *ngIf="form.get('tipoMovimentacao')?.invalid && form.get('tipoMovimentacao')?.touched" class="text-danger small">
+            Tipo de movimentação é obrigatório.
+          </div>
         </div>
 
+        <!-- Quantidade -->
         <div class="mb-3">
-          <label for="quantidade" class="form-label">Quantidade</label>
-          <input type="number" class="form-control" formControlName="quantidade" placeholder="Informe a quantidade">
+          <label for="quantidade" class="form-label">Quantidade <span class="text-danger">*</span></label>
+          <input type="number" id="quantidade" class="form-control" formControlName="quantidade" min="1">
+          <div *ngIf="form.get('quantidade')?.invalid && form.get('quantidade')?.touched" class="text-danger small">
+            A quantidade é obrigatória e deve ser maior que zero.
+          </div>
         </div>
 
-        <div class="d-flex justify-content-between gap-2 mt-4">
-          <button type="submit" class="btn btn-success flex-fill" [disabled]="form.invalid">Salvar</button>
-          <button type="button" class="btn btn-secondary flex-fill" (click)="onCancelar()">Cancelar</button>
-          <button *ngIf="isEditando" type="button" class="btn btn-danger flex-fill" (click)="onExcluir()">Excluir</button>
+        <!-- Observação -->
+        <div class="mb-3">
+          <label for="observacao" class="form-label">Observação</label>
+          <textarea id="observacao" class="form-control" rows="3" formControlName="observacao"></textarea>
+        </div>
+
+        <!-- Ações -->
+        <div class="d-flex justify-content-end gap-2 mt-4">
+          <button type="submit" class="btn btn-success" [disabled]="form.invalid">
+            Salvar
+          </button>
+          <button type="button" class="btn btn-secondary" (click)="onCancelar()">
+            Cancelar
+          </button>
         </div>
       </form>
     </div>
-  </div>
-</div>
-
-<!-- Toast de Notificação -->
-<div id="liveToast" class="toast position-fixed bottom-0 end-0 p-3 text-white bg-warning border-0" role="alert"
-  aria-live="assertive" aria-atomic="true" style="z-index: 9999;">
-  <div class="d-flex">
-    <div class="toast-body">Mensagem</div>
-    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
-      aria-label="Close"></button>
   </div>
 </div>
