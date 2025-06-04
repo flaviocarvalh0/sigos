@@ -7,8 +7,7 @@ import { ClienteService } from '../../../../services/cliente.service';
 import { ToastService } from '../../../../services/toast.service';
 import { ConfirmationService } from '../../../../services/confirmation.service';
 import { ConfirmationConfig } from '../../../../Models/confirmation.model';
-import { NgxMaskDirective, NgxMaskPipe, provideNgxMask } from 'ngx-mask';
-import { FormsModule } from '@angular/forms';
+import { ListagemDinamicaComponent } from '../../../../shared/components/listagem-dinamica/listagem-dinamica.component';
 
 @Component({
   selector: 'app-lista-clientes',
@@ -16,23 +15,36 @@ import { FormsModule } from '@angular/forms';
   imports: [
     CommonModule,
     RouterModule,
-    NgxMaskDirective,
-    NgxMaskPipe,
-    FormsModule,
+    ListagemDinamicaComponent
   ],
-  providers: [provideNgxMask()],
-  templateUrl: './lista-clientes.component.html',
+  template: `
+    <app-listagem-dinamica
+      titulo="Clientes"
+      [dados]="clientes"
+      [colunas]="colunas"
+      [carregando]="isLoading"
+      (criarNovo)="navegarParaNovoCliente()"
+      (editar)="editarCliente($event)"
+      (excluir)="excluirCliente($event)">
+    </app-listagem-dinamica>
+  `,
   styleUrls: ['./lista-clientes.component.css'],
 })
 export class ListaClienteComponent implements OnInit, OnDestroy {
   clientes: Cliente[] = [];
-  clientesFiltrados: Cliente[] = [];
   isLoading = false;
-  filtroNome: string = '';
-  filtroCpfCnpj: string = '';
-  filtroId: string = '';
-
   private subscriptions = new Subscription();
+
+  colunas = [
+    { campo: 'id', titulo: 'ID', tipo: 'texto' as const, ordenavel: true, filtro: true, largura: '70px' },
+    { campo: 'nomeCompleto', titulo: 'Nome', tipo: 'texto' as const, ordenavel: true, filtro: true },
+    { campo: 'cpf', titulo: 'CPF', tipo: 'texto' as const, filtro: true },
+    { campo: 'cnpj', titulo: 'CNPJ', tipo: 'texto' as const, filtro: true },
+    { campo: 'telefone', titulo: 'Telefone', tipo: 'texto' as const, filtro: false },
+    { campo: 'email', titulo: 'E-mail', tipo: 'texto' as const, filtro: false },
+    { campo: 'dataCriacao', titulo: 'Criado em', tipo: 'data' as const, ordenavel: true },
+    { campo: 'dataModificacao', titulo: 'Modificado em', tipo: 'dataHora' as const, ordenavel: true }
+  ];
 
   constructor(
     private clienteService: ClienteService,
@@ -45,81 +57,23 @@ export class ListaClienteComponent implements OnInit, OnDestroy {
     this.carregarClientes();
   }
 
+  ngOnDestroy(): void {
+    this.subscriptions.unsubscribe();
+  }
+
   carregarClientes(): void {
     this.isLoading = true;
     const sub = this.clienteService.obterTodos().subscribe({
       next: (data) => {
         this.clientes = data;
-        this.clientesFiltrados = data;
         this.isLoading = false;
       },
       error: (err) => {
-        console.error('Erro ao carregar clientes:', err);
         this.toastService.error(err.message || 'Falha ao carregar clientes.');
         this.isLoading = false;
       },
     });
     this.subscriptions.add(sub);
-  }
-
-  aplicarFiltros(): void {
-    let resultadoFiltrado = [...this.clientes]; // Começa com todos os clientes
-
-    // 1. Filtro por ID (tem prioridade e retorna resultado único ou vazio)
-    if (this.filtroId.trim()) {
-      const idNumerico = parseInt(this.filtroId.trim(), 10);
-      if (!isNaN(idNumerico)) {
-        const clienteEncontrado = this.clientes.find(
-          (c) => c.id === idNumerico
-        );
-        this.clientesFiltrados = clienteEncontrado ? [clienteEncontrado] : [];
-        return; // Se filtrou por ID, não aplica outros filtros
-      } else {
-        // ID fornecido mas não é um número válido, pode mostrar lista vazia ou um aviso
-        this.clientesFiltrados = [];
-        this.toastService.warning(
-          'ID fornecido para filtro não é um número válido.'
-        );
-        return;
-      }
-    }
-
-    // 2. Se não filtrou por ID, aplica os outros filtros combinados
-    if (this.filtroNome.trim()) {
-      resultadoFiltrado = resultadoFiltrado.filter((cliente) =>
-        cliente.nomeCompleto
-          ?.toLowerCase()
-          .includes(this.filtroNome.trim().toLowerCase())
-      );
-    }
-
-    if (this.filtroCpfCnpj.trim()) {
-      const cpfCnpjInput = this.filtroCpfCnpj.trim().replace(/\D/g, '');
-      resultadoFiltrado = resultadoFiltrado.filter((cliente) => {
-        const cpfMatch = cliente.cpf
-          ? cliente.cpf.replace(/\D/g, '').includes(cpfCnpjInput)
-          : false;
-        const cnpjMatch = cliente.cnpj
-          ? cliente.cnpj.replace(/\D/g, '').includes(cpfCnpjInput)
-          : false;
-        return cpfMatch || cnpjMatch;
-      });
-    }
-    this.clientesFiltrados = resultadoFiltrado;
-  }
-
-  limparFiltros(): void {
-    this.filtroNome = '';
-    this.filtroCpfCnpj = '';
-    this.filtroId = ''; // Limpa filtro de ID
-    this.aplicarFiltros(); // Reaplica para mostrar todos os clientes
-  }
-
-  onIdFilterChange(): void {
-    if (!this.filtroId.trim()) {
-      // Se o campo ID for limpo, reaplica os outros filtros
-      this.aplicarFiltros();
-    }
   }
 
   navegarParaNovoCliente(): void {
@@ -134,61 +88,38 @@ export class ListaClienteComponent implements OnInit, OnDestroy {
     }
   }
 
-  excluirCliente(id: number | undefined, nomeCliente: string): void {
-    if (id === undefined) {
+  excluirCliente(id: number): void {
+    if (!id) {
       this.toastService.warning('ID do cliente inválido para exclusão.');
       return;
     }
-
-    // TODO: Adicionar verificação se o cliente possui OS ou Aparelhos antes de excluir, se necessário.
-    // Esta verificação deve ser feita idealmente no backend ou chamando outros serviços aqui.
+    const cliente = this.clientes.find(c => c.id === id);
+    const nome = cliente?.nomeCompleto || `Cliente ID ${id}`;
 
     const config: ConfirmationConfig = {
       title: 'Confirmar Exclusão de Cliente',
-      message: `Tem certeza que deseja excluir o cliente "${nomeCliente}"? Esta ação não pode ser desfeita.`,
+      message: `Tem certeza que deseja excluir o cliente "${nome}"? Esta ação não pode ser desfeita.`,
       acceptButtonText: 'Sim, Excluir',
       acceptButtonClass: 'btn-danger',
       cancelButtonText: 'Não, Manter',
     };
 
-    const confirmSub = this.confirmationService
-      .confirm(config)
-      .subscribe((confirmado) => {
-        if (confirmado) {
-          this.isLoading = true;
-          const deleteSub = this.clienteService.remover(id).subscribe({
-            next: () => {
-              this.toastService.success(
-                `Cliente "${nomeCliente}" excluído com sucesso!`
-              );
-              this.carregarClientes(); // Recarrega a lista
-            },
-            error: (err) => {
-              this.toastService.error(
-                err.message || 'Erro ao excluir cliente.'
-              );
-              this.isLoading = false; // Resetar isLoading em caso de erro na exclusão
-            },
-          });
-          this.subscriptions.add(deleteSub);
-        }
-      });
+    const confirmSub = this.confirmationService.confirm(config).subscribe(confirmado => {
+      if (confirmado) {
+        this.isLoading = true;
+        const deleteSub = this.clienteService.remover(id!).subscribe({
+          next: () => {
+            this.toastService.success(`Cliente "${nome}" excluído com sucesso!`);
+            this.carregarClientes();
+          },
+          error: (err) => {
+            this.toastService.error(err.message || 'Erro ao excluir cliente.');
+            this.isLoading = false;
+          },
+        });
+        this.subscriptions.add(deleteSub);
+      }
+    });
     this.subscriptions.add(confirmSub);
-  }
-
-  formatarDocumento(cliente: Cliente): string {
-    if (cliente.tipoPessoa?.toLowerCase() === 'física' && cliente.cpf) {
-      return cliente.cpf; // A máscara será aplicada no template
-    } else if (
-      cliente.tipoPessoa?.toLowerCase() === 'jurídica' &&
-      cliente.cnpj
-    ) {
-      return cliente.cnpj; // A máscara será aplicada no template
-    }
-    return '-';
-  }
-
-  ngOnDestroy(): void {
-    this.subscriptions.unsubscribe();
   }
 }

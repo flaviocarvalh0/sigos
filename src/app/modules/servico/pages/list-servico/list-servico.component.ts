@@ -11,18 +11,28 @@ import { ConfirmationConfig } from '../../../../Models/confirmation.model'; // A
 import { CurrencyPipe } from '@angular/common'; // Para formatar preço
 import { Servico } from '../../../../Models/servico.mode';
 import { ServicoService } from '../../../../services/servico.service';
+import { ListagemDinamicaComponent } from '../../../../shared/components/listagem-dinamica/listagem-dinamica.component';
 
 @Component({
   selector: 'app-list-servico',
-  templateUrl: './list-servico.component.html',
-  styleUrls: ['./list-servico.component.css'], // Corrigido para styleUrls
   standalone: true,
+  template: `
+    <app-listagem-dinamica
+      titulo="Lista de Serviços"
+      [dados]="servicosFiltrados"
+      [colunas]="colunas"
+      [carregando]="isLoading"
+      (editar)="editarServico($event)"
+      (excluir)="excluirServico($event)"
+      (criarNovo)="navegarParaNovoServico()">
+    </app-listagem-dinamica>
+  `,
   imports: [
     RouterModule,
     CommonModule,
-    FormsModule, // Adicionado
-    CurrencyPipe // Adicionado
-  ],
+    FormsModule,
+    ListagemDinamicaComponent
+  ]
 })
 export class ListServicoComponent implements OnInit, OnDestroy {
   servicos: Servico[] = [];
@@ -32,6 +42,14 @@ export class ListServicoComponent implements OnInit, OnDestroy {
   // Filtros
   filtroNome: string = '';
   filtroDescricao: string = '';
+
+  colunas = [
+    { campo: 'id', titulo: 'ID', tipo: 'texto' as const, ordenavel: true, filtro: true },
+    { campo: 'nome', titulo: 'Nome', tipo: 'texto' as const, ordenavel: true, filtro: true },
+    { campo: 'descricao', titulo: 'Descrição', tipo: 'texto' as const, filtro: true },
+    { campo: 'precoPadrao', titulo: 'Valor', tipo: 'moeda' as const, ordenavel: true, filtro: false },
+    { campo: 'tempoEstimadoMinutos', titulo: 'Tempo (min)', tipo: 'texto' as const, filtro: false }
+  ];
 
   private subscriptions = new Subscription();
 
@@ -104,17 +122,18 @@ export class ListServicoComponent implements OnInit, OnDestroy {
     this.router.navigate(['/servico/form']);
   }
 
-  excluirServico(id: number | undefined, nomeServico: string | undefined): void { // Assinatura atualizada
+  excluirServico(id: number | undefined): void { // Assinatura atualizada
     if (id === undefined) {
       this.toastService.warning('ID do serviço inválido para exclusão.');
       return;
     }
-    const nomeParaExibicao = nomeServico || `Serviço ID ${id}`;
+      const servico = this.servicos.find(s => s.id === id);
+      const nome = servico?.nome || `Serviço ID ${id}`;
 
     const config: ConfirmationConfig = {
       // Adapte os campos conforme a definição da sua interface ConfirmationConfig
       title: 'Confirmar Exclusão de Serviço',
-      message: `Tem certeza que deseja excluir o serviço "${nomeParaExibicao}"? Esta ação não pode ser desfeita.`,
+      message: `Tem certeza que deseja excluir o serviço "${nome}"? Esta ação não pode ser desfeita.`,
       acceptButtonText: 'Sim, Excluir',
       acceptButtonClass: 'btn-danger',
       cancelButtonText: 'Não, Manter'
@@ -125,7 +144,7 @@ export class ListServicoComponent implements OnInit, OnDestroy {
         this.isLoading = true; // Pode ser um loading específico para a linha, ou global
         const deleteSub = this.servicoService.remover(id).subscribe({ // Usando remover()
           next: () => {
-            this.toastService.success(`Serviço "${nomeParaExibicao}" excluído com sucesso!`);
+            this.toastService.success(`Serviço "${nome}" excluído com sucesso!`);
             // Não precisa mais filtrar localmente, carregarListaServicos vai buscar a lista atualizada
             this.carregarListaServicos(); // Recarrega a lista do servidor
           },

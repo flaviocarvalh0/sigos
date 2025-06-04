@@ -50,13 +50,13 @@
       </div>
 
       <!-- Nenhum resultado com os filtros -->
-      <div *ngIf="!carregando && dados.length > 0 && dadosFiltrados.length === 0"
+      <div *ngIf="!carregando && dados.length > 0 && dadosFiltrados.length === 0 && dados"
         class="alert alert-warning text-center">
         Nenhum item encontrado com os filtros aplicados.
       </div>
 
 
-      <div class="table-responsive" *ngIf="!carregando && dadosFiltrados.length > 0">
+      <div class="table-responsive" *ngIf="!carregando && dadosFiltrados.length > 0 || !dados">
         <table class="table table-hover table-striped table-sm">
           <thead class="table-light">
             <tr>

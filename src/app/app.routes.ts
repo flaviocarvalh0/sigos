@@ -29,7 +29,7 @@ import { ListUsuarioComponent } from './modules/usuario/pages/list-usuario/list-
 import { EsqueciSenhaComponent } from './modules/usuario/pages/esqueci-senha/esqueci-senha.component';
 import { FormUsuarioComponent } from './modules/usuario/pages/form-usuario/form-usuario.component';
 import { LoginComponent } from './modules/usuario/pages/login/login.component';
-import { ListCategoriaComponent } from './modules/cateogira/pages/list-categoria/list-categoria.component';
+import { ListCategoriaComponent } from './modules/categoria/pages/list-categoria/list-categoria.component';
 import { FormCategoriaComponent } from './modules/categoria/pages/form-categoria/form-categoria.component';
 
 export const routes: Routes = [
@@ -38,7 +38,7 @@ export const routes: Routes = [
     component: LoginComponent,
     data: { animation: 'LoginPage' }
   },
-  { 
+  {
     path: 'esqueci-senha',
     component: EsqueciSenhaComponent,
     data: { animation: 'EsqueciSenhaPage' }

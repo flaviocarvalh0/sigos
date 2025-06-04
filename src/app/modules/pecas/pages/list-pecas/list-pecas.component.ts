@@ -33,31 +33,32 @@ export class ListPecaComponent implements OnInit {
   }
   pecas: Peca[] = [];
   colunas = [
-    {
-      campo: 'id',
-      titulo: 'ID',
-      ordenavel: true,
-      largura: '80px',
-      filtro: true,
-      tipo: 'texto'
-    },
-    { campo: 'nome', titulo: 'Nome', ordenavel: true, filtro: true },
-    {
-      campo: 'precoCusto',
-      titulo: 'Preço Custo',
-      tipo: 'moeda',
-      filtro: false,
-    },
-    {
-      campo: 'precoVenda',
-      titulo: 'Preço Venda',
-      tipo: 'moeda',
-      filtro: false,
-    },
-    { campo: 'localizacaoFisica', titulo: 'Localização', filtro: true },
-    { campo: 'quantidadeEstoque', titulo: 'Qtd Estoque', filtro: false },
-    { campo: 'quantidadeMinimaEstoque', titulo: 'Qtd Mínima', filtro: false },
-  ];
+  {
+    campo: 'id',
+    titulo: 'ID',
+    ordenavel: true,
+    largura: '80px',
+    filtro: true,
+    tipo: 'texto' as const
+  },
+  { campo: 'nome', titulo: 'Nome', ordenavel: true, filtro: true, tipo: 'texto' as const },
+  {
+    campo: 'precoCusto',
+    titulo: 'Preço Custo',
+    tipo: 'moeda' as const,
+    filtro: false,
+  },
+  {
+    campo: 'precoVenda',
+    titulo: 'Preço Venda',
+    tipo: 'moeda' as const,
+    filtro: false,
+  },
+  { campo: 'localizacaoFisica', titulo: 'Localização', filtro: true, tipo: 'texto' as const },
+  { campo: 'quantidadeEstoque', titulo: 'Qtd Estoque', filtro: false, tipo: 'texto' as const },
+  { campo: 'quantidadeMinimaEstoque', titulo: 'Qtd Mínima', filtro: false, tipo: 'texto' as const },
+];
+
 
   constructor(
     private pecaService: PecaService,

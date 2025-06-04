@@ -1,27 +1,52 @@
 // src/app/modules/empresa/pages/lista-empresa/lista-empresa.component.ts
-import { Component, OnInit, OnDestroy, NgModule } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule, Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
+
 import { Empresa } from '../../../../Models/empresa.model';
 import { EmpresaService } from '../../../../services/empresa.service';
-import { ToastService } from '../../../../services/toast.service'; // Importar
-import { ConfirmationService } from '../../../../services/confirmation.service'; // Importar
-import { ConfirmationConfig } from '../../../../Models/confirmation.model'; // Importar
+import { ToastService } from '../../../../services/toast.service';
+import { ConfirmationService } from '../../../../services/confirmation.service';
+import { ConfirmationConfig } from '../../../../Models/confirmation.model';
+
+import { ListagemDinamicaComponent } from '../../../../shared/components/listagem-dinamica/listagem-dinamica.component';
 
 @Component({
-  selector: 'app-lista-empresa', // Corrigido o seletor de 'app-empresa-list' para 'app-lista-empresa'
-  standalone: true, // Adicionado standalone: true
-  imports: [CommonModule, RouterModule, ],
-  templateUrl: './lista-empresa.component.html',
-  styleUrls: ['./lista-empresa.component.css'] // Adicionado styleUrls
+  selector: 'app-lista-empresa',
+  standalone: true,
+  imports: [
+    CommonModule,
+    RouterModule,
+    ListagemDinamicaComponent
+  ],
+  template: `
+    <app-listagem-dinamica
+      titulo="Lista de Empresas"
+      [dados]="empresas"
+      [colunas]="colunas"
+      [carregando]="isLoading"
+      (criarNovo)="novo()"
+      (editar)="editar($event)"
+      (excluir)="excluir($event)">
+    </app-listagem-dinamica>
+  `,
+  styleUrls: ['./lista-empresa.component.css']
 })
 export class ListEmpresaComponent implements OnInit, OnDestroy {
   empresas: Empresa[] = [];
   isLoading = false;
-  error: string | null = null; // Para mensagens de erro no template
-
   private subscriptions = new Subscription();
+
+  colunas = [
+    { campo: 'id', titulo: 'ID', tipo: 'texto' as const, ordenavel: true, filtro: true, largura: '70px' },
+    { campo: 'razaoSocial', titulo: 'Razão Social', tipo: 'texto' as const, filtro: true, ordenavel: true },
+    { campo: 'cnpj', titulo: 'CNPJ', tipo: 'texto' as const, filtro: true },
+    { campo: 'telefone', titulo: 'Telefone', tipo: 'texto' as const, filtro: true },
+    { campo: 'email', titulo: 'E-mail', tipo: 'texto' as const, filtro: true },
+    { campo: 'dataCriacao', titulo: 'Criado em', tipo: 'data' as const, ordenavel: true },
+    { campo: 'dataModificacao', titulo: 'Modificado em', tipo: 'dataHora' as const, ordenavel: true }
+  ];
 
   constructor(
     private empresaService: EmpresaService,
@@ -34,41 +59,50 @@ export class ListEmpresaComponent implements OnInit, OnDestroy {
     this.loadEmpresas();
   }
 
+  ngOnDestroy(): void {
+    this.subscriptions.unsubscribe();
+  }
+
   loadEmpresas(): void {
     this.isLoading = true;
-    this.error = null;
-    const sub = this.empresaService.obterTodos().subscribe({ // Usar obterTodos do CrudService
+    const sub = this.empresaService.obterTodos().subscribe({
       next: (data) => {
         this.empresas = data;
         this.isLoading = false;
       },
       error: (err) => {
         console.error('Erro ao carregar empresas:', err);
-        this.error = err.message || 'Falha ao carregar empresas.';
-        this.toastService.error(this.error!);
+        this.toastService.error(err.message || 'Falha ao carregar empresas.');
         this.isLoading = false;
       }
     });
     this.subscriptions.add(sub);
   }
 
-  editar(id: number | undefined): void { // Adicionado verificação para id undefined
+  novo(): void {
+    this.router.navigate(['/empresa/form']);
+  }
+
+  editar(id: number | undefined): void {
     if (id !== undefined) {
       this.router.navigate(['/empresa/form', id]);
     } else {
-        this.toastService.error('ID da empresa inválido para edição.');
+      this.toastService.error('ID da empresa inválido para edição.');
     }
   }
 
-  excluir(id: number | undefined, nomeEmpresa: string): void { // Adicionado nomeEmpresa para o diálogo
-    if (id === undefined) {
-        this.toastService.error('ID da empresa inválido para exclusão.');
-        return;
+  excluir(id: number): void {
+    if (!id) {
+      this.toastService.error('ID da empresa inválido para exclusão.');
+      return;
     }
+
+    const empresa = this.empresas.find(e => e.id === id);
+    const nome = empresa?.razaoSocial || `Empresa ID ${id}`;
 
     const config: ConfirmationConfig = {
       title: 'Confirmar Exclusão',
-      message: `Tem certeza que deseja excluir a empresa "${nomeEmpresa}"? Esta ação não pode ser desfeita.`,
+      message: `Tem certeza que deseja excluir a empresa "${nome}"? Esta ação não pode ser desfeita.`,
       acceptButtonText: 'Sim, Excluir',
       acceptButtonClass: 'btn-danger',
       cancelButtonText: 'Não, Manter'
@@ -76,11 +110,11 @@ export class ListEmpresaComponent implements OnInit, OnDestroy {
 
     const confirmSub = this.confirmationService.confirm(config).subscribe(confirmado => {
       if (confirmado) {
-        this.isLoading = true; // Pode ser útil ter um loading específico para a operação de exclusão
-        const deleteSub = this.empresaService.remover(id).subscribe({ // Usar remover do CrudService
+        this.isLoading = true;
+        const deleteSub = this.empresaService.remover(id!).subscribe({
           next: () => {
-            this.toastService.success('Empresa excluída com sucesso!');
-            this.loadEmpresas(); // Recarrega a lista (isLoading será tratado por loadEmpresas)
+            this.toastService.success(`Empresa "${nome}" excluída com sucesso!`);
+            this.loadEmpresas();
           },
           error: (err) => {
             this.toastService.error(err.message || 'Erro ao excluir empresa.');
@@ -91,34 +125,5 @@ export class ListEmpresaComponent implements OnInit, OnDestroy {
       }
     });
     this.subscriptions.add(confirmSub);
-  }
-
-  novo(): void {
-    this.router.navigate(['/empresa/form']);
-  }
-
-  formatCelular(celular: string | null | undefined): string {
-  if (!celular) return '';
-  // Remove non-digit characters
-  const digits = celular.replace(/\D/g, '');
-  // Format as (XX) XXXXX-XXXX or (XX) XXXX-XXXX
-  if (digits.length === 11) {
-    return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
-  } else if (digits.length === 10) {
-    return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
-  }
-  return celular;
-}
-
-formatCnpj(cnpj: string): string {
-  if (!cnpj) return '-';
-  // Remove non-digit characters
-  cnpj = cnpj.replace(/\D/g, '');
-  // Format as 00.000.000/0000-00
-  return cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5');
-}
-
-  ngOnDestroy(): void {
-    this.subscriptions.unsubscribe();
   }
 }
