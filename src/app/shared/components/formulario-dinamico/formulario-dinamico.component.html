@@ -38,10 +38,11 @@
                     [formControlName]="campo.nome" [placeholder]="campo.placeholder"
                     [ngClass]="{'is-invalid': isInvalidControl(campo.nome)}">
 
-                  <select *ngSwitchCase="'select'" [id]="campo.nome" class="form-select" [formControlName]="campo.nome"
-                    [ngClass]="{'is-invalid': isInvalidControl(campo.nome)}">
-                    <option *ngFor="let op of campo.opcoes" [value]="op.valor">{{ op.label }}</option>
-                  </select>
+                  <ng-select class="custom-ng-select" *ngSwitchCase="'select'" [items]="campo.opcoes" bindLabel="nome"
+                    bindValue="id" [placeholder]="campo.placeholder || 'Selecione...'" [formControlName]="campo.nome"
+                    [searchable]="true" [clearable]="true" [ngClass]="{'is-invalid': isInvalidControl(campo.nome)}">
+                  </ng-select>
+
 
                   <input *ngSwitchCase="'checkbox'" [id]="campo.nome" type="checkbox" class="form-check-input mt-2"
                     [formControlName]="campo.nome">

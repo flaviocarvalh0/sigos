@@ -4,7 +4,7 @@ export interface Modelo {
   idMarca: number;
   nomeMarca?: string;
   dataCriacao?: string;
-  dataModificacao?: string;
+  dataModificacao?: Date;
   criadoPor?: string;
   modificadoPor?: string;
 }
@@ -18,5 +18,5 @@ export interface ModeloAtualizacaoPayload {
   id: number;
   nome: string;
   idMarca: number;
-  dataUltimaModificacao: string;
+  dataUltimaModificacao: Date;
 }

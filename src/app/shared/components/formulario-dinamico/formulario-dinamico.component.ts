@@ -18,6 +18,7 @@ import {
 } from '@angular/forms';
 import { CommonModule, KeyValue } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { NgSelectModule } from '@ng-select/ng-select';
 
 export interface CampoFormularioConfig {
   nome: string;
@@ -27,7 +28,7 @@ export interface CampoFormularioConfig {
   obrigatorio?: boolean;
   col?: string;
   mask?: string;
-  opcoes?: { label: string; valor: any }[];
+  opcoes?: { id: any, nome: string;  }[];
   mensagensErro?: { [key: string]: string };
 }
 
@@ -53,8 +54,9 @@ export interface FormularioDinamicoConfig {
 @Component({
   selector: 'app-form-dinamico',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule],
-  templateUrl: './formulario-dinamico.component.html'
+  imports: [CommonModule, ReactiveFormsModule, RouterModule, NgSelectModule],
+  templateUrl: './formulario-dinamico.component.html',
+  styleUrls: ['./formulario-dinamico.component.css'],
 })
 export class FormularioDinamicoComponent implements OnInit, OnChanges {
   @Input() config!: FormularioDinamicoConfig;

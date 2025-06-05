@@ -11,13 +11,23 @@ import { MarcaService } from '../../../../services/marca.service';
 import { ToastService } from '../../../../services/toast.service';
 import { ConfirmationService } from '../../../../services/confirmation.service';
 import { ConfirmationConfig } from '../../../../Models/confirmation.model'; // Ajuste o path
+import { FormularioDinamicoComponent, FormularioDinamicoConfig } from '../../../../shared/components/formulario-dinamico/formulario-dinamico.component';
 
 @Component({
   selector: 'app-form-marca',
-  templateUrl: './form-marca.component.html',
+  template: `<app-form-dinamico
+  [config]="formularioConfig"
+  [data]="dadosIniciais"
+  [isLoading]="isLoading"
+  [isEditando]="isEditando"
+  (salvar)="onSubmit($event)"
+  (cancelar)="onCancelar()"
+  (excluir)="onExcluir()">
+</app-form-dinamico>
+`,
   styleUrls: ['./form-marca.component.css'], // Corrigido para styleUrls
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule, FormularioDinamicoComponent],
 })
 export class FormMarcaComponent implements OnInit, OnDestroy {
   // Injeções
@@ -34,6 +44,37 @@ export class FormMarcaComponent implements OnInit, OnDestroy {
   isLoading = false;
   private dataModificacaoOriginal: string | Date | null = null;
   private subscriptions = new Subscription();
+  dadosIniciais: any = {};
+
+  formularioConfig: FormularioDinamicoConfig = {
+  titulo: this.isEditando ? 'Editar Marca' : 'Cadastrar Marca',
+  iconeTitulo: 'bi bi-tags',
+  botoes: {
+    salvarTexto: this.isEditando ? 'Atualizar Marca' : 'Salvar Marca',
+    cancelarTexto: 'Cancelar',
+    excluirTexto: 'Excluir',
+    excluir: this.isEditando
+  },
+  abas: [
+    {
+      titulo: '',
+      campos: [
+        {
+          nome: 'nome',
+          tipo: 'text',
+          rotulo: 'Nome da Marca',
+          placeholder: 'Digite o nome da marca',
+          obrigatorio: true,
+          col: 'col-md-12',
+          mensagensErro: {
+            required: 'O nome da marca é obrigatório.'
+          }
+        }
+      ]
+    }
+  ]
+};
+
 
   constructor() {
     this.initForm(); // Inicializa a estrutura do formulário
@@ -56,6 +97,16 @@ export class FormMarcaComponent implements OnInit, OnDestroy {
       }
     });
     this.subscriptions.add(routeSub);
+
+    this.formularioConfig = {
+      ...this.formularioConfig,
+      titulo: this.cardTitle,
+      botoes: {
+        ...this.formularioConfig.botoes,
+        salvarTexto: this.saveButtonText,
+        excluir: this.isEditando,
+      },
+    };
   }
 
   ngOnDestroy(): void {
@@ -78,6 +129,10 @@ export class FormMarcaComponent implements OnInit, OnDestroy {
     const marcaSub = this.marcaService.obterPorId(id).subscribe({
       next: (marca: Marca | undefined) => {
         if (marca) {
+          this.dadosIniciais = {
+            nome: marca.nome
+          };
+
           this.dataModificacaoOriginal = marca.dataModificacao || null;
           // this.initForm(marca); // Recriar pode ser problemático, usar patchValue
           this.formMarca.patchValue({
@@ -99,88 +154,83 @@ export class FormMarcaComponent implements OnInit, OnDestroy {
     this.subscriptions.add(marcaSub);
   }
 
-  onSubmit(): void { // Renomeado de 'salvar'
-    if (this.formMarca.invalid) {
-      this.formMarca.markAllAsTouched();
-      this.toastService.warning('Formulário inválido. Verifique o campo Nome.');
-      return;
-    }
-
-    const formValue = this.formMarca.value;
-
-    if (this.isEditando && this.currentMarcaId) {
-      this.isLoading = true;
-      const checkAndUpdateSub = this.marcaService.obterPorId(this.currentMarcaId).pipe(
-        switchMap(marcaAtualDoBanco => {
-          if (!marcaAtualDoBanco) {
-            this.toastService.error('Marca não encontrada no servidor. Pode ter sido excluída.');
-            this.router.navigate(['/marca']);
-            return EMPTY;
-          }
-          const dataModificacaoAtualBanco = marcaAtualDoBanco.dataModificacao || null;
-          const originalTimestamp = this.dataModificacaoOriginal ? new Date(this.dataModificacaoOriginal).getTime() : null;
-          const atualBancoTimestamp = dataModificacaoAtualBanco ? new Date(dataModificacaoAtualBanco).getTime() : null;
-
-          if (originalTimestamp && atualBancoTimestamp && originalTimestamp !== atualBancoTimestamp) {
-            return of({ error: 'concurrency', marcaDoBanco: marcaAtualDoBanco });
-          }
-
-          const payload: MarcaAtualizacaoPayload = {
-            id: this.currentMarcaId!,
-            nome: formValue.nome,
-            dataUltimaModificacao: this.dataModificacaoOriginal
-          };
-          return this.marcaService.atualizar(this.currentMarcaId!, payload);
-        }),
-        tap(() => this.isLoading = false),
-        catchError(err => { this.isLoading = false; return of(err); })
-      ).subscribe({
-        next: (response: Marca | { error: string, marcaDoBanco?: Marca }) => {
-          if ((response as { error: string })?.error === 'concurrency') {
-            const marcaDoBanco = (response as { error: string, marcaDoBanco: Marca }).marcaDoBanco;
-            this.toastService.warning('Esta marca foi alterada. Seus dados não foram salvos. O formulário foi atualizado.');
-            if (marcaDoBanco) {
-              this.dataModificacaoOriginal = marcaDoBanco.dataModificacao || null;
-              this.formMarca.patchValue(marcaDoBanco);
-            }
-            return;
-          }
-          const marcaAtualizada = response as Marca;
-          if (marcaAtualizada && marcaAtualizada.id) {
-            this.toastService.success('Marca atualizada com sucesso!');
-            this.dataModificacaoOriginal = marcaAtualizada.dataModificacao || null;
-            this.router.navigate(['/marca']);
-          }
-        },
-        error: (err) => {
-          this.isLoading = false;
-          if (err.error !== 'concurrency') {
-            this.toastService.error(err.message || 'Erro ao atualizar marca.');
-            console.error('Erro ao atualizar marca:', err);
-          }
-        }
-      });
-      this.subscriptions.add(checkAndUpdateSub);
-    } else { // Criando nova marca
-      this.isLoading = true;
-      const payload: MarcaCriacaoPayload = {
-        nome: formValue.nome
-      };
-      const createSub = this.marcaService.criar(payload).subscribe({
-        next: () => {
-          this.isLoading = false;
-          this.toastService.success('Marca criada com sucesso!');
-          this.router.navigate(['/marca']);
-        },
-        error: (err) => {
-          this.isLoading = false;
-          this.toastService.error(err.message || 'Erro ao criar marca.');
-          console.error('Erro ao criar marca:', err);
-        }
-      });
-      this.subscriptions.add(createSub);
-    }
+  onSubmit(dados: any): void {
+  if (!dados.nome || dados.nome.trim().length < 3) {
+    this.toastService.warning('Nome da marca inválido.');
+    return;
   }
+
+  if (this.isEditando && this.currentMarcaId) {
+    this.isLoading = true;
+
+    const sub = this.marcaService.obterPorId(this.currentMarcaId).pipe(
+      switchMap(marcaDoBanco => {
+        if (!marcaDoBanco) {
+          this.toastService.error('Marca não encontrada no servidor. Pode ter sido excluída.');
+          this.router.navigate(['/marca']);
+          return EMPTY;
+        }
+
+        const timestampBanco = new Date(marcaDoBanco.dataModificacao || '').getTime();
+        const timestampLocal = this.dataModificacaoOriginal ? new Date(this.dataModificacaoOriginal).getTime() : null;
+
+        if (timestampBanco !== timestampLocal) {
+          return of({ error: 'concurrency', marcaDoBanco: marcaDoBanco });
+        }
+
+        const payload: MarcaAtualizacaoPayload = {
+          id: this.currentMarcaId!,
+          nome: dados.nome,
+          dataUltimaModificacao: this.dataModificacaoOriginal
+        };
+        return this.marcaService.atualizar(this.currentMarcaId!, payload);
+      }),
+      tap(() => this.isLoading = false),
+      catchError(err => { this.isLoading = false; return of(err); })
+    ).subscribe({
+      next: (response: Marca | { error: string, marcaDoBanco?: Marca }) => {
+        if ((response as any).error === 'concurrency') {
+          const marcaDoBanco = (response as any).marcaDoBanco;
+          this.toastService.warning('Esta marca foi alterada. Seus dados não foram salvos. O formulário foi atualizado.');
+          if (marcaDoBanco) {
+            this.dataModificacaoOriginal = marcaDoBanco.dataModificacao;
+          }
+          return;
+        }
+
+        this.toastService.success('Marca atualizada com sucesso!');
+        this.router.navigate(['/marca']);
+      },
+      error: (err) => {
+        this.toastService.error(err.message || 'Erro ao atualizar marca.');
+        console.error('Erro ao atualizar marca:', err);
+      }
+    });
+
+    this.subscriptions.add(sub);
+  } else {
+    // Criando nova marca
+    this.isLoading = true;
+    const payload: MarcaCriacaoPayload = {
+      nome: dados.nome
+    };
+
+    const sub = this.marcaService.criar(payload).subscribe({
+      next: () => {
+        this.toastService.success('Marca criada com sucesso!');
+        this.router.navigate(['/marca']);
+      },
+      error: (err) => {
+        this.toastService.error(err.message || 'Erro ao criar marca.');
+        this.isLoading = false;
+        console.error('Erro ao criar marca:', err);
+      }
+    });
+
+    this.subscriptions.add(sub);
+  }
+}
+
 
   onCancelar(): void { // Renomeado de 'cancelar'
     this.router.navigate(['/marca']);

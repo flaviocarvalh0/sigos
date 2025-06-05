@@ -1,30 +1,37 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ModeloService } from '../../../../services/modelo.service';
 import { MarcaService } from '../../../../services/marca.service';
 import { ToastService } from '../../../../services/toast.service';
 import { CommonModule } from '@angular/common';
-import { NgSelectModule } from '@ng-select/ng-select';
+import { FormularioDinamicoComponent, CampoFormularioConfig, FormularioDinamicoConfig } from '../../../../shared/components/formulario-dinamico/formulario-dinamico.component';
 
 @Component({
- selector: 'app-form-modelo',
-  templateUrl: './form-modelo.component.html',
+  selector: 'app-form-modelo',
+  template: `<app-form-dinamico
+    [config]="config"
+    [data]="dadosIniciais"
+    [isLoading]="isLoading"
+    [isEditando]="isEditando"
+    (salvar)="onSubmit($event)"
+    (cancelar)="onCancelar()"
+    (excluir)="onExcluir()"
+  >
+  </app-form-dinamico> `,
   styleUrls: ['./form-modelo.component.css'],
   standalone: true,
-  imports: [CommonModule, FormsModule, NgSelectModule, ReactiveFormsModule]
+  imports: [CommonModule, FormularioDinamicoComponent]
 })
 export class FormModeloComponent implements OnInit {
-  formModelo!: FormGroup;
   isEditando = false;
   isLoading = false;
-  cardTitle = 'Cadastrar Modelo';
-  saveButtonText = 'Salvar';
   idModelo?: number;
   marcas: { id: number, nome: string }[] = [];
+  dadosIniciais: any = {};
+  private dataUltimaModificacaoOriginal?: Date;
+
 
   constructor(
-    private fb: FormBuilder,
     private route: ActivatedRoute,
     private router: Router,
     private modeloService: ModeloService,
@@ -34,42 +41,56 @@ export class FormModeloComponent implements OnInit {
 
   ngOnInit(): void {
     this.idModelo = Number(this.route.snapshot.paramMap.get('id'));
-    this.inicializarFormulario();
     this.carregarMarcas();
 
     if (this.idModelo) {
       this.isEditando = true;
-      this.cardTitle = 'Editar Modelo';
-      this.saveButtonText = 'Atualizar';
       this.carregarModelo(this.idModelo);
     }
-  }
 
-  inicializarFormulario(): void {
-    this.formModelo = this.fb.group({
-      nome: ['', [Validators.required, Validators.minLength(2)]],
-      idMarca: [null, Validators.required],
-      dataUltimaModificacao: [null]
-    });
+     this.config = {
+      ...this.config,
+      titulo: this.cardTitle,
+      botoes: {
+        ...this.config.botoes,
+        salvarTexto: this.saveButtonText,
+        excluir: this.isEditando,
+      },
+    };
   }
 
   carregarMarcas(): void {
-    this.marcaService.obterParaSelecao().subscribe({
-      next: (marcas) => this.marcas = marcas.map(m => ({ id: m.id, nome: m.descricao })),
-      error: err => this.toastService.error(err.message || 'Erro ao carregar marcas.')
-    });
+  this.marcaService.obterParaSelecao().subscribe({
+    next: (marcas) => {
+      this.marcas = marcas.map(m => ({ id: m.id, nome: m.descricao }));
+
+      // Atualiza dinamicamente o campo do select com as marcas
+      const campoMarca = this.config.abas[0].campos.find(c => c.nome === 'idMarca');
+      if (campoMarca) {
+        campoMarca.opcoes = this.marcas;
+      }
+    },
+    error: err => this.toastService.error(err.message || 'Erro ao carregar marcas.')
+  });
+}
+
+  get cardTitle(): string {
+    return this.isEditando ? 'Editar Modelo' : 'Cadastrar Modelo';
   }
 
+  get saveButtonText(): string {
+    return this.isEditando ? 'Atualizar Modelo' : 'Salvar Modelo';
+  }
   carregarModelo(id: number): void {
     this.isLoading = true;
     this.modeloService.obterPorId(id).subscribe({
       next: modelo => {
         if (!modelo) return;
-        this.formModelo.patchValue({
+        this.dadosIniciais = {
           nome: modelo.nome,
           idMarca: modelo.idMarca,
-          dataUltimaModificacao: modelo.dataModificacao
-        });
+        };
+        this.dataUltimaModificacaoOriginal = modelo.dataModificacao;
         this.isLoading = false;
       },
       error: err => {
@@ -79,17 +100,58 @@ export class FormModeloComponent implements OnInit {
     });
   }
 
-  onSubmit(): void {
-    if (this.formModelo.invalid) {
-      this.formModelo.markAllAsTouched();
+  config: FormularioDinamicoConfig = {
+      titulo: this.isEditando ? 'Editar Modelo' : 'Cadastrar Modelo',
+      iconeTitulo: 'bi-phone',
+      botoes: {
+        salvarTexto: this.isEditando ? 'Atualizar' : 'Salvar',
+        cancelarTexto: 'Cancelar',
+        excluirTexto: 'Excluir',
+        cancelar: true,
+        excluir: this.isEditando
+      },
+      abas: [
+        {
+          titulo: 'Dados do Modelo',
+          campos: [
+            {
+              nome: 'nome',
+              tipo: 'text',
+              rotulo: 'Nome do Modelo',
+              placeholder: 'Digite o nome do modelo',
+              obrigatorio: true,
+              col: 'col-md-6',
+              mensagensErro: {
+                required: 'Nome é obrigatório.',
+                minlength: 'Nome deve ter pelo menos 2 caracteres.'
+              }
+            },
+            {
+              nome: 'idMarca',
+              tipo: 'select',
+              rotulo: 'Marca',
+              placeholder: 'Selecione a marca',
+              obrigatorio: true,
+              col: 'col-md-6',
+              opcoes: this.marcas,
+              mensagensErro: {
+                required: 'A marca é obrigatória.'
+              }
+            }
+          ]
+        }
+      ]
+    };
+
+  onSubmit(dados: any): void {
+    if (!dados.nome || dados.nome.trim().length < 2) {
+      this.toastService.warning('Nome do modelo inválido.');
       return;
     }
     this.isLoading = true;
 
-    const payload = this.formModelo.value;
-
     if (this.isEditando && this.idModelo) {
-      payload.id = this.idModelo;
+      const payload = { ...dados, id: this.idModelo, dataUltimaModificacao: this.dataUltimaModificacaoOriginal };
       this.modeloService.atualizar(this.idModelo, payload).subscribe({
         next: () => {
           this.toastService.success('Modelo atualizado com sucesso!');
@@ -101,6 +163,7 @@ export class FormModeloComponent implements OnInit {
         }
       });
     } else {
+      const payload = { nome: dados.nome, idMarca: dados.idMarca, dataUltimaModificacao: dados.dataUltimaModificacao };
       this.modeloService.criar(payload).subscribe({
         next: () => {
           this.toastService.success('Modelo criado com sucesso!');
@@ -120,7 +183,6 @@ export class FormModeloComponent implements OnInit {
 
   onExcluir(): void {
     if (!this.idModelo) return;
-
     this.isLoading = true;
     this.modeloService.remover(this.idModelo).subscribe({
       next: () => {
@@ -132,18 +194,5 @@ export class FormModeloComponent implements OnInit {
         this.isLoading = false;
       }
     });
-  }
-
-  isInvalidControl(controlName: string): boolean {
-    const control = this.formModelo.get(controlName);
-    return !!(control && control.invalid && (control.dirty || control.touched));
-  }
-
-  getControlErrors(controlName: string): any {
-    return this.formModelo.get(controlName)?.errors;
-  }
-
-  get f() {
-    return this.formModelo.controls;
   }
 }

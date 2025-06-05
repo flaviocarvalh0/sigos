@@ -1,0 +1,74 @@
+/* Classe customizada para o ng-select */
+.custom-ng-select .ng-select-container {
+  border: none !important; /* Remove a borda do container principal */
+  box-shadow: none !important; /* Remove qualquer sombra que possa parecer uma borda */
+
+  /*
+    Para alinhar com outros campos (ex: Bootstrap .form-control):
+    A altura padrão de um .form-control no Bootstrap 5 é calc(1.5em + 0.75rem + 2px).
+    Como removemos a borda (2px), ajustamos o min-height.
+  */
+  min-height: calc(1.5em + 0.75rem); /* Altura interna para alinhar com outros inputs sem borda */
+  display: flex; /* Ajuda no alinhamento vertical do conteúdo interno */
+  align-items: center; /* Centraliza verticalmente o conteúdo */
+
+  /*
+    Ajuste o padding se necessário para alinhar o texto interno
+    com outros inputs. O ng-select tem sua própria estrutura de padding.
+    Este é um exemplo, pode precisar de ajuste fino:
+  */
+  /* padding: 0.375rem 0.75rem; */
+}
+
+/* Estilos para o host do ng-select para se comportar como outros elementos de formulário */
+.custom-ng-select {
+  display: block; /* Para ocupar a largura disponível, como outros form-controls */
+  width: 100%;   /* Ou defina uma largura específica */
+  /*
+    Você pode querer herdar ou definir explicitamente propriedades de fonte
+    para corresponder a outros campos de formulário:
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+    color: #212529;
+    background-color: #fff;
+  */
+}
+
+/*
+  Seta (dropdown arrow):
+  O ng-select já possui sua própria seta interna (.ng-arrow-wrapper).
+  Se você estivesse usando a classe 'form-select' do Bootstrap no host <ng-select>,
+  ela adicionaria uma seta de fundo (background-image). Ao não usar 'form-select' diretamente
+  no <ng-select> e estilizando de forma customizada, evitamos a "seta de fora".
+*/
+
+/*
+  Largura do painel de dropdown:
+  O ng-select normalmente garante que o painel de opções (.ng-dropdown-panel)
+  tenha a mesma largura que o campo de seleção.
+  A imagem que você forneceu mostra que o painel de dropdown já tem a largura correta
+  e possui uma borda (o que é comum para distinção visual).
+  A solicitação "a contedeu de dentro do drop deve ficar do memso tamnho da caixa de pesquisa"
+  é o comportamento padrão.
+*/
+/*
+  Se você também quisesse remover a borda do painel de dropdown (a parte que abre com as opções),
+  descomente o seguinte (mas geralmente o painel tem uma borda/sombra):
+  .custom-ng-select .ng-dropdown-panel {
+    border: none !important;
+  }
+*/
+
+/*
+  Estilização para o estado 'is-invalid' (se estiver usando Bootstrap):
+  Como removemos a borda, o feedback de inválido padrão (borda vermelha) não aparecerá.
+  Você pode adicionar um estilo alternativo, como uma sombra ou uma borda apenas para o estado inválido.
+*/
+.custom-ng-select.is-invalid .ng-select-container {
+  /* Exemplo: Adicionar uma borda vermelha apenas quando for inválido */
+  /* border: 1px solid #dc3545 !important; */ /* Cor de perigo do Bootstrap */
+
+  /* Ou usar uma sombra para indicar o estado inválido */
+   box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25) !important; /* Sombra de foco inválido do Bootstrap */
+}
