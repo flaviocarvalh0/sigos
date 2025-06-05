@@ -1,0 +1,47 @@
+<nav class="sidebar bg-primary p-3 border-end text-white" [class.collapsed]="isCollapsed">
+  <div class="sidebar-menu">
+    <div class="accordion" [id]="parentAccordionId">
+
+      <ng-container *ngFor="let group of menuAccordionGroups">
+        <div class="accordion-item bg-transparent border-0">
+          <h2 class="accordion-header" [id]="'header-' + group.id">
+            <button class="accordion-button bg-transparent text-dark" type="button"
+                    data-bs-toggle="collapse" [attr.data-bs-target]="getTargetId(group.id)"
+                    [attr.aria-expanded]="group.isInitiallyOpen ? 'true' : 'false'"
+                    [attr.aria-controls]="group.id"
+                    [class.collapsed]="!group.isInitiallyOpen">
+              {{ group.headerText }}
+            </button>
+          </h2>
+          <div [id]="group.id" class="accordion-collapse collapse"
+               [class.show]="group.isInitiallyOpen"
+               [attr.aria-labelledby]="'header-' + group.id"
+               [attr.data-bs-parent]="getTargetId(parentAccordionId)">
+            <ul class="nav flex-column px-2">
+              <li *ngFor="let link of group.navLinks" class="nav-item mb-1">
+                <a [routerLink]="link.routerLink" routerLinkActive="active"
+                   class="nav-link d-flex align-items-center rounded">
+                  <i class="{{ link.iconClass }} me-2"></i>
+                  <span>{{ link.label }}</span>
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </ng-container>
+
+    </div>
+  </div>
+
+  <div *ngIf="isLoggedIn && currentUser as user"
+       class="user-profile d-flex align-items-center p-2 rounded mt-auto" style="cursor: pointer;"
+       (click)="onUserProfileClick()">
+    <div class="avatar bg-secondary text-white me-2">
+      {{ user.nome ? user.nome.substring(0,1).toUpperCase() : (user.login ? user.login.substring(0,1).toUpperCase() : 'U') }}
+    </div>
+    <div class="user-info">
+      <div class="user-name fw-bold small text-dark">{{ abreviarNome(user.nome) || user.login }}</div>
+      <div class="user-email text-muted small">{{ user.email }}</div>
+    </div>
+  </div>
+</nav>

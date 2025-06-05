@@ -1,0 +1,36 @@
+<nav class="navbar navbar-dark bg-primary fixed-top px-3 d-flex align-items-center">
+  <div class="d-flex align-items-center gap-3">
+    <span class="navbar-brand mb-0 h1 d-flex align-items-center gap-2" style="cursor: pointer;" (click)="actionButton ? handleActionButtonClick() : router.navigate(['/'])">
+      <div class="logo-icon">{{ logoText }}</div>
+      <div>
+        <div>{{ brandName }}</div>
+        <small class="navbar-subtitle">{{ brandSubtitle }}</small>
+      </div>
+    </span>
+    <button class="btn btn-outline-light btn-sm" (click)="onToggleSidebar()">
+      <i class="bi bi-list"></i>
+    </button>
+  </div>
+
+  <div class="ms-auto d-flex align-items-center gap-2">
+    <span *ngIf="isLoggedIn && currentUser?.nome" class="text-white me-2 small">
+      Olá, {{ abreviarNome(currentUser?.nome) }}
+    </span>
+
+    <button *ngIf="actionButton"
+            [class]="'btn btn-sm ' + (actionButton.buttonClass || 'btn-outline-light')"
+            (click)="handleActionButtonClick()"
+            [title]="actionButton.title || ''">
+      <i *ngIf="actionButton.iconClass" [class]="actionButton.iconClass"></i>
+      <span *ngIf="actionButton.text" [class.ms-1]="actionButton.iconClass && actionButton.text">{{ actionButton.text }}</span>
+    </button>
+
+    <button *ngIf="showAdminSettingsButton && !actionButton && isLoggedIn" class="btn btn-sm btn-outline-light" (click)="onAdminSettingsClick()"
+      title="Gerenciar Usuários"> <i class="bi bi-gear text-white"></i>
+    </button>
+
+    <button *ngIf="isLoggedIn" class="btn btn-outline-light btn-sm" (click)="onLogout()">
+      Logout
+    </button>
+  </div>
+</nav>

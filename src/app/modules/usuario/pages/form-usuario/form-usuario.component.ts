@@ -13,11 +13,8 @@ import { Empresa } from '../../../../Models/empresa.model';
 // Serviços de Toast e Confirmação
 import { ToastService } from '../../../../services/toast.service';
 import { ConfirmationService } from '../../../../services/confirmation.service';
-import { ConfirmationConfig } from '../../../../Models/confirmation.model';
-
-// NgZone pode não ser mais necessária aqui se ToastService e ConfirmationService lidam com isPlatformBrowser internamente.
-// No entanto, se eles usam o bootstrap JS global diretamente, a proteção ainda é boa.
-// Vamos assumir que os serviços encapsulam isso.
+import { ConfirmationConfig } from '../../../../Models/confirmation.model'; // Ajuste o path se necessário
+import { AuthService } from '../../../../services/auth/auth.service';
 
 @Component({
   selector: 'app-form-usuario',
@@ -35,10 +32,11 @@ export class FormUsuarioComponent implements OnInit, OnDestroy {
   confirmaSenhaVisivel = false;
 
   empresas: Empresa[] = [];
-  // gruposDisponiveis: Grupo[] = []; // Removido, pois não há campo de grupo no form
-
-  private dataModificacaoUsuarioAtual?: Date; // Ajustado para Date ou string
+  private dataModificacaoUsuarioAtual?: Date;
   private subscriptions = new Subscription();
+
+  // Usado para determinar a rota de retorno
+  private veioDeMeuPerfil = false;
 
   constructor(
     private fb: FormBuilder,
@@ -47,64 +45,87 @@ export class FormUsuarioComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     public router: Router,
     private toastService: ToastService,
-    private confirmationService: ConfirmationService, // Injetado mas não usado neste form, ListaUsuario usará
+    private confirmationService: ConfirmationService,
+    private authService: AuthService,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {}
 
   ngOnInit(): void {
-  this.loadEmpresas().then(() => {
-    const id = this.route.snapshot.paramMap.get('id');
-    if (id) {
-      this.usuarioId = +id;
-      this.isEditMode = true;
-      this.loadUsuarioParaEdicao(); // aqui já carrega com empresas disponíveis
-    } else {
-      this.isEditMode = false;
-      this.initForm(); // só chama aqui, depois de ter empresas
-    }
-  });
+    // Determinar o contexto de origem para o redirecionamento
+    // Usar route.url para verificar o path de forma mais robusta
+    this.subscriptions.add(
+        this.route.url.subscribe(segments => {
+            const path = segments.map(s => s.path).join('/');
+            if (path.includes('meu-perfil/editar')) {
+                this.veioDeMeuPerfil = true;
+            } else {
+                this.veioDeMeuPerfil = false;
+            }
+
+            // Prosseguir com o carregamento de dados após determinar o contexto
+            this.loadEmpresas().then(() => {
+                if (this.veioDeMeuPerfil) {
+                    const currentUser = this.authService.currentUserValue;
+                    if (currentUser && currentUser.id) {
+                        this.usuarioId = currentUser.id;
+                        this.isEditMode = true;
+                        this.loadUsuarioParaEdicao();
+                    } else {
+                        this.toastService.error('Usuário não autenticado para editar perfil.');
+                        this.router.navigate(['/login']);
+                    }
+                } else {
+                    const id = this.route.snapshot.paramMap.get('id');
+                    if (id) {
+                        this.usuarioId = +id;
+                        this.isEditMode = true;
+                        this.loadUsuarioParaEdicao();
+                    } else {
+                        this.isEditMode = false;
+                        this.initForm();
+                    }
+                }
+            });
+        })
+    );
 }
 
-  initForm(usuario?: Usuario): void {
-    // Na criação (isEditMode é false), senha é obrigatória.
-    // Na edição, senha é opcional (só valida minLength se preenchida).
-    const senhaValidators = !this.isEditMode ? [Validators.required, Validators.minLength(6)] : [Validators.minLength(6)];
-    // Confirmação é obrigatória apenas se a senha principal for obrigatória (ou seja, na criação)
-    // ou se a senha estiver sendo alterada na edição.
-    const confirmarSenhaValidators = !this.isEditMode ? [Validators.required] : [];
+  // initForm, senhasCombinamValidator, loadEmpresas, loadUsuarioParaEdicao
+  // permanecem como no seu código original ou com os ajustes de validação que você já tem.
+  // O importante é que eles não afetam a lógica de redirecionamento que estamos focando.
 
+  initForm(usuario?: Usuario): void {
+    const senhaValidators = !this.isEditMode ? [Validators.required, Validators.minLength(6)] : [Validators.minLength(6)];
+    const confirmarSenhaValidators = !this.isEditMode ? [Validators.required] : [];
 
     this.form = this.fb.group({
       nome: [usuario?.nome || '', Validators.required],
       login: [usuario?.login || '', Validators.required],
       email: [usuario?.email || '', [Validators.required, Validators.email]],
-      senha: ['', senhaValidators], // Validador é condicional
-      confirmarSenha: ['', confirmarSenhaValidators], // Validador é condicional
+      senha: ['', senhaValidators],
+      confirmarSenha: ['', confirmarSenhaValidators],
       idEmpresa: [usuario?.idEmpresa || null],
       ativo: [usuario ? usuario.ativo : true, Validators.required],
-      // id_grupos: [usuario?.grupos?.map(g => g.id) || []], // Removido
     }, {
-      validators: this.senhasCombinamValidator // Aplica o validador de grupo
+      validators: this.senhasCombinamValidator
     });
 
-    // Lógica para tornar 'confirmarSenha' obrigatório na edição APENAS se 'senha' for preenchida
     if (this.isEditMode) {
+      this.form.get('login')?.disable(); // Login não é editável no modo de edição
       const senhaCtrl = this.form.get('senha');
       const confirmarSenhaCtrl = this.form.get('confirmarSenha');
 
       if (senhaCtrl && confirmarSenhaCtrl) {
         this.subscriptions.add(
           senhaCtrl.valueChanges.subscribe(value => {
-            if (value && value.trim() !== '') { // Se o campo senha tem algo
+            if (value && value.trim() !== '') {
               confirmarSenhaCtrl.setValidators([Validators.required]);
-            } else { // Se senha for limpa
+            } else {
               confirmarSenhaCtrl.clearValidators();
-              confirmarSenhaCtrl.setValue(''); // Limpa confirmação
-              confirmarSenhaCtrl.markAsUntouched(); // Para não mostrar erro de 'required' se senha estiver vazia
+              confirmarSenhaCtrl.setValue('');
+              confirmarSenhaCtrl.markAsUntouched();
             }
             confirmarSenhaCtrl.updateValueAndValidity();
-            // Não precisa chamar this.form.updateValueAndValidity() aqui,
-            // pois o validador de grupo senhasCombinamValidator cuidará da lógica de combinação.
           })
         );
       }
@@ -115,50 +136,44 @@ export class FormUsuarioComponent implements OnInit, OnDestroy {
     const senha = group.get('senha')?.value;
     const confirmarSenha = group.get('confirmarSenha')?.value;
 
-    // Se o campo senha está preenchido, então o campo confirmarSenha deve ser igual
     if (senha && senha.trim() !== '') {
         if (senha !== confirmarSenha) {
             group.get('confirmarSenha')?.setErrors({ senhasNaoCombinam: true });
-            return { senhasNaoCombinamGlobal: true }; // Erro a nível de grupo para o form.invalid
+            return { senhasNaoCombinamGlobal: true };
         }
     } else if (confirmarSenha && confirmarSenha.trim() !== '' && (!senha || senha.trim() === '')) {
-        // Se a senha está vazia mas a confirmação não, isso também é um erro (ou a senha se torna required)
-        group.get('senha')?.setErrors({ required: true }); // Força erro de required na senha
-        return { senhasNaoCombinamGlobal: true }; // Indica erro no grupo
+        group.get('senha')?.setErrors({ required: true });
+        return { senhasNaoCombinamGlobal: true };
     }
 
     if (senha === confirmarSenha && group.get('confirmarSenha')?.hasError('senhasNaoCombinam')) {
         group.get('confirmarSenha')?.setErrors(null);
     }
-
-    return null; 
+    return null;
   }
 
- loadEmpresas(): Promise<void> {
-  return new Promise((resolve) => {
-    const empresaSub = this.empresaService.obterTodos().subscribe({
-      next: (data: Empresa[]) => {
-        this.empresas = data;
-         const idEmpresaAtual = this.form?.get('idEmpresa')?.value;
-if (idEmpresaAtual) {
-  const empresaExiste = this.empresas.some(e => e.id === idEmpresaAtual);
-  if (!empresaExiste) {
-    this.form.get('idEmpresa')?.setValue(null); // limpa se não existir mais
-  }
-}
-        resolve();
-      },
-      error: (err) => {
-        this.toastService.error('Erro ao carregar empresas: ' + (err.message || 'Verifique a API.'));
-        resolve(); // resolve mesmo com erro, para não travar a tela
-      }
+  loadEmpresas(): Promise<void> {
+    return new Promise((resolve) => {
+      const empresaSub = this.empresaService.obterTodos().subscribe({
+        next: (data: Empresa[]) => {
+          this.empresas = data;
+            const idEmpresaAtual = this.form?.get('idEmpresa')?.value;
+            if (idEmpresaAtual) {
+            const empresaExiste = this.empresas.some(e => e.id === idEmpresaAtual);
+            if (!empresaExiste) {
+                this.form.get('idEmpresa')?.setValue(null);
+            }
+            }
+          resolve();
+        },
+        error: (err) => {
+          this.toastService.error('Erro ao carregar empresas: ' + (err.message || 'Verifique a API.'));
+          resolve();
+        }
+      });
+      this.subscriptions.add(empresaSub);
     });
-    this.subscriptions.add(empresaSub);
-  });
-
-}
-
-  // loadGruposDisponiveis(): void { /* Removido */ }
+  }
 
   loadUsuarioParaEdicao(): void {
     if (!this.usuarioId) return;
@@ -166,11 +181,12 @@ if (idEmpresaAtual) {
     const userSub = this.usuarioService.obterPorId(this.usuarioId).subscribe(
       usuario => {
         if (usuario) {
-          this.initForm(usuario); // Popula com os dados do usuário
-          this.dataModificacaoUsuarioAtual = usuario.dataModificacao; // Armazena para controle de concorrência
+          this.initForm(usuario);
+          this.dataModificacaoUsuarioAtual = usuario.dataModificacao;
         } else {
           this.toastService.error('Usuário não encontrado.');
-          this.router.navigate(['/admin/usuarios']);
+          // Ajuste o redirecionamento aqui também, se necessário, baseado em this.veioDeMeuPerfil
+          this.router.navigate([this.veioDeMeuPerfil ? '/ordem-servico' : '/admin/usuarios']);
         }
         this.isLoading = false;
       },
@@ -180,7 +196,7 @@ if (idEmpresaAtual) {
   }
 
   onSubmit(): void {
-    this.form.markAllAsTouched(); // Marca tudo para exibir todos os erros de validação pendentes
+    this.form.markAllAsTouched();
     if (this.form.invalid) {
       this.toastService.error('Formulário inválido. Verifique os campos destacados.');
       console.log("Erros do formulário:", this.collectFormErrors(this.form));
@@ -193,32 +209,29 @@ if (idEmpresaAtual) {
       const payload: UsuarioAtualizacaoPayload = {
         id: this.usuarioId,
         nome: formValue.nome,
-        login: formValue.login,
+        login: formValue.login, // Corrigido para pegar do formValue (getRawValue)
         email: formValue.email,
         ativo: formValue.ativo,
         idEmpresa: formValue.idEmpresa || null,
-        // matricula: formValue.matricula || null, // Adicionar se matricula fizer parte do DTO de atualização
-        dataUltimaModificacao: this.dataModificacaoUsuarioAtual, // Enviando o valor original para concorrência
+        dataUltimaModificacao: this.dataModificacaoUsuarioAtual,
       };
-      if (formValue.senha && formValue.senha.trim() !== '') { // Só envia senha se foi preenchida
+      if (formValue.senha && formValue.senha.trim() !== '') {
         payload.senha = formValue.senha;
       }
 
       const updateSub = this.usuarioService.atualizarUsuario(this.usuarioId, payload).subscribe({
-
         next: () => this.handleSuccess('Usuário atualizado com sucesso!'),
         error: (err) => this.handleApiError('Erro ao atualizar usuário.', err)
       });
       this.subscriptions.add(updateSub);
-    } else { // Criação
+    } else {
       const payload: UsuarioCriacaoPayload = {
         nome: formValue.nome,
         login: formValue.login,
         email: formValue.email,
-        senha: formValue.senha, // Senha é obrigatória e validada
+        senha: formValue.senha,
         ativo: formValue.ativo,
         idEmpresa: formValue.idEmpresa || null,
-        // matricula: formValue.matricula || null,
       };
       const createSub = this.usuarioService.criarUsuario(payload).subscribe({
         next: () => this.handleSuccess('Usuário criado com sucesso!'),
@@ -228,18 +241,22 @@ if (idEmpresaAtual) {
     }
   }
 
- // Exemplo no FormUsuarioComponent
-private handleSuccess(message: string): void {
-  console.log('[FormUsuario] Chamando toastService.success com:', message); // LOG
-  this.toastService.success(message);
-  this.isLoading = false;
-  this.router.navigate(['/admin/usuarios']);
-}
+  private handleSuccess(message: string): void {
+    this.toastService.success(message);
+    this.isLoading = false;
+    // Redirecionamento baseado no contexto determinado no ngOnInit
+    if (this.veioDeMeuPerfil) {
+      this.router.navigate(['/ordem-servico']); // Ou para uma página de visualização de perfil, ou de onde veio
+    } else {
+      this.router.navigate(['/admin/usuarios']);
+    }
+  }
 
   private handleApiError(message: string, error: any): void {
+    // ... (seu código de handleApiError) ...
     let detailErrorMessage = error.message || 'Erro desconhecido.';
     if (error.error && typeof error.error === 'object') {
-        if (error.error.errors) { // Erros de validação do ModelState .NET Core
+        if (error.error.errors) {
             const validationErrors = [];
             for (const key in error.error.errors) {
                 if (error.error.errors.hasOwnProperty(key) && Array.isArray(error.error.errors[key])) {
@@ -247,13 +264,13 @@ private handleSuccess(message: string): void {
                 }
             }
             if (validationErrors.length > 0) {
-              detailErrorMessage = validationErrors.join('; ');
-            } else if (error.error.mensagem) { // Se a API RespostaApi<T> tem 'mensagem'
+                detailErrorMessage = validationErrors.join('; ');
+            } else if (error.error.mensagem) {
                 detailErrorMessage = error.error.mensagem;
             }
         } else if (error.error.mensagem) {
-             detailErrorMessage = error.error.mensagem;
-        } else if (error.error.title) { // Estrutura de erro padrão do ASP.NET Core para 400
+            detailErrorMessage = error.error.mensagem;
+        } else if (error.error.title) {
             detailErrorMessage = error.error.title;
         }
     }
@@ -274,13 +291,46 @@ private handleSuccess(message: string): void {
     return !!control && control.invalid && (control.dirty || control.touched);
   }
 
+  cancelar(): void {
+    const ROTA_LAYOUT_PRINCIPAL = '/ordem-servico'; // Ou a rota principal da sua aplicação
+    const ROTA_ADMIN_USUARIOS = '/admin/usuarios';
+
+    const navigateToDefault = () => {
+        if (this.veioDeMeuPerfil) {
+            this.router.navigate([ROTA_LAYOUT_PRINCIPAL]);
+        } else {
+            this.router.navigate([ROTA_ADMIN_USUARIOS]);
+        }
+    };
+
+    if (this.form.dirty) {
+        const config: ConfirmationConfig = { // Agora usando a interface correta
+            title: 'Descartar Alterações?',
+            message: 'Todas as alterações não salvas serão perdidas. Deseja continuar?',
+            acceptButtonText: 'Sim, Descartar', // Opcional, pode usar os padrões do dialog
+            cancelButtonText: 'Não', // Opcional
+            // acceptButtonClass: 'btn-danger', // Opcional
+            // cancelButtonClass: 'btn-secondary' // Opcional
+        };
+
+        // A subscrição ao resultado do confirm
+        this.confirmationService.confirm(config).subscribe((result: boolean) => {
+            if (result) { // Usuário clicou em "Sim"
+                navigateToDefault();
+            }
+            // Se result for false, não faz nada (usuário clicou em "Não")
+        });
+    } else {
+        navigateToDefault();
+    }
+  }
+
   ngOnDestroy(): void {
     this.subscriptions.unsubscribe();
   }
 
-  // showToast já foi removido, usamos this.toastService.
-
   private collectFormErrors(form: FormGroup | FormArray): any {
+    // ... (seu código de collectFormErrors) ...
     const errors: any = {};
     Object.keys(form.controls).forEach((key) => {
       const control = form.get(key) as AbstractControl;

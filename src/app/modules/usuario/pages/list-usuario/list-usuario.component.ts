@@ -116,4 +116,15 @@ export class ListUsuarioComponent implements OnInit, OnDestroy {
 
     this.subscriptions.add(confirmSub);
   }
+
+  navigateToForm(id?: number): void {
+    const basePath = '/admin/usuarios'; // Rota base para admin
+    const returnUrl = basePath; // Sempre volta para a lista de usuários admin
+
+    if (id) { // Editar usuário existente
+      this.router.navigate([`${basePath}/editar`, id], { queryParams: { returnUrl } });
+    } else { // Criar novo usuário
+      this.router.navigate([`${basePath}/novo`], { queryParams: { returnUrl } });
+    }
+  }
 }

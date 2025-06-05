@@ -1,0 +1,84 @@
+/* Estilos que eram específicos da sidebar no layout.component.css podem vir para cá */
+.sidebar {
+  width: 280px;
+  transition: width 0.3s ease;
+  display: flex;
+  flex-direction: column; /* Para posicionar o rodapé do usuário em baixo */
+}
+
+.sidebar.collapsed {
+  width: 0;
+  padding-left: 0 !important; /* Importante para ocultar completamente */
+  padding-right: 0 !important; /* Importante para ocultar completamente */
+  overflow: hidden;
+}
+
+.sidebar .sidebar-menu {
+  overflow-y: auto; /* Para permitir scroll se o menu for grande */
+  flex-grow: 1; /* Para que o menu ocupe o espaço disponível */
+}
+
+.sidebar .nav-link {
+  color: rgba(255, 255, 255, 0.8); /* Cor padrão dos links */
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.sidebar .nav-link:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+.sidebar .nav-link.active {
+  background-color: #ffffff;
+  color: #0d6efd; /* Cor primária do Bootstrap */
+  font-weight: 500;
+}
+
+.sidebar .nav-link.active i {
+  color: #0d6efd; /* Cor primária do Bootstrap */
+}
+
+.sidebar .accordion-button {
+  color: rgba(255, 255, 255, 0.9) !important; /* Ajuste para texto do accordion */
+  padding: 0.75rem 1rem; /* Ajuste o padding conforme necessário */
+}
+.sidebar .accordion-button:not(.collapsed) {
+  color: #fff !important;
+  background-color: rgba(0,0,0,0.1) !important;
+}
+
+.sidebar .accordion-button:focus {
+  box-shadow: none;
+}
+
+.sidebar .accordion-button::after {
+  filter: invert(1) grayscale(100%) brightness(200%); /* Para ícone do accordion branco */
+}
+
+.sidebar .accordion-item {
+  margin-bottom: 0.5rem;
+}
+
+/* User profile no rodapé */
+.user-profile {
+  background-color: rgba(255, 255, 255, 0.1); /* Um fundo levemente diferente */
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  margin-top: auto; /* Empurra para o final */
+}
+
+.user-profile .avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+}
+
+.user-profile .user-name {
+  color: #fff !important; /* Nome do usuário em branco */
+}
+.user-profile .user-email {
+  color: rgba(255, 255, 255, 0.7) !important; /* Email com opacidade */
+}

@@ -1,23 +1,24 @@
 <div class="d-flex flex-column vh-100">
   <app-navbar
+    brandName="SIGOS Admin"
+    brandSubtitle="Painel de Controle"
+    logoText="ADM"
     [currentUser]="currentUserForLayout"
     [isLoggedIn]="isLoggedIn"
     (toggleSidebarClicked)="toggleSidebar()"
-    [showAdminSettingsButton]="true"
-    adminSettingsLink="/admin/usuarios">
-    </app-navbar>
+    [showAdminSettingsButton]="false" [actionButton]="navbarActionButton"> </app-navbar>
 
-  <div class="d-flex flex-grow-1" style="margin-top: 56px;"> <app-sidebar
+  <div class="d-flex flex-grow-1" style="margin-top: 56px;">
+    <app-sidebar
       [isCollapsed]="isSidebarCollapsed"
-      [menuAccordionGroups]="mainSidebarMenuGroups"
+      [menuAccordionGroups]="adminSidebarMenuGroups"
       [currentUser]="currentUserForLayout"
       [isLoggedIn]="isLoggedIn"
       (userProfileClicked)="handleUserProfileClick($event)">
     </app-sidebar>
 
-   <main class="main-content flex-grow-1 overflow-auto p-0">
-      <div class="container-fluid px-3 py-2 container py-4">
-        <router-outlet></router-outlet>
+    <main class="main-content flex-grow-1 overflow-auto p-0">
+      <div class="container-fluid px-3 py-2 container py-4"> <router-outlet></router-outlet>
       </div>
     </main>
   </div>
