@@ -67,7 +67,7 @@ export class FormCategoriaComponent implements OnInit, OnDestroy {
         campos: [
           {
             nome: 'nome',
-            tipo: 'text',
+            tipo: 'texto',
             rotulo: 'Nome da Categoria',
             placeholder: 'Digite o nome da categoria',
             obrigatorio: true,

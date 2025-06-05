@@ -112,11 +112,11 @@ export class FormModeloComponent implements OnInit {
       },
       abas: [
         {
-          titulo: 'Dados do Modelo',
+          titulo: '',
           campos: [
             {
               nome: 'nome',
-              tipo: 'text',
+              tipo: 'texto',
               rotulo: 'Nome do Modelo',
               placeholder: 'Digite o nome do modelo',
               obrigatorio: true,

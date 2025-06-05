@@ -30,7 +30,7 @@
 
                 <ng-container [ngSwitch]="campo.tipo">
 
-                  <input *ngSwitchCase="'text'" [id]="campo.nome" type="text" class="form-control"
+                  <input *ngSwitchCase="'texto'" [id]="campo.nome" type="text" class="form-control"
                     [formControlName]="campo.nome" [placeholder]="campo.placeholder" [attr.mask]="campo.mask"
                     [ngClass]="{'is-invalid': isInvalidControl(campo.nome)}">
 
@@ -43,6 +43,25 @@
                     [searchable]="true" [clearable]="true" [ngClass]="{'is-invalid': isInvalidControl(campo.nome)}">
                   </ng-select>
 
+
+                  <input *ngSwitchCase="'moeda'" currencyMask
+                    [options]="{ prefix: 'R$ ', thousands: '.', decimal: ',', precision: 2 }" type="text"
+                    class="form-control" [formControlName]="campo.nome" [placeholder]="campo.placeholder || ''"
+                    [ngClass]="{'is-invalid': isInvalidControl(campo.nome)}" />
+
+                  <input *ngSwitchCase="'decimal'" type="number" step="0.01" class="form-control"
+                    [formControlName]="campo.nome" [placeholder]="campo.placeholder || ''"
+                    [ngClass]="{'is-invalid': isInvalidControl(campo.nome)}" />
+
+                  <input *ngSwitchCase="'inteiro'" type="number" step="1" class="form-control"
+                    [formControlName]="campo.nome" [placeholder]="campo.placeholder || ''"
+                    [ngClass]="{'is-invalid': isInvalidControl(campo.nome)}" />
+
+                  <input *ngSwitchCase="'data'" type="date" class="form-control" [id]="campo.nome"
+                    [formControlName]="campo.nome" [placeholder]="campo.placeholder || ''" />
+
+                  <input *ngSwitchCase="'dataHora'" type="datetime-local" class="form-control" [id]="campo.nome"
+                    [formControlName]="campo.nome" [placeholder]="campo.placeholder || ''" />
 
                   <input *ngSwitchCase="'checkbox'" [id]="campo.nome" type="checkbox" class="form-check-input mt-2"
                     [formControlName]="campo.nome">

@@ -57,7 +57,7 @@ export class FormPecaComponent implements OnInit {
         campos: [
           {
             nome: 'nome',
-            tipo: 'text',
+            tipo: 'texto',
             rotulo: 'Nome da Peça',
             placeholder: 'Digite o nome da peça',
             obrigatorio: true,
@@ -68,7 +68,7 @@ export class FormPecaComponent implements OnInit {
           },
           {
             nome: 'precoCusto',
-            tipo: 'text',
+            tipo: 'moeda',
             rotulo: 'Preço de Custo',
             placeholder: 'Digite o preço de custo',
             obrigatorio: true,
@@ -76,7 +76,7 @@ export class FormPecaComponent implements OnInit {
           },
           {
             nome: 'precoVenda',
-            tipo: 'text',
+            tipo: 'moeda',
             rotulo: 'Preço de Venda',
             placeholder: 'Digite o preço de venda',
             obrigatorio: true,
@@ -84,14 +84,14 @@ export class FormPecaComponent implements OnInit {
           },
           {
             nome: 'localizacaoFisica',
-            tipo: 'text',
+            tipo: 'texto',
             rotulo: 'Localização Física',
             placeholder: 'Informe a localização',
             col: 'col-md-4'
           },
           {
             nome: 'quantidadeMinimaEstoque',
-            tipo: 'text',
+            tipo: 'inteiro',
             rotulo: 'Qtd. Mínima Estoque',
             placeholder: 'Informe a quantidade mínima',
             col: 'col-md-4'

@@ -61,7 +61,7 @@ export class FormMarcaComponent implements OnInit, OnDestroy {
       campos: [
         {
           nome: 'nome',
-          tipo: 'text',
+          tipo: 'texto',
           rotulo: 'Nome da Marca',
           placeholder: 'Digite o nome da marca',
           obrigatorio: true,

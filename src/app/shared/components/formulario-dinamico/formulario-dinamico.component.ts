@@ -19,10 +19,11 @@ import {
 import { CommonModule, KeyValue } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { NgSelectModule } from '@ng-select/ng-select';
+import { CurrencyMaskModule } from 'ng2-currency-mask';
 
 export interface CampoFormularioConfig {
   nome: string;
-  tipo: 'text' | 'email' | 'select' | 'checkbox';
+  tipo: 'texto' | 'inteiro' | 'email' | 'senha' | 'data' | 'checkbox' | 'select' | 'textarea' | 'booleano' | 'moeda';
   rotulo: string;
   placeholder?: string;
   obrigatorio?: boolean;
@@ -54,7 +55,7 @@ export interface FormularioDinamicoConfig {
 @Component({
   selector: 'app-form-dinamico',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule, NgSelectModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule, NgSelectModule, CurrencyMaskModule],
   templateUrl: './formulario-dinamico.component.html',
   styleUrls: ['./formulario-dinamico.component.css'],
 })
