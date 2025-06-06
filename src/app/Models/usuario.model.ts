@@ -1,5 +1,7 @@
 // O modelo Grupo permanece o mesmo que você definiu para o banco
 export interface Grupo {
+  dataModificacao: string | Date | undefined;
+  ativo: any;
   id: number;
   nome: string;
 }
@@ -78,5 +80,5 @@ export interface UsuarioAtualizacaoPayload {
   senha?: string; // Opcional na atualização
   ativo: boolean;
   idEmpresa?: number | null;
-  dataUltimaModificacao?: Date; 
+  dataUltimaModificacao?: Date;
 }

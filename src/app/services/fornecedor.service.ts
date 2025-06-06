@@ -15,7 +15,7 @@ export class FornecedorService extends CrudService<Fornecedor, number> {
 
   constructor(http: HttpClient) {
     super(http);
-    console.log(`[FornecedorService] Inicializado para interagir com: ${this.fullApiUrl}`);
+
   }
 
   // obterTodos() é herdado e usa GET /api/fornecedores

@@ -10,19 +10,12 @@ import { RespostaApi } from '../Models/reposta-api.model';
   providedIn: 'root'
 })
 export class UsuarioService extends CrudService<Usuario, number> {
- 
+
   // apiUrlBase é herdado ou pode ser definido aqui se diferente do CrudService padrão
   // (se CrudService não tiver um apiUrlBase default, defina-o aqui ou no construtor)
   protected override readonly apiUrlBase = 'https://localhost:7119/api'; // Se diferente do default no CrudService
   protected readonly endpoint = 'usuarios'; // Endpoint específico para usuários
 
-  // Lista mockada de grupos disponíveis para atribuição
-  private mockGruposDisponiveis: Grupo[] = [
-      { id: 1, nome: 'admin' },
-      { id: 2, nome: 'user' },
-      { id: 3, nome: 'tecnico' },
-      { id: 4, nome: 'gestor' }
-  ];
 
   constructor(http: HttpClient) {
     super(http); // Chama o construtor da classe base CrudService
@@ -54,16 +47,19 @@ export class UsuarioService extends CrudService<Usuario, number> {
     return super.criar(usuarioData as Omit<Usuario, 'id'>); // Faz cast se necessário ou mapeia
   }
 
-  // Sobrescrevendo atualizar para usar UsuarioAtualizacaoPayload
+  obterParaSelecao(): Observable<{ id: number, descricao: string }[]> {
+    return this.http.get<RespostaApi<{ id: number, descricao: string }[]>>(`${this.fullApiUrl}/selecao`, this.getHttpOptions())
+      .pipe(
+        map(response => {
+          if (response.sucesso && response.dados) return response.dados;
+          throw new Error(response.mensagem || 'Falha ao obter seleção de modelos.');
+        }),
+        catchError(this.handleError)
+      );
+  }
+
+
   atualizarUsuario(id: number, usuarioData: UsuarioAtualizacaoPayload): Observable<Usuario> {
-    // O endpoint PUT da sua API /api/usuarios/{id} espera UsuarioAtualizacaoDto
-    // A classe base CrudService.atualizar já faz PUT para this.fullApiUrl/{id}
-    // Se UsuarioAtualizacaoPayload for compatível com o que o backend espera,
-    // podemos chamar o método da classe base.
-    // Seu DTO de atualização no backend tem `Id` no corpo e `DataUltimaModificacao`.
-    // O CrudService.atualizar envia `item: Partial<T>`.
-    // Precisamos garantir que o payload enviado seja o `UsuarioAtualizacaoPayload` completo.
-    // O método `super.atualizar` envia o segundo argumento como corpo.
     return this.http.put<RespostaApi<Usuario>>(`${this.fullApiUrl}/${id}`, usuarioData, this.getHttpOptions())
       .pipe(
         map(response => {
@@ -75,16 +71,4 @@ export class UsuarioService extends CrudService<Usuario, number> {
         catchError(this.handleError) // handleError é herdado
       );
   }
-
-
-  // Este método pode continuar mockado ou ser movido para um GrupoService no futuro
-  getGruposDisponiveis(): Observable<Grupo[]> {
-    console.log('[UsuarioService] getGruposDisponiveis (MOCKADO).');
-    return of([...this.mockGruposDisponiveis]).pipe(delay(100));
-    // No futuro: return this.http.get<Grupo[]>(`${this.apiUrlBase}/grupos`, this.getHttpOptions()).pipe(catchError(this.handleError));
-  }
-
-  // Se você tiver outros métodos específicos para usuários que não são CRUD padrão,
-  // adicione-os aqui. Por exemplo:
-  // buscarPorLogin(login: string): Observable<Usuario | undefined> { ... }
 }

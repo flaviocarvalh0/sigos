@@ -42,6 +42,7 @@ export class FormCategoriaComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private toastService = inject(ToastService);
   private confirmationService = inject(ConfirmationService);
+  
 
   dadosIniciais: any = {};
   currentCategoriaId: number | null = null;

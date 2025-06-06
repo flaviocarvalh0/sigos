@@ -37,6 +37,8 @@ import { FormOrdemServicoComponent } from './modules/ordem-servico/form-ordem-se
 import { ListCategoriaComponent } from './modules/categoria/pages/list-categoria/list-categoria.component';
 import { FormCategoriaComponent } from './modules/categoria/pages/form-categoria/form-categoria.component';
 import { AdminLayoutComponent } from './modules/admin/layout/admin-layout/admin-layout.component';
+import { ListGruposComponent } from './modules/admin/pages/grupo/list-grupo/list-grupo.component';
+import { FormGrupoComponent } from './modules/admin/pages/grupo/form-grupo/form-grupo.component';
 // Supondo que você criará este para a área admin:
 // import { ListGruposComponent } from './admin/pages/list-grupos/list-grupos.component';
 
@@ -73,7 +75,20 @@ export const routes: Routes = [
       {
         path: 'usuarios/editar/:id', // Admin editando qualquer usuário
         component: FormUsuarioComponent,
-      }
+      },
+      {
+        path: 'grupos',
+        component: ListGruposComponent,
+        // canActivate: [RoleGuard], // RoleGuard já está no pai, redundante aqui se a regra for a mesma
+      },
+      {
+        path: 'grupo/form',
+        component: FormGrupoComponent,
+      },
+      {
+        path: 'grupo/form/:id',
+        component: FormGrupoComponent,
+      },
     ],
   },
   {
