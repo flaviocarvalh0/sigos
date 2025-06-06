@@ -58,14 +58,12 @@ export class AuthService {
     return this.http.post<LoginResponse>(`${this.apiUrl}/login/authenticate`, payload)
       .pipe(
         tap(response => {
-          console.log("API Login Response:", response);
           if (response && response.sucesso && response.dados) { // response.dados é o token
             const token = response.dados;
             this.setToken(token);
             const decodedUserData = this.decodeAndStoreUserFromToken(token);
             if (decodedUserData) {
               this.currentUserSubject.next(decodedUserData);
-              console.log('[AuthService] Login bem-sucedido. Usuário:', decodedUserData);
             } else {
               // Falha na decodificação ou token inválido mesmo com sucesso da API (improvável mas defensivo)
               this.clearAuthDataStorage();
@@ -83,7 +81,6 @@ export class AuthService {
         catchError((error: HttpErrorResponse | Error) => {
           this.clearAuthDataStorage(); // Garante limpeza em caso de erro
           this.currentUserSubject.next(null);
-          console.error('Erro no login do AuthService:', error);
           // Propaga um erro que o componente de login possa usar
           if (error instanceof HttpErrorResponse && error.error && error.error.mensagem) {
             return throwError(() => new Error(error.error.mensagem));
@@ -184,19 +181,15 @@ export class AuthService {
         try {
           const parsedUser = JSON.parse(userInfo) as UsuarioLogado;
           if (!this.isTokenExpired(parsedUser)) {
-            console.log('[AuthService] Usuário válido carregado do storage:', parsedUser);
             return parsedUser;
           } else {
-            console.log('[AuthService] Usuário do storage expirado.');
             this.clearAuthDataStorage(); // Limpa dados expirados
           }
         } catch (e) {
-          console.error('[AuthService] Erro ao parsear usuário do storage:', e);
           this.clearAuthDataStorage();
         }
       }
     }
-    console.log('[AuthService] Nenhum usuário válido no storage.');
     return null;
   }
 

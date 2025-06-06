@@ -5,7 +5,7 @@
       <ng-container *ngFor="let group of menuAccordionGroups">
         <div class="accordion-item bg-transparent border-0">
           <h2 class="accordion-header" [id]="'header-' + group.id">
-            <button class="accordion-button bg-transparent text-dark" type="button"
+            <button class="accordion-button bg-transparent text-dark mb-2" type="button"
                     data-bs-toggle="collapse" [attr.data-bs-target]="getTargetId(group.id)"
                     [attr.aria-expanded]="group.isInitiallyOpen ? 'true' : 'false'"
                     [attr.aria-controls]="group.id"
