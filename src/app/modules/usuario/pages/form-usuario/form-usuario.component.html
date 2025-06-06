@@ -15,107 +15,110 @@
       </div>
 
       <form *ngIf="form && !isLoading" [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
-        <div class="row">
-          <div class="col-md-6 mb-3">
-            <label for="nome" class="form-label">Nome Completo <span class="text-danger">*</span></label>
-            <input type="text" id="nome" class="form-control" formControlName="nome"
-              placeholder="Nome completo do usuário">
-            <div *ngIf="isInvalidControl('nome')" class="text-danger small">
-              <span *ngIf="form.get('nome')?.errors?.['required']">Nome é obrigatório.</span>
-            </div>
-          </div>
-          <div class="col-md-6 mb-3">
-            <label for="login" class="form-label">Login <span class="text-danger">*</span></label>
-            <input type="text" id="login" class="form-control" formControlName="login" placeholder="Login de acesso">
-            <div *ngIf="isInvalidControl('login')" class="text-danger small">
-              <span *ngIf="form.get('login')?.errors?.['required']">Login é obrigatório.</span>
-            </div>
-          </div>
-        </div>
+        <ul class="nav nav-tabs mb-3" id="tabsUsuario" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="dados-tab" data-bs-toggle="tab" data-bs-target="#dados" type="button" role="tab">Dados do Usuário</button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="grupos-tab" data-bs-toggle="tab" data-bs-target="#grupos" type="button" role="tab">Grupos Vinculados</button>
+          </li>
+        </ul>
 
-        <div class="row">
-          <div class="col-md-6 mb-3">
-            <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
-            <input type="email" id="email" class="form-control" formControlName="email"
-              placeholder="endereco@email.com">
-            <div *ngIf="isInvalidControl('email')" class="text-danger small">
-              <span *ngIf="form.get('email')?.errors?.['required']">Email é obrigatório.</span>
-              <span *ngIf="form.get('email')?.errors?.['email']">Email inválido.</span>
+        <div class="tab-content">
+          <div class="tab-pane fade show active" id="dados" role="tabpanel">
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="nome" class="form-label">Nome Completo <span class="text-danger">*</span></label>
+                <input type="text" id="nome" class="form-control" formControlName="nome" placeholder="Nome completo do usuário">
+                <div *ngIf="isInvalidControl('nome')" class="text-danger small">
+                  <span *ngIf="form.get('nome')?.errors?.['required']">Nome é obrigatório.</span>
+                </div>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="login" class="form-label">Login <span class="text-danger">*</span></label>
+                <input type="text" id="login" class="form-control" formControlName="login" placeholder="Login de acesso">
+                <div *ngIf="isInvalidControl('login')" class="text-danger small">
+                  <span *ngIf="form.get('login')?.errors?.['required']">Login é obrigatório.</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
+                <input type="email" id="email" class="form-control" formControlName="email" placeholder="endereco@email.com">
+                <div *ngIf="isInvalidControl('email')" class="text-danger small">
+                  <span *ngIf="form.get('email')?.errors?.['required']">Email é obrigatório.</span>
+                  <span *ngIf="form.get('email')?.errors?.['email']">Email inválido.</span>
+                </div>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="idEmpresa" class="form-label">Empresa</label>
+                <ng-select id="idEmpresa" [items]="empresas" bindLabel="razaoSocial" bindValue="id" formControlName="idEmpresa" placeholder="Selecione a Empresa" [clearable]="true"></ng-select>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="senha" class="form-label">Senha <span *ngIf="!isEditMode" class="text-danger">*</span></label>
+                <div class="input-group">
+                  <input [type]="senhaVisivel ? 'text' : 'password'" id="senha" class="form-control" formControlName="senha" placeholder="{{ isEditMode ? 'Nova senha (deixe em branco para não alterar)' : 'Mínimo 6 caracteres' }}">
+                  <button class="btn btn-outline-secondary" type="button" (click)="toggleSenhaVisivel()">
+                    <i class="bi" [ngClass]="senhaVisivel ? 'bi-eye-slash' : 'bi-eye'"></i>
+                  </button>
+                </div>
+                <div *ngIf="isInvalidControl('senha')" class="text-danger small">
+                  <span *ngIf="form.get('senha')?.errors?.['required']">Senha é obrigatória.</span>
+                  <span *ngIf="form.get('senha')?.errors?.['minlength']">Senha deve ter no mínimo 6 caracteres.</span>
+                </div>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="confirmarSenha" class="form-label">Confirmar Senha <span *ngIf="!isEditMode || form.get('senha')?.value" class="text-danger">*</span></label>
+                <div class="input-group">
+                  <input [type]="confirmaSenhaVisivel ? 'text' : 'password'" id="confirmarSenha" class="form-control" formControlName="confirmarSenha" placeholder="Confirme a senha">
+                  <button class="btn btn-outline-secondary" type="button" (click)="toggleConfirmaSenhaVisivel()">
+                    <i class="bi" [ngClass]="confirmaSenhaVisivel ? 'bi-eye-slash' : 'bi-eye'"></i>
+                  </button>
+                </div>
+                <div *ngIf="form.hasError('senhasNaoCombinam') && (form.get('confirmarSenha')?.touched || form.get('senha')?.touched)" class="text-danger small">
+                  As senhas não combinam.
+                </div>
+                <div *ngIf="isInvalidControl('confirmarSenha') && form.get('confirmarSenha')?.errors?.['required']" class="text-danger small">
+                  Confirmação de senha é obrigatória.
+                </div>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="ativo" formControlName="ativo">
+                <label class="form-check-label" for="ativo">Usuário Ativo</label>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div class="row">
-          <div class="col-md-6 mb-3">
-            <label for="senha" class="form-label">Senha <span *ngIf="!isEditMode" class="text-danger">*</span></label>
-            <div class="input-group">
-              <input [type]="senhaVisivel ? 'text' : 'password'" id="senha" class="form-control" formControlName="senha"
-                placeholder="{{ isEditMode ? 'Nova senha (deixe em branco para não alterar)' : 'Mínimo 6 caracteres' }}">
-              <button class="btn btn-outline-secondary" type="button" (click)="toggleSenhaVisivel()">
-                <i class="bi" [ngClass]="senhaVisivel ? 'bi-eye-slash' : 'bi-eye'"></i>
+          <div class="tab-pane fade" id="grupos" role="tabpanel">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h5 class="mb-0">Grupos Vinculados</h5>
+              <button type="button" class="btn btn-sm btn-outline-primary" (click)="abrirModalSelecaoGrupos()">
+                <i class="bi bi-plus-circle me-1"></i> Adicionar Grupos
               </button>
             </div>
-            <div *ngIf="isInvalidControl('senha')" class="text-danger small">
-              <span *ngIf="form.get('senha')?.errors?.['required']">Senha é obrigatória.</span>
-              <span *ngIf="form.get('senha')?.errors?.['minlength']">Senha deve ter no mínimo 6 caracteres.</span>
-            </div>
-          </div>
-          <div class="col-md-6 mb-3">
-            <label for="confirmarSenha" class="form-label">Confirmar Senha <span
-                *ngIf="!isEditMode || form.get('senha')?.value" class="text-danger">*</span></label>
-            <div class="input-group">
-              <input [type]="confirmaSenhaVisivel ? 'text' : 'password'" id="confirmarSenha" class="form-control"
-                formControlName="confirmarSenha" placeholder="Confirme a senha">
-              <button class="btn btn-outline-secondary" type="button" (click)="toggleConfirmaSenhaVisivel()">
-                <i class="bi" [ngClass]="confirmaSenhaVisivel ? 'bi-eye-slash' : 'bi-eye'"></i>
-              </button>
-            </div>
-            <div
-              *ngIf="form.hasError('senhasNaoCombinam') && (form.get('confirmarSenha')?.touched || form.get('senha')?.touched)"
-              class="text-danger small">
-              As senhas não combinam.
-            </div>
-            <div *ngIf="isInvalidControl('confirmarSenha') && form.get('confirmarSenha')?.errors?.['required']"
-              class="text-danger small">
-              Confirmação de senha é obrigatória.
-            </div>
-          </div>
-        </div>
-
-        <div class="row">
-          <div class="col-md-6 mb-3">
-            <label for="idEmpresa" class="form-label">Empresa</label>
-            <ng-select id="idEmpresa" [items]="empresas" bindLabel="razaoSocial" bindValue="id"
-              formControlName="idEmpresa" placeholder="Selecione a Empresa" [clearable]="true">
-            </ng-select>
-          </div>
-          <!-- <div class="col-md-6 mb-3">
-            <label for="id_grupos" class="form-label">Grupos de Acesso <span class="text-danger">*</span></label>
-            <ng-select id="id_grupos"
-                       [items]="gruposDisponiveis"
-                       bindLabel="nome"
-                       bindValue="id"
-                       [multiple]="true"
-                       formControlName="id_grupos"
-                       placeholder="Selecione os grupos"
-                       [closeOnSelect]="false">
-            </ng-select>
-             <div *ngIf="isInvalidControl('id_grupos')" class="text-danger small">
-              Pelo menos um grupo é obrigatório.
-            </div>
-          </div> -->
-        </div>
-
-        <div class="mb-3">
-          <div class="form-check form-switch">
-            <input class="form-check-input" type="checkbox" id="ativo" formControlName="ativo">
-            <label class="form-check-label" for="ativo">Usuário Ativo</label>
+            <div *ngIf="gruposVinculados.length === 0" class="text-muted">Nenhum grupo vinculado.</div>
+            <ul class="list-group" *ngIf="gruposVinculados.length > 0">
+              <li *ngFor="let grupo of gruposVinculados" class="list-group-item d-flex justify-content-between align-items-center">
+                {{ grupo.nomeGrupo || ('Grupo ' + grupo.idGrupo) }}
+                <button *ngIf="usuarioId" type="button" class="btn btn-sm btn-outline-danger" (click)="removerGrupo(grupo.idGrupo)">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </li>
+            </ul>
           </div>
         </div>
 
         <hr class="my-4">
         <div class="d-flex justify-content-end">
-          <button type="button" class="btn btn-secondary me-2" (click)="router.navigate(['/admin/usuarios'])">
+          <button type="button" class="btn btn-secondary me-2" (click)="cancelar()">
             Cancelar
           </button>
           <button type="submit" class="btn btn-primary" [disabled]="form.invalid || isLoading">
@@ -126,12 +129,32 @@
       </form>
     </div>
   </div>
-  <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1090">
-    <div id="liveToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
-      <div class="d-flex">
-        <div class="toast-body"></div>
-        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
-          aria-label="Close"></button>
+</div>
+
+<!-- MODAL DE SELEÇÃO DE GRUPOS -->
+<div class="modal fade" id="modalGrupos" tabindex="-1" aria-labelledby="modalGruposLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalGruposLabel">Selecionar Grupos para Vincular</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body">
+        <div class="overflow-auto" style="max-height: 300px;">
+          <input type="text"
+       class="form-control mb-3"
+       placeholder="Pesquisar grupo..."
+       [(ngModel)]="filtroGrupo">
+
+          <div *ngFor="let grupo of gruposDisponiveis | filter: filtroGrupo:'descricao'" class="form-check">
+            <input class="form-check-input" type="checkbox" [value]="grupo.id" [checked]="gruposSelecionados.includes(grupo.id)" (change)="onSelecionarGrupo($event, grupo.id)">
+            <label class="form-check-label">{{ grupo.descricao }}</label>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary" (click)="confirmarGruposSelecionados()">Adicionar ao Usuário</button>
       </div>
     </div>
   </div>

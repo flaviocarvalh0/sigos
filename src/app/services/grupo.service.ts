@@ -47,7 +47,14 @@ export class GrupoService extends CrudService<Grupo, number> {
   // remover(id: number): Observable<RespostaApi<boolean>>
 
   // Método específico para /api/grupos/selecao
-  obterParaSelecao(): Observable<RespostaApi<GrupoSelecao[]>> {
-    return this.http.get<RespostaApi<GrupoSelecao[]>>(`${this.fullApiUrl}/selecao`);
+  obterParaSelecao(): Observable<{ id: number, descricao: string }[]> {
+    return this.http.get<RespostaApi<{ id: number, descricao: string }[]>>(`${this.fullApiUrl}/selecao`, this.getHttpOptions())
+      .pipe(
+        map(response => {
+          if (response.sucesso && response.dados) return response.dados;
+          throw new Error(response.mensagem || 'Falha ao obter seleção de modelos.');
+        }),
+        catchError(this.handleError)
+      );
   }
 }
