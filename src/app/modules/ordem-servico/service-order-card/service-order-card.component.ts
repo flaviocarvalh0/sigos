@@ -23,8 +23,8 @@ import { Modelo } from '../../../Models/modelo.model';
         <div class="d-flex justify-content-between align-items-start">
           <div>
             <h3 class="h6 fw-bold mb-1">OS #{{ order.codigo }}</h3>
-            <span class="badge" [ngClass]="getStatusColor(order.nomeEstado)">
-              {{ formatStatus(order.nomeEstado) }}
+            <span class="badge" [ngClass]="getStatusColor(order.nomeEstado!)">
+              {{ formatStatus(order.nomeEstado!) }}
             </span>
           </div>
           <div class="text-end">

@@ -138,10 +138,10 @@ onSubmit(): void {
     this.usuarioService.obterParaSelecao().subscribe({
       next: (res) => {
         this.usuariosDisponiveis = res
-          .filter(u => !this.usuariosVinculados.some(v => v.idUsuario === u.id && u.ativo == true))
+          .filter(u => !this.usuariosVinculados.some(v => v.idUsuario === u.id))
           .map(u => ({
             id: u.id,
-            descricao: u.nome || u.nome || '', // ajuste conforme o campo correto em Usuario
+            descricao: u.descricao || u.descricao || '', // ajuste conforme o campo correto em Usuario
           }));
         const modal: any = document.getElementById('modalUsuarios');
         if (modal) {

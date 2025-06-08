@@ -1,9 +1,14 @@
-// src/app/models/toast.model.ts (ou em uma pasta de modelos compartilhados)
 export interface ToastData {
-  id?: number; // Opcional, para rastreamento
+  id?: number;
   message: string;
   type: 'success' | 'error' | 'warning' | 'info';
-  classname?: string; // Para classes CSS customizadas
-  delay?: number;     // Tempo para auto-fechar
+  delay?: number;
   timestamp?: Date;
+
+  timeoutId?: any;
+  intervalId?: any;
+  startedAt?: number;
+  remaining?: number;
+  paused?: boolean;
+  progress?: number;
 }

@@ -65,4 +65,6 @@ export class MarcaService extends CrudService<Marca, number> {
         catchError(this.handleError) // Reutiliza o handleError da classe base
       );
   }
+
+
 }

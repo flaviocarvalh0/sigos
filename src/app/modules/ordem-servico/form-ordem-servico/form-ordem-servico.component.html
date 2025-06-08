@@ -1,10 +1,11 @@
 <div class="container mt-4 mb-5">
   <div class="card shadow-sm">
-    <div class="card-header bg-primary text-white">
+    <div class="card-header bg-primary text-white  d-flex justify-content-between align-items-center">
       <h4 class="mb-0">
         <i class="fas fa-edit me-2"></i>
         {{ isEditMode ? 'Editar Ordem de Serviço' : 'Nova Ordem de Serviço' }}
       </h4>
+      <button type="button" class="btn-close" aria-label="Fechar" (click)="goBack()"></button>
     </div>
     <div class="card-body">
       <div *ngIf="isLoading" class="text-center my-3">
@@ -46,13 +47,14 @@
         <div class="tab-content" id="osTabContent">
           <div class="tab-pane fade show active" id="dados-principais" role="tabpanel"
             aria-labelledby="dados-principais-tab">
-            <h5 class="mb-3">Informações da Ordem de Serviço</h5>
+            <hr class="my-4">
+            <h5 class="mb-3 text-primary">Informações da Ordem de Serviço</h5>
             <div class="row mb-3">
               <div class="col-md-3">
                 <label for="codigo" class="form-label">Código OS <span class="text-danger">*</span></label>
                 <input type="text" id="codigo" class="form-control" formControlName="codigo"
                   [ngClass]="{ 'is-invalid': isInvalid('codigo') }">
-                <div *ngIf="isInvalid('codigo')" class="invalid-feedback">Código é obrigatório.</div>
+
               </div>
               <div class="col-md-3">
                 <label for="data_entrada" class="form-label">Data de Entrada <span class="text-danger">*</span></label>
@@ -69,29 +71,58 @@
                 </select> -->
                 <div *ngIf="isInvalid('id_status_os')" class="invalid-feedback">Status é obrigatório.</div>
               </div>
-              <div class="col-md-3" *ngIf="form.get('id_empresa')?.enabled || form.get('id_empresa')?.value"> <label
-                  for="id_empresa" class="form-label">Empresa <span class="text-danger">*</span></label>
+              <div class="col-md-3">
+                <label for="id_empresa" class="form-label">Empresa <span class="text-danger">*</span></label>
                 <select id="id_empresa" formControlName="id_empresa" class="form-select"
                   [ngClass]="{ 'is-invalid': isInvalid('id_empresa') }">
                   <option [ngValue]="null" disabled>Selecione a Empresa</option>
-                  <option *ngFor="let empresa of empresas" [ngValue]="empresa.id">{{ empresa.razaoSocial }}</option>
+                  <option *ngFor="let empresa of empresas" [ngValue]="empresa.id">
+                    {{ empresa.descricao }}
+                  </option>
                 </select>
                 <div *ngIf="isInvalid('id_empresa')" class="invalid-feedback">Empresa é obrigatória.</div>
               </div>
+
+
             </div>
 
-            <h5 class="mb-3 mt-4">Cliente e Aparelho</h5>
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label for="id_atendente" class="form-label">Atendente <span class="text-danger">*</span></label>
+                <ng-select id="id_atendente" class="form-control ng-select-clean" formControlName="id_atendente"
+                  [items]="usuarios" bindLabel="descricao" bindValue="id" placeholder="Selecione o atendente"
+                  [notFoundText]="'Nenhum usuário encontrado'" [ngClass]="{ 'is-invalid': isInvalid('id_atendente') }">
+                </ng-select>
+                <div *ngIf="isInvalid('id_atendente')" class="invalid-feedback d-block">
+                  Atendente é obrigatório.
+                </div>
+              </div>
+
+              <div class="col-md-6">
+                <label for="id_tecnico" class="form-label">Técnico <span class="text-danger">*</span></label>
+                <ng-select id="id_tecnico" class="form-control ng-select-clean" formControlName="id_tecnico"
+                  [items]="usuarios" bindLabel="descricao" bindValue="id" placeholder="Selecione o técnico"
+                  [notFoundText]="'Nenhum usuário encontrado'" [ngClass]="{ 'is-invalid': isInvalid('id_tecnico') }">
+                </ng-select>
+                <div *ngIf="isInvalid('id_tecnico')" class="invalid-feedback d-block">
+                  Técnico é obrigatório.
+                </div>
+              </div>
+            </div>
+
+
+            <hr class="my-4">
+            <h5 class="mb-3 mt-4 text-primary">Cliente e Aparelho</h5>
             <div class="row mb-3">
               <div class="col-md-6 mb-3 mb-md-0">
                 <label for="id_cliente" class="form-label">Cliente <span class="text-danger">*</span></label>
                 <div class="input-group">
-                  <ng-select id="id_cliente" formControlName="id_cliente" [items]="clientes" bindLabel="nomeCompleto"
-                    bindValue="id" placeholder="Selecione ou pesquise o Cliente"
+                  <ng-select class="form-control ng-select-clean" id="id_cliente" formControlName="id_cliente"
+                    [items]="clientes" bindLabel="nome" bindValue="id" placeholder="Selecione ou pesquise o Cliente"
                     [notFoundText]="'Nenhum cliente encontrado'" [ngClass]="{ 'is-invalid': isInvalid('id_cliente') }">
                   </ng-select>
                   <button type="button" class="btn btn-outline-primary" title="Novo Cliente"
-                    (click)="abrirModalNovoCliente()"
-                    style="display: flex; align-items: center; justify-content: center;">
+                    (click)="abrirModalNovoCliente()">
                     <i class="bi bi-plus"></i>
                   </button>
                 </div>
@@ -103,8 +134,9 @@
               <div class="col-md-6">
                 <label for="id_aparelho" class="form-label">Aparelho <span class="text-danger">*</span></label>
                 <div class="input-group">
-                  <ng-select id="id_aparelho" formControlName="id_aparelho" [items]="aparelhosDoCliente" bindValue="id"
-                    placeholder="Selecione ou pesquise o Aparelho" [notFoundText]="'Nenhum aparelho encontrado'"
+                  <ng-select class="form-control ng-select-clean" id="id_aparelho" formControlName="id_aparelho"
+                    [items]="aparelhosDoCliente" bindValue="id" placeholder="Selecione ou pesquise o Aparelho"
+                    [notFoundText]="'Nenhum aparelho encontrado'"
                     [ngClass]="{ 'is-invalid': isInvalid('id_aparelho') }">
 
                     <ng-template ng-label-tmp let-item="item">
@@ -170,7 +202,8 @@
                 </div>
               </div>
             </div>
-            <h5 class="mb-3 mt-4">Relatos e Observações</h5>
+            <hr class="my-4">
+            <h5 class="mb-3 mt-4 text-primary">Relatos e Observações</h5>
             <div class="row mb-3">
               <div class="col-md-12">
                 <label for="defeito_relatado_cliente" class="form-label">Relato do Problema (Cliente) <span
@@ -194,23 +227,48 @@
                   rows="3"></textarea>
               </div>
             </div>
-
-            <h5 class="mb-3 mt-4">Datas e Garantia</h5>
+            <hr class="my-4">
+            <h5 class="mb-3 text-primary mt-4">Datas e Garantia</h5>
             <div class="row mb-3">
+              <div class="col-md-6">
+                <label for="forma_pagamento" class="form-label">Forma de Pagamento</label>
+                <input type="text" id="forma_pagamento" class="form-control" formControlName="forma_pagamento">
+              </div>
+
+              <div class="col-md-6 d-flex align-items-center">
+                <div class="form-check mt-4">
+                  <input class="form-check-input" type="checkbox" id="pagamento_realizado"
+                    formControlName="pagamento_realizado">
+                  <label class="form-check-label" for="pagamento_realizado">
+                    Pagamento Realizado?
+                  </label>
+                </div>
+              </div>
               <div class="col-md-3">
                 <label for="data_execucao" class="form-label">Data de Execução</label>
-                <input type="date" id="data_execucao" class="form-control" formControlName="data_execucao">
+                <input
+                  *ngIf="form.get('data_execucao')?.value && form.get('data_execucao')?.value !== '0001-01-01T00:00:00'"
+                  type="date" formControlName="data_execucao" class="form-control">
+                <input
+                  *ngIf="!form.get('data_execucao')?.value || form.get('data_execucao')?.value === '0001-01-01T00:00:00'"
+                  type="date" formControlName="data_execucao" class="form-control" [value]="null">
               </div>
               <div class="col-md-3">
                 <label for="data_conclusao" class="form-label">Data de Conclusão</label>
                 <input type="date" id="data_conclusao" class="form-control" formControlName="data_conclusao">
               </div>
               <div class="col-md-3">
-                <label for="id_prazo_garantia" class="form-label">Prazo de Garantia</label>
-                <select id="id_prazo_garantia" formControlName="id_prazo_garantia" class="form-select">
-                  <option [ngValue]="null" selected>Sem Garantia</option>
-                  <option *ngFor="let prazo of prazosGarantia" [ngValue]="prazo.id">{{ prazo.descricao }}</option>
-                </select>
+                <label for="id_prazo_garantia" class="form-label">Prazo de Garantia <span
+                    class="text-danger">*</span></label>
+                <ng-select id="id_prazo_garantia" class="form-control ng-select-clean"
+                  formControlName="id_prazo_garantia" [items]="prazosGarantia" bindLabel="descricao" bindValue="id"
+                  [clearable]="true" [placeholder]="'Sem Garantia'"
+                  [ngClass]="{ 'is-invalid': isInvalid('id_prazo_garantia') }">
+                </ng-select>
+                <div *ngIf="isInvalid('id_prazo_garantia')" class="invalid-feedback d-block">
+                  Prazo de garantia é obrigatório.
+                </div>
+
               </div>
               <div class="col-md-3">
                 <label for="data_expiracao_garantia" class="form-label">Expiração da Garantia</label>
@@ -229,7 +287,7 @@
 
           <div class="tab-pane fade" id="servicos" role="tabpanel" aria-labelledby="servicos-tab">
             <div class="d-flex justify-content-between align-items-center mb-3">
-              <h5>Serviços Adicionados</h5>
+              <h5 class="text-primary">Serviços Adicionados</h5>
               <button type="button" class="btn btn-sm btn-outline-primary" (click)="addServico()">
                 <i class="bi bi-plus me-1"></i> Adicionar Serviço
               </button>
@@ -248,7 +306,7 @@
                         [ngClass]="{ 'is-invalid': isFormArrayControlInvalid('os_servicos', i, 'id_servico_catalogo') }">
                         <option [ngValue]="null" disabled>Selecione...</option>
                         <option *ngFor="let catServico of servicosDisponiveis" [ngValue]="catServico.id">{{
-                          catServico.nome }}</option>
+                          catServico.descricao }}</option>
                       </select>
                     </div>
                     <div class="col-md-2">
@@ -291,7 +349,7 @@
 
           <div class="tab-pane fade" id="pecas" role="tabpanel" aria-labelledby="pecas-tab">
             <div class="d-flex justify-content-between align-items-center mb-3">
-              <h5>Peças Utilizadas</h5>
+              <h5 class="text-primary">Peças Utilizadas</h5>
               <button type="button" class="btn btn-sm btn-outline-primary" (click)="addPeca()">
                 <i class="bi bi-plus me-1"></i> Adicionar Peça
               </button>
@@ -309,7 +367,7 @@
                         class="form-select form-select-sm"
                         [ngClass]="{ 'is-invalid': isFormArrayControlInvalid('os_pecas', i, 'id_peca_catalogo') }">
                         <option [ngValue]="null" disabled>Selecione...</option>
-                        <option *ngFor="let catPeca of pecasDisponiveis" [ngValue]="catPeca.id">{{ catPeca.nome }}
+                        <option *ngFor="let catPeca of pecasDisponiveis" [ngValue]="catPeca.id">{{ catPeca.descricao }}
                         </option>
                       </select>
                     </div>
@@ -353,7 +411,7 @@
 
           <div class="tab-pane fade" id="anexos" role="tabpanel" aria-labelledby="anexos-tab">
             <div class="d-flex justify-content-between align-items-center mb-3">
-              <h5>Anexos</h5>
+              <h5 class="text-primary">Anexos</h5>
               <button type="button" class="btn btn-sm btn-outline-primary" (click)="addAnexo()">
                 <i class="bi bi-plus me-1"></i> Adicionar Anexo
               </button>
@@ -418,6 +476,9 @@
         <div class="d-flex justify-content-end">
           <button type="button" class="btn btn-secondary me-2" (click)="goBack()">
             <i class="fas fa-times me-1"></i> Cancelar
+          </button>
+          <button class="btn btn-danger me-2" *ngIf="isEditMode" type="button" (click)="excluir()">
+            <i class="bi bi-trash me-1"></i> Excluir
           </button>
           <button type="submit" class="btn btn-success" [disabled]="form.invalid || isLoading">
             <i class="fas fa-save me-1"></i>

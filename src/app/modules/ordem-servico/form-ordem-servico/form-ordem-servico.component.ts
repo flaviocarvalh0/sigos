@@ -1,6 +1,19 @@
+import { ConfirmationService } from './../../../services/confirmation.service';
 import { Modelo } from './../../../Models/modelo.model';
 import { MarcaService } from './../../../services/marca.service';
-import { Component, OnInit, OnDestroy, ViewChild, ElementRef, Inject, PLATFORM_ID, ChangeDetectorRef, NgZone } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  ViewChild,
+  ElementRef,
+  Inject,
+  PLATFORM_ID,
+  ChangeDetectorRef,
+  NgZone,
+  Output,
+  EventEmitter,
+} from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
@@ -27,45 +40,67 @@ import { ClienteService } from '../../../services/cliente.service';
 import { AparelhoService } from '../../../services/aparelho.service';
 import { EmpresaService } from '../../../services/empresa.service';
 import { PrazoGarantiaService } from '../../../services/prazo_garantia.service';
-import { ServicoService as CatalogoServicoService, ServicoService } from '../../../services/servico.service';
+import {
+  ServicoService as CatalogoServicoService,
+  ServicoService,
+} from '../../../services/servico.service';
 import { PecaService as CatalogoPecaService } from '../../../services/peca.service';
 
 import { OsServico } from '../../../Models/ordem-servico/os-servico.model';
 import { OsPeca } from '../../../Models/ordem-servico/os-peca.model';
-import { OrdemServico } from '../../../Models/ordem-servico/ordem_servico.model';
+import {
+  OrdemServico,
+  OrdemServicoAtualizacaoPayload,
+  OrdemServicoCriacaoPayload,
+} from '../../../Models/ordem-servico/ordem_servico.model';
 import { OsAnexo } from '../../../Models/ordem-servico/os-anexos.model';
 import { Mode } from 'fs';
 import { ModeloService } from '../../../services/modelo.service';
-import { FormClienteComponent } from "../../cliente/pages/form-cliente/form-cliente.component";
-import { FormAparelhoComponent } from "../../aparelho/pages/form-aparelho/form-aparelho.component";
+import { FormClienteComponent } from '../../cliente/pages/form-cliente/form-cliente.component';
+import { FormAparelhoComponent } from '../../aparelho/pages/form-aparelho/form-aparelho.component';
 import { OrdemServicoService } from '../../../services/ordem-servico/ordem-servico.service';
 import { OsServicoService } from '../../../services/ordem-servico/os-servico.service';
 import { OsPecaService } from '../../../services/ordem-servico/os-peca.service';
 import { OsAnexoService } from '../../../services/ordem-servico/os-anexo.service';
+import { ToastService } from '../../../services/toast.service';
+import { UsuarioService } from '../../../services/usuario.service';
+import { ConfirmationConfig } from '../../../Models/confirmation.model';
+import { limparDatasInvalidas } from '../../../shared/helpers/form-helpers.';
 
 declare const bootstrap: any;
 
 @Component({
   selector: 'app-form-ordem-servico',
-  templateUrl: './form-ordem-servico.component.html', // Será atualizado depois
+  templateUrl: './form-ordem-servico.component.html',
+  styleUrls: ['./form-ordem-servico.component.css'],
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, NgSelectModule, FormClienteComponent, FormAparelhoComponent],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    NgSelectModule,
+    FormClienteComponent,
+    FormAparelhoComponent,
+  ],
 })
 export class FormOrdemServicoComponent implements OnInit, OnDestroy {
   form!: FormGroup;
   ordemServicoId?: number;
   isEditMode = false;
   isLoading = false;
-
-  empresas: Empresa[] = [];
-  clientes: { id: number, nomeCompleto: string }[] = [];
+  private idEstadoOs?: number;
+  private idWorkflowOs?: number;
+  private dataUltimaModificacaoOriginal?: Date;
+  empresas: { id: number; descricao: string }[] = [];
+  clientes: { id: number; nome: string }[] = [];
+  usuarios: { id: number; nome: string }[] = [];
   aparelhosDoCliente: Aparelho[] = [];
-  prazosGarantia: PrazoGarantia[] = [];
-  servicosDisponiveis: CatalogoServico[] = [];
-  pecasDisponiveis: CatalogoPeca[] = [];
-  marcas: { id: number; nome: string }[] = [];
-  modelos: { id: number; nome: string }[] = [];
-
+  prazosGarantia: { id: number; descricao: string; prazoEmDias?: number }[] =
+    [];
+  servicosDisponiveis: { id: number; descricao: string; valor?: number }[] = [];
+  pecasDisponiveis: { id: number; descricao: string; precoVenda?: number }[] =
+    [];
+  marcas: { id: number; descricao: string }[] = [];
+  modelos: { id: number; descricao: string }[] = [];
 
   private idsServicosParaDeletar: number[] = [];
   private idsPecasParaDeletar: number[] = [];
@@ -82,9 +117,8 @@ export class FormOrdemServicoComponent implements OnInit, OnDestroy {
   exibirConteudoModalAparelhoOs = false;
   editandoAparelhoOsId: number | undefined = undefined;
 
-
   constructor(
-@Inject(PLATFORM_ID) private platformId: Object,
+    @Inject(PLATFORM_ID) private platformId: Object,
     private fb: FormBuilder,
     private cdr: ChangeDetectorRef,
     private zone: NgZone,
@@ -98,29 +132,38 @@ export class FormOrdemServicoComponent implements OnInit, OnDestroy {
     private osServicoService: OsServicoService,
     private osPecaService: OsPecaService,
     private osAnexoService: OsAnexoService,
-    private marcaService : MarcaService,
+    private marcaService: MarcaService,
     private modeloService: ModeloService,
     private servicoService: ServicoService,
+    private usuarioService: UsuarioService,
     private route: ActivatedRoute,
-    private router: Router
+    private router: Router,
+    private confirmationService: ConfirmationService,
+    private toastService: ToastService
   ) {}
 
   ngOnInit(): void {
+    this.carregarEmpresaParaSelecao();
     this.initForm();
     this.loadInitialSelectData();
+    this.carregarClientesParaSelecao();
+    this.carregarUsuarioParaSelecao();
 
     const routeParamsSub = this.route.params.subscribe((params) => {
       this.isLoading = true;
       if (params['id']) {
         this.ordemServicoId = +params['id'];
+        this.carregarOsParaEdicao(this.ordemServicoId);
         this.isEditMode = true;
         this.loadOrdemServicoAndRelatedItems();
       } else {
         this.form.patchValue({
           data_entrada: new Date().toISOString().substring(0, 10),
         });
-        this.isEditMode = false;// Chama o método para gerar o código
-        this.form.patchValue({ data_criacao: new Date().toISOString().substring(0, 10) });
+        this.isEditMode = false; // Chama o método para gerar o código
+        this.form.patchValue({
+          data_criacao: new Date().toISOString().substring(0, 10),
+        });
         this.applyEmpresaRule();
         this.isLoading = false;
       }
@@ -157,31 +200,48 @@ export class FormOrdemServicoComponent implements OnInit, OnDestroy {
     this.subscriptions.add(servicosChangesSub);
     this.subscriptions.add(pecasChangesSub);
   }
-ngAfterViewInit() {
+  ngAfterViewInit() {
     if (isPlatformBrowser(this.platformId)) {
       // Modal Cliente (como antes)
       const modalClienteEl = this.modalNovoClienteRef?.nativeElement;
       if (modalClienteEl) {
         this.modalClienteInstance = new bootstrap.Modal(modalClienteEl);
-        modalClienteEl.addEventListener('show.bs.modal', () => this.zone.run(() => { this.exibirConteudoModalCliente = true; this.cdr.detectChanges(); }));
-        modalClienteEl.addEventListener('hidden.bs.modal', () => this.zone.run(() => { this.exibirConteudoModalCliente = false; this.cdr.detectChanges(); }));
+        modalClienteEl.addEventListener('show.bs.modal', () =>
+          this.zone.run(() => {
+            this.exibirConteudoModalCliente = true;
+            this.cdr.detectChanges();
+          })
+        );
+        modalClienteEl.addEventListener('hidden.bs.modal', () =>
+          this.zone.run(() => {
+            this.exibirConteudoModalCliente = false;
+            this.cdr.detectChanges();
+          })
+        );
       }
 
       // Novo Modal Aparelho (controlado pela OS)
       const modalAparelhoOsEl = this.modalNovoAparelhoOsRef?.nativeElement;
       if (modalAparelhoOsEl) {
         this.modalAparelhoOsInstance = new bootstrap.Modal(modalAparelhoOsEl);
-        modalAparelhoOsEl.addEventListener('show.bs.modal', () => this.zone.run(() => { this.exibirConteudoModalAparelhoOs = true; this.cdr.detectChanges(); }));
-        modalAparelhoOsEl.addEventListener('hidden.bs.modal', () => this.zone.run(() => {
+        modalAparelhoOsEl.addEventListener('show.bs.modal', () =>
+          this.zone.run(() => {
+            this.exibirConteudoModalAparelhoOs = true;
+            this.cdr.detectChanges();
+          })
+        );
+        modalAparelhoOsEl.addEventListener('hidden.bs.modal', () =>
+          this.zone.run(() => {
             this.exibirConteudoModalAparelhoOs = false;
             this.editandoAparelhoOsId = undefined; // Limpa ID de edição
             // Recarrega aparelhos do cliente selecionado na OS, se houver um
             const clienteIdNaOs = this.form.get('id_cliente')?.value;
             if (clienteIdNaOs) {
-                this.onClienteChange(clienteIdNaOs); // Reutiliza para recarregar aparelhos
+              this.onClienteChange(clienteIdNaOs); // Reutiliza para recarregar aparelhos
             }
             this.cdr.detectChanges();
-        }));
+          })
+        );
       }
     }
   }
@@ -198,24 +258,29 @@ ngAfterViewInit() {
       // Campos da OS Principal (alinhados com o modelo OrdemServico e o HTML)
       id: [null],
       codigo: { value: '', disabled: true }, // Do modelo OrdemServico
-      id_empresa: [{ value: null, disabled: false }, Validators.required],
+      id_empresa: [null, Validators.required],
       id_cliente: [null, Validators.required],
       id_aparelho: [{ value: null, disabled: true }, Validators.required],
       data_entrada: [null, Validators.required], // Mapeia para data_criacao
       data_execucao: [null], // Do modelo OrdemServico
       data_conclusao: [null], // Do modelo OrdemServico
-      id_prazo_garantia: [null], // Do modelo OrdemServico
+      id_prazo_garantia: [null, Validators.required], // Do modelo OrdemServico
       data_expiracao_garantia: [{ value: null, disabled: true }], // Do modelo OrdemServico
-      data_saida: [null], // No HTML, mapeia para data_retirada do modelo OrdemServico
+      data_saida: [null], 
 
       // Descrições e Observações
       defeito_relatado_cliente: ['', Validators.required], // No HTML, mapeia para relato_do_problema
       defeito_constatado_tecnico: [''], // No HTML, mapeia para relato_tecnico
       observacoes_gerais: [''], // No HTML, mapeia para observacoes
 
+      forma_pagamento: [''],
+      pagamento_realizado: [false],
+      id_atendente: [null, Validators.required],
+      id_tecnico: [null, Validators.required],
+      data_modificacao: [null],
 
       data_previsao_entrega: [null],
-      id_status_os: [null, Validators.required],
+      id_status_os: [null],
 
       valor_total_servicos: [{ value: 0, disabled: true }],
       valor_total_pecas: [{ value: 0, disabled: true }],
@@ -231,17 +296,20 @@ ngAfterViewInit() {
   abrirModalNovoAparelhoParaOS(aparelhoId?: number): void {
     const clienteIdSelecionado = this.form.get('id_cliente')?.value;
     if (!clienteIdSelecionado) {
-      this.showToast('Selecione um cliente primeiro para adicionar um aparelho.', 'warning');
+      this.showToast(
+        'Selecione um cliente primeiro para adicionar um aparelho.',
+        'warning'
+      );
       return;
     }
     this.editandoAparelhoOsId = aparelhoId; // Define se está editando ou criando novo
     // A flag exibirConteudoModalAparelhoOs será true pelo evento 'show.bs.modal'
     if (isPlatformBrowser(this.platformId)) {
-        // Um pequeno timeout pode ajudar se o *ngIf precisar de um ciclo para renderizar o conteúdo
-        // antes do Bootstrap JS calcular o tamanho do modal.
-        setTimeout(() => {
-            this.modalAparelhoOsInstance?.show();
-        }, 0);
+      // Um pequeno timeout pode ajudar se o *ngIf precisar de um ciclo para renderizar o conteúdo
+      // antes do Bootstrap JS calcular o tamanho do modal.
+      setTimeout(() => {
+        this.modalAparelhoOsInstance?.show();
+      }, 0);
     }
   }
 
@@ -263,66 +331,176 @@ ngAfterViewInit() {
     }
   }
 
-
   loadInitialSelectData(): void {
-  this.isLoading = true;
+    this.isLoading = true;
 
-  // Array de Observables para carregar dados em paralelo
-  const requests = [
-    this.empresaService.obterParaSelecao().pipe(
-      tap((data) => {
-        this.empresas = data;
-        this.applyEmpresaRule();
-      })
-    ),
-    // LINHA CORRIGIDA: trocamos .subscribe() por .pipe(tap(...))
-    this.clienteService.obterParaSelecao().pipe(
-      tap((data) => this.clientes = data)
-    ),
-    this.prazoGarantiaService
-        .obterParaSelecao()
-        .pipe(tap((data) => (this.prazosGarantia = data))),
-      this.servicoService
-        .obterParaSelecao()
-        .pipe(tap((data) => (this.servicosDisponiveis = data))),
-      this.catalogoPecaService
-      .obterParaSelecao().pipe(
-        map(data => data.map(peca => ({id: peca.id, nome: peca.nome})))
+    const requests = [
+      this.prazoGarantiaService.obterParaSelecao().pipe(
+        map((data) =>
+          data.map((item) => ({
+            id: item.id,
+            descricao: item.descricao,
+            prazoEmDias: item.prazoEmDias,
+          }))
+        ),
+        tap((data) => (this.prazosGarantia = data))
       ),
-    this.marcaService.obterParaSelecao().pipe(
-      map(data => data.map(marca => ({ id: marca.id, nome: marca.nome }))),
-      tap(data => this.marcas = data)
-    ),
-    this.modeloService.obterParaSelecao().pipe(
-      tap(data => this.modelos = data)
-    )
-  ];
+      // Serviço: Mapeia nome para descricao
+      this.servicoService.obterParaSelecao().pipe(
+        map((data) =>
+          data.map((item) => ({
+            id: item.id,
+            descricao: item.nome,
+            valor: item.valor,
+          }))
+        ),
+        tap((data) => (this.servicosDisponiveis = data))
+      ),
+      // Peça: Já usa 'descricao'
+      this.catalogoPecaService.obterParaSelecao().pipe(
+        map((data) =>
+          data.map((item) => ({
+            id: item.id,
+            descricao: item.descricao,
+            precoVenda: item.precoVenda,
+          }))
+        ),
+        tap((data) => (this.pecasDisponiveis = data))
+      ),
+      // Marca: Já usa 'descricao'
+      this.marcaService.obterParaSelecao().pipe(
+        tap((data) => (this.marcas = data)) // Supondo que o serviço já retorna { id, descricao }
+      ),
+      // Modelo: Já usa 'descricao'
+      this.modeloService.obterParaSelecao().pipe(
+        tap((data) => (this.modelos = data)) // Supondo que o serviço já retorna { id, descricao }
+      ),
+    ];
 
-  const loadSub = this.subscriptions.add(
-    forkJoin(requests).subscribe({
-      complete: () => {
-        if (!this.isEditMode) {
+    const loadSub = this.subscriptions.add(
+      forkJoin(requests).subscribe({
+        complete: () => {
+          if (!this.isEditMode) {
             this.isLoading = false;
-        }
-        // Se for modo de edição, o isLoading será tratado pelo loadOrdemServicoAndRelatedItems()
+          }
+        },
+        error: (err) => {
+          this.toastService.error(
+            'Erro ao carregar dados iniciais para selects:',
+            err
+          );
+          this.isLoading = false;
+        },
+      })
+    );
+  }
+
+  carregarClientesParaSelecao(): void {
+    this.clienteService.obterParaSelecao().subscribe({
+      next: (clientes) => {
+        this.clientes = clientes.map((c) => ({ id: c.id, nome: c.descricao }));
+      },
+      error: (err) =>
+        this.toastService.error(err.message || 'Erro ao carregar clientes.'),
+    });
+  }
+
+  carregarUsuarioParaSelecao(): void {
+    this.usuarioService.obterParaSelecao().subscribe({
+      next: (usuarios) => {
+        this.usuarios = usuarios;
       },
       error: (err) => {
-        console.error('Erro ao carregar dados iniciais para selects:', err);
-        this.isLoading = false;
-        // Adicione um toast de erro aqui se desejar
+        this.toastService.error('Erro ao carregar usuários: ' + err.message);
       },
-    })
-  );
+    });
+  }
+
+  carregarEmpresaParaSelecao(): void {
+    this.empresaService.obterParaSelecao().subscribe({
+      next: (empresas) => {
+        console.log('Empresas carregadas:', empresas);
+        this.empresas = empresas;
+
+        if (empresas.length > 0) {
+          this.form.get('id_empresa')?.setValue(empresas[0].id);
+
+          if (empresas.length > 1) {
+            this.form.get('id_empresa')?.enable();
+          } else {
+            this.form.get('id_empresa')?.disable(); // fica visível, mas não editável
+          }
+        }
+      },
+      error: (err) => {
+        this.toastService.error('Erro ao carregar empresas: ' + err.message);
+      },
+    });
+  }
+
+carregarOsParaEdicao(idOs: number): void {
+
+   console.log(`--- INICIANDO carregarOsParaEdicao com ID: ${idOs} ---`);
+  this.ordemServicoService.obterPorId(idOs).subscribe({
+    next: (ordem) => {
+
+      console.log('DADOS BRUTOS RECEBIDOS DA API:', ordem);
+      limparDatasInvalidas(ordem, [
+        'dataEntrada',
+        'dataRetirada',
+        'dataExecucao',
+        'dataConclusao',
+        'dataSaida',
+        'dataExpiracaoGarantia',
+        'dataInicioGarantia', // <--- ESTE CAMPO PRECISA ESTAR AQUI
+        'dataFimGarantia' 
+      ]);
+
+      console.log('DADOS APÓS LIMPAR DATAS INVÁLIDAS:', ordem);
+
+          this.form.patchValue({
+        id: ordem?.id,
+        codigo: ordem?.codigo,
+        pagamento_realizado: ordem?.pagamentoRealizado,
+        forma_pagamento: ordem?.formaPagamento,
+        observacoes_gerais: ordem?.observacoes,
+        id_empresa: ordem?.idEmpresa,
+        id_cliente: ordem?.idCliente,
+        id_aparelho: ordem?.idAparelho,
+        id_atendente: ordem?.idAtendente,
+        id_tecnico: ordem?.idTecnico,
+        id_prazo_garantia: ordem?.idPrazoGarantia,
+        id_status_os: ordem?.idEstado,
+        defeito_relatado_cliente: ordem?.descricaoProblema,
+        defeito_constatado_tecnico: ordem?.diagnosticoTecnico,
+
+        // Formata as datas válidas e mantém as nulas
+        data_entrada: ordem?.dataCriacao ? new Date(ordem.dataCriacao).toISOString().substring(0, 10) : null,
+        data_execucao: ordem?.dataExecucao ? new Date(ordem.dataExecucao).toISOString().substring(0, 10) : null,
+        data_conclusao: ordem?.dataConclusao ? new Date(ordem.dataConclusao).toISOString().substring(0, 10) : null,
+        data_saida: ordem?.dataRetirada ? new Date(ordem.dataRetirada).toISOString().substring(0, 10) : null,
+        data_expiracao_garantia: ordem?.dataFimGarantia ? new Date(ordem.dataFimGarantia).toISOString().substring(0, 10) : null,
+      });
+
+      this.dataUltimaModificacaoOriginal = ordem!.dataModificacao;
+      this.idEstadoOs = ordem!.idEstado;
+      this.idWorkflowOs = ordem!.idWorkflow;
+    },
+    error: (err) =>
+      this.toastService.error(`Erro ao carregar OS: ${err.error?.message}`),
+  });
 }
 
+
+
   getNomeMarca(idMarca: number): string {
-    const marca = this.marcas.find(m => m.id === idMarca);
-    return marca ? marca.nome : 'Desconhecida';
+    const marca = this.marcas.find((m) => m.id === idMarca);
+    return marca ? marca.descricao : 'Desconhecida';
   }
 
   getNomeModelo(idModelo: number): string {
-    const modelo = this.modelos.find(m => m.id === idModelo);
-    return modelo ? modelo.nome : 'Desconhecido';
+    const modelo = this.modelos.find((m) => m.id === idModelo);
+    return modelo ? modelo.descricao : 'Desconhecido';
   }
   applyEmpresaRule(): void {
     if (
@@ -335,11 +513,11 @@ ngAfterViewInit() {
     } else if (this.empresas && this.empresas.length > 1) {
       this.form.get('id_empresa')?.enable();
     } else if (!this.empresas || this.empresas.length === 0) {
-      this.form.get('id_empresa')?.disable();
+      // this.form.get('id_empresa')?.disable();
     }
     // Se já houver um valor (modo de edição), não sobrescrever, apenas ajustar o estado enabled/disabled.
     if (this.form.get('id_empresa')?.value && this.empresas.length === 1) {
-      this.form.get('id_empresa')?.disable();
+      //this.form.get('id_empresa')?.disable();
     }
   }
 
@@ -368,25 +546,25 @@ ngAfterViewInit() {
     const dataConclusaoStr = this.form.get('data_conclusao')?.value;
 
     if (prazoId && dataConclusaoStr) {
-      const prazoSelecionado = this.prazosGarantia.find(
-        (p) => p.id === prazoId
-      );
       const dataConclusao = new Date(dataConclusaoStr);
 
-      if (
-        prazoSelecionado &&
-        !isNaN(dataConclusao.getTime()) &&
-        prazoSelecionado.prazoEmDias
-      ) {
-        const dataExpiracao = new Date(dataConclusao);
-        dataExpiracao.setDate(
-          dataConclusao.getDate() + prazoSelecionado.prazoEmDias
-        );
-        this.form
-          .get('data_expiracao_garantia')
-          ?.setValue(dataExpiracao.toISOString().substring(0, 10));
-      } else {
-        this.form.get('data_expiracao_garantia')?.setValue(null);
+      if (!isNaN(dataConclusao.getTime())) {
+        this.prazoGarantiaService
+          .obterPorId(prazoId)
+          .subscribe((prazoSelecionado) => {
+            if (prazoSelecionado?.prazoEmDias) {
+              const dataExpiracao = new Date(dataConclusao);
+              dataExpiracao.setDate(
+                dataConclusao.getDate() + prazoSelecionado.prazoEmDias
+              );
+
+              this.form
+                .get('data_expiracao_garantia')
+                ?.setValue(dataExpiracao.toISOString().substring(0, 10));
+            } else {
+              this.form.get('data_expiracao_garantia')?.setValue(null);
+            }
+          });
       }
     } else {
       this.form.get('data_expiracao_garantia')?.setValue(null);
@@ -428,20 +606,16 @@ ngAfterViewInit() {
             id_prazo_garantia: os.idPrazoGarantia,
             // data_expiracao_garantia será recalculada ou pega da OS
             data_expiracao_garantia: os.dataFimGarantia
-              ? new Date(os.dataFimGarantia)
-                  .toISOString()
-                  .substring(0, 10)
+              ? new Date(os.dataFimGarantia).toISOString().substring(0, 10)
               : null,
             defeito_relatado_cliente: os.descricaoProblema,
             defeito_constatado_tecnico: os.diagnosticoTecnico,
             observacoes_gerais: os.observacoes,
-            // Campos do seu HTML que não estão no modelo OrdemServico principal:
-            // Se vierem no DTO da OS (ex: os.prioridade), podem ser mapeados aqui.
-            // prioridade: os.prioridade,
-            // id_tecnico_responsavel: os.id_tecnico_responsavel,
-            // etc.
+            forma_pagamento: os.formaPagamento || '',
+            pagamento_realizado: os.pagamentoRealizado ?? false,
+            id_atendente: os.idAtendente,
+            id_tecnico: os.idTecnico,
           });
-
 
           if (os.idCliente) this.onClienteChange(os.idCliente);
           this.applyEmpresaRule();
@@ -524,7 +698,7 @@ ngAfterViewInit() {
           this.isLoading = false;
         },
         error: (err) => {
-          console.error('Erro ao carregar OS e itens:', err);
+          this.toastService.error('Erro ao carregar OS e itens:', err);
           this.router.navigate(['/ordem-servico']);
           this.isLoading = false;
         },
@@ -831,11 +1005,10 @@ ngAfterViewInit() {
   onSubmit(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
-      alert('Formulário inválido. Verifique os campos destacados.');
-      console.error(
-        'Formulário inválido:',
-        this.form.errors,
-        this.collectFormErrors(this.form)
+      this.toastService.error(
+        `Formulário inválido. Verifique os campos destacados: \n${
+          this.form.errors
+        } \n ${this.collectFormErrors(this.form)}`
       );
       return;
     }
@@ -843,55 +1016,61 @@ ngAfterViewInit() {
     const formValue = this.form.getRawValue();
 
     // Mapear dados do formulário para o modelo OrdemServico
-    const osDataPrincipal: OrdemServico = {
-      id: this.isEditMode ? this.ordemServicoId : undefined,
-      codigo: formValue.codigo,
-      // Mapeia id_status_os (number) para status (string)
-      idEstado: formValue.idEstado,
+    const osPayload: OrdemServicoCriacaoPayload = {
+      codigo: formValue.codigo || undefined,
+      valorTotal: parseFloat(formValue.valor_total_orcamento) || 0,
+      dataRetirada: formValue.data_saida
+        ? formValue.data_saida
+        : null,
+      dataExecucao: formValue.data_execucao
+        ? new Date(formValue.data_execucao)
+        : null,
+      dataConclusao: formValue.data_conclusao
+        ? formValue.data_conclusao
+        : null,
       descricaoProblema: formValue.defeito_relatado_cliente,
-      diagnosticoTecnico: formValue.defeito_constatado_tecnico || null,
-      observacoes: formValue.observacoes_gerais || null,
-      dataCriacao: formValue.data_entrada
-        ? new Date(formValue.data_entrada)
-        : new Date(),
+      diagnosticoTecnico: formValue.defeito_constatado_tecnico || undefined,
+      observacoes: formValue.observacoes_gerais || undefined,
+      dataInicioGarantia: formValue.data_conclusao
+        ? formValue.data_conclusao
+        : null,
+      dataFimGarantia: formValue.data_expiracao_garantia
+        ? formValue.data_expiracao_garantia
+        : null,
+      idPrazoGarantia: formValue.id_prazo_garantia || undefined,
       idCliente: formValue.id_cliente,
       idAparelho: formValue.id_aparelho,
-      idEmpresa: formValue.id_empresa,
-      // Estes campos do modelo OrdemServico não estão no seu HTML, então defino como null ou valores padrão
-      idPrazoGarantia: formValue.id_prazo_garantia || null, // Adicionado ao form
-      dataFimGarantia: formValue.data_expiracao_garantia
-        ? new Date(formValue.data_expiracao_garantia)
-        : null, // Adicionado ao form
-
-      // Placeholder
-      dataModificacao: new Date(),
-      valorTotal: 0,
-      dataRetirada: null,
-      dataExecucao: null,
-      dataConclusao: null,
-      dataInicioGarantia: null,
-      descricaoPrazoGarantia: '',
-      nomeCliente: '',
-      descricaoAparelho: '',
-      nomeEmpresa: '',
-      pagamentoRealizado: false,
-      formaPagamento: '',
-      valorServicos: 0,
-      valorPecas: 0,
-      nomeEstado: '',
-      idAtendente: 0,
-      nomeAtendente: '',
-      idTecnico: 0,
-      nomeTecnico: '',
-      idWorkflow: 0
+      idEmpresa: formValue.id_empresa ?? this.empresas[0]?.id,
+      pagamentoRealizado: formValue.pagamento_realizado || false,
+      formaPagamento: formValue.forma_pagamento || undefined,
+      valorServicos: parseFloat(formValue.valor_total_servicos) || 0,
+      valorPecas: parseFloat(formValue.valor_total_pecas) || 0,
+      idAtendente: formValue.id_atendente,
+      idTecnico: formValue.id_tecnico,
     };
 
-    // Remover campos que são apenas de UI do payload principal, se necessário
-    // (Neste caso, osDataPrincipal já é construído seletivamente)
-
     if (this.isEditMode && this.ordemServicoId) {
+      const osUpdatePayload: OrdemServicoAtualizacaoPayload = {
+        ...osPayload,
+        id: this.ordemServicoId!,
+        dataUltimaModificacao: this.dataUltimaModificacaoOriginal!,
+        idEstado: this.idEstadoOs, // ou this.dataModificacaoOriginal
+        idWorkflow: this.idWorkflowOs,
+      };
+
+      limparDatasInvalidas(this.isEditMode ? osPayload : osUpdatePayload, [
+          'dataConclusao',
+          'dataRetirada',
+          'dataExecucao',
+          'dataInicioGarantia',
+          'dataFimGarantia',
+          'data_saida',
+          'data_entrada',
+          'data_expiracao_garantia',
+      ]);
+
       this.ordemServicoService
-        .atualizar(this.ordemServicoId, osDataPrincipal)
+        .atualizar(this.ordemServicoId, osUpdatePayload)
         .pipe(switchMap(() => this.processarItensDaOs(this.ordemServicoId!)))
         .subscribe({
           next: () => {
@@ -902,24 +1081,40 @@ ngAfterViewInit() {
           },
         });
     } else {
+      this.ordemServicoService;
       this.ordemServicoService
-        .criar(osDataPrincipal)
+        .criar(osPayload)
         .pipe(
           switchMap((osCriada) => {
             if (!osCriada || !osCriada.id)
               return throwError(
                 () => new Error('Falha ao criar OS ou ID não retornado.')
               );
+
+            // Atualiza o formulário com o retorno do backend
+            this.form.patchValue({
+              id: osCriada.id,
+              codigo: osCriada.codigo,
+              dataUltimaModificacao: osCriada.dataModificacao, // ou outro nome conforme retorno
+            });
+
             this.ordemServicoId = osCriada.id;
+            this.isEditMode = true; // Agora é modo edição
+
             return this.processarItensDaOs(osCriada.id, true);
           })
         )
         .subscribe({
           next: () => {
-            this.handleSuccess('Ordem de Serviço e itens criados.');
+            this.toastService.success(
+              'Ordem de Serviço e itens criados com sucesso.'
+            );
           },
           error: (err) => {
             this.handleError('Erro ao criar OS:', err);
+          },
+          complete: () => {
+            this.isLoading = false; // Garanta que o loading pare aqui também
           },
         });
     }
@@ -1029,7 +1224,7 @@ ngAfterViewInit() {
 
   private handleSuccess(message: string): void {
     console.log(message);
-    this.router.navigate(['/ordem-servico']); // Ajuste conforme sua rota de lista/dashboard
+    //this.router.navigate(['/ordem-servico']); // Ajuste conforme sua rota de lista/dashboard
     this.isLoading = false;
     // Adicionar notificação visual de sucesso (ex: Toastr)
   }
@@ -1038,11 +1233,15 @@ ngAfterViewInit() {
     console.error(message, error);
     this.isLoading = false;
     // Adicionar notificação visual de erro
-    alert(`${message} Detalhes: ${error.message || error}`);
+    this.toastService.error(
+      `${message} Detalhes: ${error.message || error}`,
+      8000
+    );
   }
 
   goBack(): void {
-    this.router.navigate(['/ordem-servico']); // Ajuste conforme necessário
+    this.router.navigate(['/ordem-servico']);
+    this.resetForm;
   }
 
   // Helpers para validação no template
@@ -1081,38 +1280,91 @@ ngAfterViewInit() {
     return errors;
   }
 
-   // Exemplo de método showToast (adapte ao seu serviço de notificação)
-  private showToast(message: string, type: 'success' | 'error' | 'warning' = 'success'): void {
+  // Exemplo de método showToast (adapte ao seu serviço de notificação)
+  private showToast(
+    message: string,
+    type: 'success' | 'error' | 'warning' = 'success'
+  ): void {
     console.log(`Toast: ${message} (type: ${type})`);
     // Implemente seu toast real aqui
   }
 
   // --- Lógica para Modal Novo Cliente (já implementada na resposta anterior) ---
- // --- Lógica para Modal Novo Cliente ---
+  // --- Lógica para Modal Novo Cliente ---
   abrirModalNovoCliente(): void {
     if (isPlatformBrowser(this.platformId)) {
       // A flag `exibirConteudoModalCliente` será definida como true pelo evento 'show.bs.modal'
       this.modalClienteInstance?.show();
     } else {
-      console.log("[SSR] Tentativa de abrir modal de cliente no servidor (ignorado).");
+      console.log(
+        '[SSR] Tentativa de abrir modal de cliente no servidor (ignorado).'
+      );
     }
   }
 
-  fecharModalNovoClienteManual(): void { // Se o btn-close do modal não estiver funcionando via data-bs-dismiss
-      if (isPlatformBrowser(this.platformId)) {
-          this.modalClienteInstance?.hide();
-      }
+  fecharModalNovoClienteManual(): void {
+    // Se o btn-close do modal não estiver funcionando via data-bs-dismiss
+    if (isPlatformBrowser(this.platformId)) {
+      this.modalClienteInstance?.hide();
+    }
   }
 
   handleClienteCriado(clienteCriado?: Cliente): void {
-  if (isPlatformBrowser(this.platformId)) {
-    this.modalClienteInstance?.hide();
-  }
+    if (isPlatformBrowser(this.platformId)) {
+      this.modalClienteInstance?.hide();
+    }
 
-  if (clienteCriado && clienteCriado.id) {
+    if (clienteCriado && clienteCriado.id) {
       this.showToast(`Cliente salvo com sucesso!`, 'success');
       this.form.get('id_cliente')?.setValue(clienteCriado.id);
     }
-}
+  }
 
+  excluir(): void {
+    const nome = this.form.get('codigo')?.value || 'esta OS';
+
+    const config: ConfirmationConfig = {
+      title: 'Confirmar Exclusão de Ordem de Serviço',
+      message: `Tem certeza que deseja excluir a ordem de serviço "${nome}"?`,
+      acceptButtonText: 'Sim, Excluir',
+      acceptButtonClass: 'btn-danger',
+      cancelButtonText: 'Não, Cancelar',
+    };
+
+    const sub = this.confirmationService
+      .confirm(config)
+      .subscribe((confirmado) => {
+        if (confirmado && this.ordemServicoId) {
+          this.isLoading = true;
+          this.ordemServicoService.remover(this.ordemServicoId).subscribe({
+            next: () => {
+              this.toastService.success(
+                `Ordem de Serviço "${nome}" excluída com sucesso.`
+              );
+              this.ordemServicoService.remover(this.ordemServicoId!);
+              this.goBack();
+              this.resetForm();
+            },
+            error: (err) => {
+              this.toastService.error(
+                err.message || 'Erro ao excluir Ordem de Serviço.'
+              );
+              this.isLoading = false;
+            },
+          });
+        }
+      });
+  }
+
+  resetForm(): void {
+    this.form.reset();
+    this.ordemServicoId = undefined;
+    this.isEditMode = false;
+  }
+
+  isDataValida(data: string | Date | null | undefined): boolean {
+    if (!data) return false;
+    const dataObj = new Date(data);
+    return dataObj.getFullYear() > 1900; // Evita 0001, 0000 etc.
+  }
 }

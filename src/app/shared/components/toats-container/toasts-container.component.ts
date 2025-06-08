@@ -35,6 +35,42 @@ export class ToastsContainerComponent implements OnInit, OnDestroy {
     }
   }
 
+pauseToast(toast: ToastData) {
+  if (toast.timeoutId) {
+    clearTimeout(toast.timeoutId);
+    toast.timeoutId = undefined;
+    const elapsed = Date.now() - (toast.startedAt ?? Date.now());
+    toast.remaining = (toast.remaining ?? 0) - elapsed;
+  }
+}
+
+resumeToast(toast: ToastData) {
+  if (!toast.timeoutId && (toast.remaining ?? 0) > 0) {
+    toast.startedAt = Date.now();
+    toast.timeoutId = setTimeout(() => {
+      this.toastService.remove(toast);
+    }, toast.remaining);
+  }
+}
+
+togglePause(toast: ToastData): void {
+  if (toast.paused) {
+    toast.paused = false;
+    toast.startedAt = Date.now();
+    toast.timeoutId = setTimeout(() => this.toastService.remove(toast), toast.remaining!);
+  } else {
+    toast.paused = true;
+    const elapsed = Date.now() - toast.startedAt!;
+    toast.remaining = (toast.remaining ?? 0) - elapsed;
+    clearTimeout(toast.timeoutId);
+  }
+}
+
+
+
+
+
+
   ngOnDestroy(): void {
     this.toastSubscription.unsubscribe();
   }

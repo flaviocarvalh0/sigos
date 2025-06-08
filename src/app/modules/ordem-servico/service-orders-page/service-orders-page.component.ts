@@ -73,14 +73,14 @@ export class OrdemServicoComponent implements OnInit {
 
     // Ordens concluídas hoje
     const completedToday = orders.filter(o =>
-      o.nomeEstado.toLocaleLowerCase() === 'concluído' &&
+      o.nomeEstado!.toLocaleLowerCase() === 'concluído' &&
       o.dataConclusao &&
       this.formatDate(new Date(o.dataConclusao)) === todayISO
     ).length;
 
     // Ordens concluídas ontem
     const completedYesterday = orders.filter(o =>
-      o.nomeEstado.toLocaleLowerCase() === 'concluído' &&
+      o.nomeEstado!.toLocaleLowerCase() === 'concluído' &&
       o.dataConclusao &&
       this.formatDate(new Date(o.dataConclusao)) === yesterdayISO
     ).length;
@@ -108,11 +108,11 @@ export class OrdemServicoComponent implements OnInit {
       ? Math.round(((thisMonthOrders - lastMonthOrders) / lastMonthOrders) * 100)
       : thisMonthOrders > 0 ? 100 : 0;
 
-    const totalPendentes = orders.filter(o => o.nomeEstado.toLocaleLowerCase() === 'pendente').length;
+    const totalPendentes = orders.filter(o => o.nomeEstado!!.toLocaleLowerCase() === 'pendente').length;
 
     this.metrics = {
       totalOrders: orders.length.toString(),
-      pendingOrders: orders.filter(o => o.nomeEstado.toLocaleLowerCase() === 'pendente').length.toString(),
+      pendingOrders: orders.filter(o => o.nomeEstado!!.toLocaleLowerCase() === 'pendente').length.toString(),
       completedToday: completedToday.toString(),
       changeTotal: changePercent >= 0 ? `+${changePercent}% este mês` : `${changePercent}% este mês`,
       changeTotalType: changePercent >= 0 ? 'positive' : 'negative',

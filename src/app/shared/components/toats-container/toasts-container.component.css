@@ -1,5 +1,3 @@
-/* src/app/shared/components/toasts-container/toasts-container.component.css */
-.toast.show { /* O Bootstrap JS adiciona 'show', mas podemos forçar se não estiver usando o JS dele para isso */
-  display: block;
-  opacity: 1;
+.toast .bi {
+  transition: opacity 0.2s;
 }

@@ -1,17 +1,42 @@
 <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1090;">
-  <div *ngFor="let toast of toasts; let i = index"
-       [id]="'toast-' + toast.id"
-       class="toast show"
+  <div *ngFor="let toast of toasts"
+       class="toast show mb-2 position-relative px-3 pt-4 pb-3"
        [ngClass]="getToastClass(toast)"
-       role="alert"
-       aria-live="assertive"
-       aria-atomic="true"
-       data-bs-autohide="false">
-    <div class="d-flex">
-      <div class="toast-body">
-        {{ toast.message }}
-      </div>
-      <button type="button" class="btn-close btn-close-white me-2 m-auto" (click)="toastService.remove(toast)" aria-label="Close"></button>
+       style="min-width: 300px;">
+
+    <!-- Ícones no canto superior direito (sem fundo) -->
+    <div class="position-absolute top-0 end-0 d-flex align-items-center me-2 mt-2" style="gap: 0.5rem; z-index: 2;">
+      <!-- Pausar / Retomar -->
+      <i class="bi"
+         [ngClass]="toast.paused ? 'bi-play-fill' : 'bi-pause-fill'"
+         role="button"
+         style="font-size: 1rem; color: white; cursor: pointer;"
+         (click)="togglePause(toast)"
+         title="{{ toast.paused ? 'Retomar' : 'Pausar' }}">
+      </i>
+
+      <!-- Fechar -->
+      <i class="bi bi-x-lg"
+         role="button"
+         style="font-size: 1rem; color: white; cursor: pointer;"
+         (click)="toastService.remove(toast)"
+         title="Fechar">
+      </i>
+    </div>
+
+    <!-- Corpo do toast -->
+    <div class="toast-body">
+      {{ toast.message }}
+
+      <!-- Barra de progresso -->
+      <!-- <div class="progress mt-2" style="height: 4px;">
+        <div class="progress-bar bg-light"
+             [style.width.%]="toast.progress"
+             role="progressbar"
+             [attr.aria-valuenow]="toast.progress"
+             aria-valuemin="0" aria-valuemax="100">
+        </div>
+      </div> -->
     </div>
   </div>
 </div>

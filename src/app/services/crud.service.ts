@@ -80,7 +80,7 @@ export abstract class CrudService<T extends { id?: ID }, ID> { // Adicionado T e
       );
   }
 
-   obterParaSelecao(queryParams?: Record<string, string | number | boolean>): Observable<T[]> {
+  obterParaSelecao(queryParams?: Record<string, string | number | boolean>): Observable<any[]>  {
     let params = new HttpParams();
     if (queryParams) {
       for (const key in queryParams) {
@@ -89,7 +89,7 @@ export abstract class CrudService<T extends { id?: ID }, ID> { // Adicionado T e
         }
       }
     }
-    return this.http.get<RespostaApi<T[]>>(`${this.apiUrlSelecao}`, this.getHttpOptions(params))
+    return this.http.get<RespostaApi<any[]>>(`${this.apiUrlSelecao}`, this.getHttpOptions(params))
       .pipe(
         map(response => {
           if (response.sucesso && response.dados) {

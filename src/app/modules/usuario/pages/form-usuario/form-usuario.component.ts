@@ -324,8 +324,8 @@ export class FormUsuarioComponent implements OnInit, OnDestroy {
           .filter((g) => !this.gruposVinculados.some((v) => v.idGrupo === g.id))
           .map((g) => ({
             id: g.id,
-            descricao: g.nome,
-            nome: (g as any).nome ?? g.nome, // Ajuste conforme o nome correto da propriedade
+            descricao: g.descricao,
+            nome: (g as any).nome ?? g.descricao, // Ajuste conforme o nome correto da propriedade
           }));
         const modal = document.getElementById('modalGrupos');
         if (modal) {

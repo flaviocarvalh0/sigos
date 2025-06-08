@@ -1,0 +1,28 @@
+.ng-select-clean {
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
+  padding: 0;
+  height: 38px; /* altura do botão padrão */
+}
+
+.ng-select-clean .ng-select-container {
+  border: none !important;
+  box-shadow: none !important;
+  height: 100%;
+  padding: 0 0.5rem;
+  align-items: center;
+  display: flex;
+}
+
+.ng-select-clean .ng-select-container .ng-value-container {
+  padding: 0 !important;
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+
+.ng-select-clean .ng-select-container .ng-arrow-wrapper {
+  display: flex;
+  align-items: center;
+}
