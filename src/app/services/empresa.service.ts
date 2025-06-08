@@ -5,13 +5,14 @@ import { map, catchError } from 'rxjs/operators';
 import { Empresa, EmpresaCriacaoPayload, EmpresaAtualizacaoPayload } from '../Models/empresa.model';
 import { CrudService } from './crud.service';
 import { RespostaApi } from '../Models/reposta-api.model';
+import { environment } from '../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class EmpresaService extends CrudService<Empresa, number> {
   // Defina a URL base da sua API.
-  protected readonly apiUrlBase = 'https://localhost:7119/api'; // <<--- AJUSTE SE NECESSÁRIO
+  protected readonly apiUrlBase = environment.apiUrl;
   protected readonly endpoint = 'empresas';
 
   constructor(http: HttpClient) {

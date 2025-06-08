@@ -16,33 +16,37 @@
       </div>
 
       <form [formGroup]="form" (ngSubmit)="onSubmit()" *ngIf="!isLoading">
-        <ul class="nav nav-tabs mb-3" id="osTab" role="tablist">
-          <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="dados-principais-tab" data-bs-toggle="tab"
-              data-bs-target="#dados-principais" type="button" role="tab" aria-controls="dados-principais"
-              aria-selected="true">
-              <i class="fas fa-file-alt me-1"></i>Dados Principais
-            </button>
-          </li>
-          <li class="nav-item" role="presentation">
-            <button class="nav-link" id="servicos-tab" data-bs-toggle="tab" data-bs-target="#servicos" type="button"
-              role="tab" aria-controls="servicos" aria-selected="false">
-              <i class="fas fa-concierge-bell me-1"></i>Serviços
-            </button>
-          </li>
-          <li class="nav-item" role="presentation">
-            <button class="nav-link" id="pecas-tab" data-bs-toggle="tab" data-bs-target="#pecas" type="button"
-              role="tab" aria-controls="pecas" aria-selected="false">
-              <i class="fas fa-cogs me-1"></i>Peças
-            </button>
-          </li>
-          <li class="nav-item" role="presentation">
-            <button class="nav-link" id="anexos-tab" data-bs-toggle="tab" data-bs-target="#anexos" type="button"
-              role="tab" aria-controls="anexos" aria-selected="false">
-              <i class="fas fa-paperclip me-1"></i>Anexos
-            </button>
-          </li>
-        </ul>
+       <ul class="nav nav-tabs mb-3" id="osTab" role="tablist">
+  <li class="nav-item" role="presentation">
+    <button class="nav-link active" id="dados-principais-tab" data-bs-toggle="tab"
+            data-bs-target="#dados-principais" type="button" role="tab"
+            (click)="setAbaAtiva('dados-principais')">
+      <i class="fas fa-file-alt me-1"></i>Dados Principais
+    </button>
+  </li>
+
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="servicos-tab" data-bs-toggle="tab" data-bs-target="#servicos"
+            type="button" role="tab" (click)="setAbaAtiva('servicos')">
+      <i class="fas fa-concierge-bell me-1"></i>Serviços
+    </button>
+  </li>
+
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="pecas-tab" data-bs-toggle="tab" data-bs-target="#pecas"
+            type="button" role="tab" (click)="setAbaAtiva('pecas')"
+            [disabled]="!isEditMode">
+      <i class="fas fa-cogs me-1"></i>Peças
+    </button>
+  </li>
+
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="anexos-tab" data-bs-toggle="tab" data-bs-target="#anexos"
+            type="button" role="tab" (click)="setAbaAtiva('anexos')">
+      <i class="fas fa-paperclip me-1"></i>Anexos
+    </button>
+  </li>
+</ul>
 
         <div class="tab-content" id="osTabContent">
           <div class="tab-pane fade show active" id="dados-principais" role="tabpanel"
@@ -347,67 +351,15 @@
             </div>
           </div>
 
-          <div class="tab-pane fade" id="pecas" role="tabpanel" aria-labelledby="pecas-tab">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-              <h5 class="text-primary">Peças Utilizadas</h5>
-              <button type="button" class="btn btn-sm btn-outline-primary" (click)="addPeca()">
-                <i class="bi bi-plus me-1"></i> Adicionar Peça
-              </button>
-            </div>
-            <div formArrayName="os_pecas">
-              <div *ngIf="osPecas.controls.length === 0" class="alert alert-light text-center">Nenhuma peça adicionada.
-              </div>
-              <div *ngFor="let pecaCtrl of osPecas.controls; let i = index" [formGroupName]="i" class="card mb-3">
-                <div class="card-body">
-                  <div class="row gx-2 align-items-end">
-                    <div class="col-md-5">
-                      <label for="id_peca_catalogo_{{i}}" class="form-label">Peça <span
-                          class="text-danger">*</span></label>
-                      <select id="id_peca_catalogo_{{i}}" formControlName="id_peca_catalogo"
-                        class="form-select form-select-sm"
-                        [ngClass]="{ 'is-invalid': isFormArrayControlInvalid('os_pecas', i, 'id_peca_catalogo') }">
-                        <option [ngValue]="null" disabled>Selecione...</option>
-                        <option *ngFor="let catPeca of pecasDisponiveis" [ngValue]="catPeca.id">{{ catPeca.descricao }}
-                        </option>
-                      </select>
-                    </div>
-                    <div class="col-md-2">
-                      <label for="quantidade_peca_{{i}}" class="form-label">Qtd. <span
-                          class="text-danger">*</span></label>
-                      <input type="number" id="quantidade_peca_{{i}}" formControlName="quantidade"
-                        class="form-control form-control-sm"
-                        [ngClass]="{ 'is-invalid': isFormArrayControlInvalid('os_pecas', i, 'quantidade') }">
-                    </div>
-                    <div class="col-md-2">
-                      <label for="valor_unitario_peca_{{i}}" class="form-label">Val. Unit. <span
-                          class="text-danger">*</span></label>
-                      <input type="number" id="valor_unitario_peca_{{i}}" formControlName="valor_unitario"
-                        class="form-control form-control-sm"
-                        [ngClass]="{ 'is-invalid': isFormArrayControlInvalid('os_pecas', i, 'valor_unitario') }">
-                    </div>
-                    <div class="col-md-2">
-                      <label for="valor_total_peca_item_{{i}}" class="form-label">Subtotal</label>
-                      <input type="number" id="valor_total_peca_item_{{i}}" formControlName="valor_total_calculado"
-                        class="form-control form-control-sm" readonly>
-                    </div>
-                    <div class="col-md-1 text-end">
-                      <button type="button" class="btn btn-sm btn-outline-danger" (click)="removePeca(i)"
-                        title="Remover Peça">
-                        <i class="bi bi-trash"></i>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="row mt-3">
-              <div class="col-md-4 offset-md-8">
-                <label for="valor_total_pecas" class="form-label fw-bold">Total Peças (R$)</label>
-                <input type="number" id="valor_total_pecas" formControlName="valor_total_pecas" class="form-control"
-                  readonly>
-              </div>
-            </div>
-          </div>
+        <div class="tab-pane fade" id="pecas" role="tabpanel" aria-labelledby="pecas-tab">
+          <app-pecas-ordem-servico
+            [ordemServicoId]="ordemServicoId!"
+            [pecasDisponiveis]="pecasDisponiveis"
+            (osAtualizada)="handleOsAtualizadaPeloFilho($event)">
+          </app-pecas-ordem-servico>
+        </div>
+
+
 
           <div class="tab-pane fade" id="anexos" role="tabpanel" aria-labelledby="anexos-tab">
             <div class="d-flex justify-content-between align-items-center mb-3">

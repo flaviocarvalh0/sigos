@@ -3,7 +3,7 @@
 import { Injectable } from '@angular/core';
 import { of, Observable, delay } from 'rxjs';
 import { CrudService } from '../crud.service';
-import { OrdemServico } from '../../Models/ordem-servico/ordem_servico.model';
+import { OrdemServico } from '../../Models/ordem-servico/ordem-servico.model';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 

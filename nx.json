@@ -32,5 +32,6 @@
       "!{projectRoot}/**/*.spec.[jt]s"
     ]
   },
-  "nxCloudId": "6845001a837b246a51ce671c"
+  "nxCloudId": "6845001a837b246a51ce671c",
+  "defaultProject": "sigos"
 }

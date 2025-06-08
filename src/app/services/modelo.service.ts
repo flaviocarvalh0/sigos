@@ -9,12 +9,13 @@ import { Observable } from 'rxjs';
 import { CrudService } from './crud.service';
 import { Modelo, ModeloAtualizacaoPayload, ModeloCriacaoPayload } from '../Models/modelo.model';
 import { RespostaApi } from '../Models/reposta-api.model';
+import { environment } from '../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ModeloService extends CrudService<Modelo, number> {
-  protected readonly apiUrlBase = 'https://localhost:7119/api';
+  protected readonly apiUrlBase = environment.apiUrl;
   protected readonly endpoint = 'modelos';
 
   constructor(http: HttpClient) {

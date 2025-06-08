@@ -21,6 +21,7 @@ import {
   FormArray,
   ReactiveFormsModule,
   AbstractControl,
+  FormsModule,
 } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
@@ -31,7 +32,7 @@ import { switchMap, catchError, tap, map, startWith } from 'rxjs/operators';
 import { Cliente } from '../../../Models/cliente.model';
 import { Aparelho } from '../../../Models/aparelho.model';
 import { Empresa } from '../../../Models/empresa.model';
-import { PrazoGarantia } from '../../../Models/prazo_garantia.model';
+import { PrazoGarantia } from '../../../Models/prazo-garantia.model';
 
 import { Servico as CatalogoServico } from '../../../Models/servico.mode';
 import { Peca as CatalogoPeca } from '../../../Models/peca.model';
@@ -47,12 +48,11 @@ import {
 import { PecaService as CatalogoPecaService } from '../../../services/peca.service';
 
 import { OsServico } from '../../../Models/ordem-servico/os-servico.model';
-import { OsPeca } from '../../../Models/ordem-servico/os-peca.model';
 import {
   OrdemServico,
   OrdemServicoAtualizacaoPayload,
   OrdemServicoCriacaoPayload,
-} from '../../../Models/ordem-servico/ordem_servico.model';
+} from '../../../Models/ordem-servico/ordem-servico.model';
 import { OsAnexo } from '../../../Models/ordem-servico/os-anexos.model';
 import { Mode } from 'fs';
 import { ModeloService } from '../../../services/modelo.service';
@@ -60,12 +60,18 @@ import { FormClienteComponent } from '../../cliente/pages/form-cliente/form-clie
 import { FormAparelhoComponent } from '../../aparelho/pages/form-aparelho/form-aparelho.component';
 import { OrdemServicoService } from '../../../services/ordem-servico/ordem-servico.service';
 import { OsServicoService } from '../../../services/ordem-servico/os-servico.service';
-import { OsPecaService } from '../../../services/ordem-servico/os-peca.service';
 import { OsAnexoService } from '../../../services/ordem-servico/os-anexo.service';
 import { ToastService } from '../../../services/toast.service';
 import { UsuarioService } from '../../../services/usuario.service';
 import { ConfirmationConfig } from '../../../Models/confirmation.model';
 import { limparDatasInvalidas } from '../../../shared/helpers/form-helpers.';
+import {
+  OrdemServicoPeca,
+  OrdemServicoPecaAtualizacaoPayload,
+  OrdemServicoPecaCriacaoPayload,
+} from '../../../Models/ordem-servico/ordem-servico-peca.model';
+import { OrdemServicoPecaService } from '../../../services/ordem-servico/ordem-servico-peca.service';
+import { PecasOrdemServicoComponent } from '../pecas/pecas-ordem-servico.component';
 
 declare const bootstrap: any;
 
@@ -80,6 +86,8 @@ declare const bootstrap: any;
     NgSelectModule,
     FormClienteComponent,
     FormAparelhoComponent,
+    FormsModule,
+    PecasOrdemServicoComponent,
   ],
 })
 export class FormOrdemServicoComponent implements OnInit, OnDestroy {
@@ -94,6 +102,7 @@ export class FormOrdemServicoComponent implements OnInit, OnDestroy {
   clientes: { id: number; nome: string }[] = [];
   usuarios: { id: number; nome: string }[] = [];
   aparelhosDoCliente: Aparelho[] = [];
+  pecasAdicionadas: OrdemServicoPeca[] = [];
   prazosGarantia: { id: number; descricao: string; prazoEmDias?: number }[] =
     [];
   servicosDisponiveis: { id: number; descricao: string; valor?: number }[] = [];
@@ -101,6 +110,8 @@ export class FormOrdemServicoComponent implements OnInit, OnDestroy {
     [];
   marcas: { id: number; descricao: string }[] = [];
   modelos: { id: number; descricao: string }[] = [];
+
+  abaAtiva: string = 'dados-principais';
 
   private idsServicosParaDeletar: number[] = [];
   private idsPecasParaDeletar: number[] = [];
@@ -117,6 +128,16 @@ export class FormOrdemServicoComponent implements OnInit, OnDestroy {
   exibirConteudoModalAparelhoOs = false;
   editandoAparelhoOsId: number | undefined = undefined;
 
+  novaPeca: OrdemServicoPecaCriacaoPayload = {
+    idOrdemServico: 0, // será setado no salvar
+    idPeca: null!,
+    quantidade: 1,
+    valorUnitario: 0,
+    valorMaoObra: 0,
+    valorTotal: 0,
+    observacao: '',
+  };
+
   constructor(
     @Inject(PLATFORM_ID) private platformId: Object,
     private fb: FormBuilder,
@@ -130,7 +151,7 @@ export class FormOrdemServicoComponent implements OnInit, OnDestroy {
     private catalogoServicoService: CatalogoServicoService,
     private catalogoPecaService: CatalogoPecaService,
     private osServicoService: OsServicoService,
-    private osPecaService: OsPecaService,
+    private ordemServicoPecaService: OrdemServicoPecaService,
     private osAnexoService: OsAnexoService,
     private marcaService: MarcaService,
     private modeloService: ModeloService,
@@ -246,6 +267,10 @@ export class FormOrdemServicoComponent implements OnInit, OnDestroy {
     }
   }
 
+get osPecas(): FormArray {
+    return this.form.get('os_pecas') as FormArray;
+  }
+
   ngOnDestroy(): void {
     this.subscriptions.unsubscribe();
     if (isPlatformBrowser(this.platformId)) {
@@ -266,7 +291,7 @@ export class FormOrdemServicoComponent implements OnInit, OnDestroy {
       data_conclusao: [null], // Do modelo OrdemServico
       id_prazo_garantia: [null, Validators.required], // Do modelo OrdemServico
       data_expiracao_garantia: [{ value: null, disabled: true }], // Do modelo OrdemServico
-      data_saida: [null], 
+      data_saida: [null],
 
       // Descrições e Observações
       defeito_relatado_cliente: ['', Validators.required], // No HTML, mapeia para relato_do_problema
@@ -357,11 +382,11 @@ export class FormOrdemServicoComponent implements OnInit, OnDestroy {
         tap((data) => (this.servicosDisponiveis = data))
       ),
       // Peça: Já usa 'descricao'
-      this.catalogoPecaService.obterParaSelecao().pipe(
+      this.catalogoPecaService.obterTodos().pipe(
         map((data) =>
           data.map((item) => ({
             id: item.id,
-            descricao: item.descricao,
+            descricao: item.nome,
             precoVenda: item.precoVenda,
           }))
         ),
@@ -438,60 +463,67 @@ export class FormOrdemServicoComponent implements OnInit, OnDestroy {
     });
   }
 
-carregarOsParaEdicao(idOs: number): void {
+  carregarOsParaEdicao(idOs: number): void {
+    console.log(`--- INICIANDO carregarOsParaEdicao com ID: ${idOs} ---`);
+    this.ordemServicoService.obterPorId(idOs).subscribe({
+      next: (ordem) => {
+        console.log('DADOS BRUTOS RECEBIDOS DA API:', ordem);
+        limparDatasInvalidas(ordem, [
+          'dataEntrada',
+          'dataRetirada',
+          'dataExecucao',
+          'dataConclusao',
+          'dataSaida',
+          'dataExpiracaoGarantia',
+          'dataInicioGarantia', // <--- ESTE CAMPO PRECISA ESTAR AQUI
+          'dataFimGarantia',
+        ]);
 
-   console.log(`--- INICIANDO carregarOsParaEdicao com ID: ${idOs} ---`);
-  this.ordemServicoService.obterPorId(idOs).subscribe({
-    next: (ordem) => {
+        console.log('DADOS APÓS LIMPAR DATAS INVÁLIDAS:', ordem);
 
-      console.log('DADOS BRUTOS RECEBIDOS DA API:', ordem);
-      limparDatasInvalidas(ordem, [
-        'dataEntrada',
-        'dataRetirada',
-        'dataExecucao',
-        'dataConclusao',
-        'dataSaida',
-        'dataExpiracaoGarantia',
-        'dataInicioGarantia', // <--- ESTE CAMPO PRECISA ESTAR AQUI
-        'dataFimGarantia' 
-      ]);
+        this.form.patchValue({
+          id: ordem?.id,
+          codigo: ordem?.codigo,
+          pagamento_realizado: ordem?.pagamentoRealizado,
+          forma_pagamento: ordem?.formaPagamento,
+          observacoes_gerais: ordem?.observacoes,
+          id_empresa: ordem?.idEmpresa,
+          id_cliente: ordem?.idCliente,
+          id_aparelho: ordem?.idAparelho,
+          id_atendente: ordem?.idAtendente,
+          id_tecnico: ordem?.idTecnico,
+          id_prazo_garantia: ordem?.idPrazoGarantia,
+          id_status_os: ordem?.idEstado,
+          defeito_relatado_cliente: ordem?.descricaoProblema,
+          defeito_constatado_tecnico: ordem?.diagnosticoTecnico,
+          valor_orcamento_total: ordem?.valorTotal,
 
-      console.log('DADOS APÓS LIMPAR DATAS INVÁLIDAS:', ordem);
+          // Formata as datas válidas e mantém as nulas
+          data_entrada: ordem?.dataCriacao
+            ? new Date(ordem.dataCriacao).toISOString().substring(0, 10)
+            : null,
+          data_execucao: ordem?.dataExecucao
+            ? new Date(ordem.dataExecucao).toISOString().substring(0, 10)
+            : null,
+          data_conclusao: ordem?.dataConclusao
+            ? new Date(ordem.dataConclusao).toISOString().substring(0, 10)
+            : null,
+          data_saida: ordem?.dataRetirada
+            ? new Date(ordem.dataRetirada).toISOString().substring(0, 10)
+            : null,
+          data_expiracao_garantia: ordem?.dataFimGarantia
+            ? new Date(ordem.dataFimGarantia).toISOString().substring(0, 10)
+            : null,
+        });
 
-          this.form.patchValue({
-        id: ordem?.id,
-        codigo: ordem?.codigo,
-        pagamento_realizado: ordem?.pagamentoRealizado,
-        forma_pagamento: ordem?.formaPagamento,
-        observacoes_gerais: ordem?.observacoes,
-        id_empresa: ordem?.idEmpresa,
-        id_cliente: ordem?.idCliente,
-        id_aparelho: ordem?.idAparelho,
-        id_atendente: ordem?.idAtendente,
-        id_tecnico: ordem?.idTecnico,
-        id_prazo_garantia: ordem?.idPrazoGarantia,
-        id_status_os: ordem?.idEstado,
-        defeito_relatado_cliente: ordem?.descricaoProblema,
-        defeito_constatado_tecnico: ordem?.diagnosticoTecnico,
-
-        // Formata as datas válidas e mantém as nulas
-        data_entrada: ordem?.dataCriacao ? new Date(ordem.dataCriacao).toISOString().substring(0, 10) : null,
-        data_execucao: ordem?.dataExecucao ? new Date(ordem.dataExecucao).toISOString().substring(0, 10) : null,
-        data_conclusao: ordem?.dataConclusao ? new Date(ordem.dataConclusao).toISOString().substring(0, 10) : null,
-        data_saida: ordem?.dataRetirada ? new Date(ordem.dataRetirada).toISOString().substring(0, 10) : null,
-        data_expiracao_garantia: ordem?.dataFimGarantia ? new Date(ordem.dataFimGarantia).toISOString().substring(0, 10) : null,
-      });
-
-      this.dataUltimaModificacaoOriginal = ordem!.dataModificacao;
-      this.idEstadoOs = ordem!.idEstado;
-      this.idWorkflowOs = ordem!.idWorkflow;
-    },
-    error: (err) =>
-      this.toastService.error(`Erro ao carregar OS: ${err.error?.message}`),
-  });
-}
-
-
+        this.dataUltimaModificacaoOriginal = ordem!.dataModificacao;
+        this.idEstadoOs = ordem!.idEstado;
+        this.idWorkflowOs = ordem!.idWorkflow;
+      },
+      error: (err) =>
+        this.toastService.error(`Erro ao carregar OS: ${err.error?.message}`),
+    });
+  }
 
   getNomeMarca(idMarca: number): string {
     const marca = this.marcas.find((m) => m.id === idMarca);
@@ -615,6 +647,10 @@ carregarOsParaEdicao(idOs: number): void {
             pagamento_realizado: os.pagamentoRealizado ?? false,
             id_atendente: os.idAtendente,
             id_tecnico: os.idTecnico,
+              // ADICIONE/CORRIJA ESTES CAMPOS
+          valor_total_servicos: os.valorServicos,
+          valor_total_pecas: os.valorPecas,
+          valor_total_orcamento: os.valorTotal
           });
 
           if (os.idCliente) this.onClienteChange(os.idCliente);
@@ -628,12 +664,6 @@ carregarOsParaEdicao(idOs: number): void {
             loadedOsServicos: this.osServicoService
               .getServicosByOsId(this.ordemServicoId)
               .pipe(catchError(() => of([] as OsServico[]))),
-            loadedOsPecas: this.osPecaService
-              .getPecasByOsId(this.ordemServicoId)
-              .pipe(catchError(() => of([] as OsPeca[]))),
-            // loadedOsAnexos: this.osAnexoService
-            //   .getAnexosByOsId(this.ordemServicoId)
-            //   .pipe(catchError(() => of([] as OsAnexoMetadata[]))),
           });
         })
       )
@@ -641,7 +671,6 @@ carregarOsParaEdicao(idOs: number): void {
         next: ({
           osPrincipal,
           loadedOsServicos,
-          loadedOsPecas,
           //loadedOsAnexos,
         }) => {
           this.osServicos.clear();
@@ -655,22 +684,7 @@ carregarOsParaEdicao(idOs: number): void {
                 valor_unitario: s.valor_unitario,
               },
               false
-            )
-          );
-
-          this.osPecas.clear();
-          this.idsPecasParaDeletar = [];
-          loadedOsPecas.forEach((p) =>
-            this.addPeca(
-              {
-                id: p.id,
-                id_peca: p.id_peca,
-                quantidade: p.quantidade,
-                valor_unitario: p.valor_unitario,
-              },
-              false
-            )
-          );
+            ))
 
           this.osAnexos.clear();
           this.idsAnexosParaDeletar = [];
@@ -693,7 +707,7 @@ carregarOsParaEdicao(idOs: number): void {
               300
             );
           }
-          this.calculateAllTotals();
+         
           this.form.markAsPristine();
           this.isLoading = false;
         },
@@ -793,83 +807,27 @@ carregarOsParaEdicao(idOs: number): void {
     this.form.markAsDirty();
   }
 
-  // --- FormArray de Peças ---
-  get osPecas(): FormArray {
-    return this.form.get('os_pecas') as FormArray;
-  }
 
-  addPeca(pecaData?: OsPeca, markAsDirty = true): void {
-    const pecaForm = this.fb.group({
-      id: [pecaData?.id || null],
-      id_peca_catalogo: [pecaData?.id_peca || null, Validators.required],
-      quantidade: [
-        pecaData?.quantidade || 1,
-        [Validators.required, Validators.min(1)],
-      ],
-      valor_unitario: [
-        pecaData?.valor_unitario || 0,
-        [Validators.required, Validators.min(0)],
-      ],
-      valor_total_calculado: [{ value: 0, disabled: true }],
-    });
+ addPeca(): void {
+  const novaPecaForm = this.fb.group({
+    idPeca: [null, Validators.required],
+    quantidade: [1, [Validators.required, Validators.min(1)]],
+    valorUnitario: [{ value: 0, disabled: false }, Validators.required],
+    valorTotalCalculado: [{ value: 0, disabled: true }]
+  });
+}
 
-    const subId = pecaForm
-      .get('id_peca_catalogo')
-      ?.valueChanges.pipe(startWith(pecaForm.get('id_peca_catalogo')?.value))
-      .subscribe((pecaId) => {
-        if (pecaId) {
-          const catPeca = this.pecasDisponiveis.find((p) => p.id === pecaId);
-          if (catPeca && typeof catPeca.precoVenda === 'number') {
-            pecaForm.get('valor_unitario')?.setValue(catPeca.precoVenda);
-          }
-        }
-        this.updateSubtotalItem(
-          pecaForm,
-          'quantidade',
-          'valor_unitario',
-          'valor_total_calculado'
-        );
-      });
-    this.subscriptions.add(subId);
-
-    const subQty = pecaForm
-      .get('quantidade')
-      ?.valueChanges.subscribe(() =>
-        this.updateSubtotalItem(
-          pecaForm,
-          'quantidade',
-          'valor_unitario',
-          'valor_total_calculado'
-        )
-      );
-    const subVal = pecaForm
-      .get('valor_unitario')
-      ?.valueChanges.subscribe(() =>
-        this.updateSubtotalItem(
-          pecaForm,
-          'quantidade',
-          'valor_unitario',
-          'valor_total_calculado'
-        )
-      );
-    this.subscriptions.add(subQty);
-    this.subscriptions.add(subVal);
-
-    if (pecaData)
-      this.updateSubtotalItem(
-        pecaForm,
-        'quantidade',
-        'valor_unitario',
-        'valor_total_calculado'
-      );
-
-    this.osPecas.push(pecaForm);
-    if (markAsDirty) this.form.markAsDirty();
-  }
+recalcularTotal(form: FormGroup): void {
+  const quantidade = Number(form.get('quantidade')?.value || 0);
+  const valor = Number(form.get('valorUnitario')?.value || 0);
+  form.get('valorTotalCalculado')?.setValue(quantidade * valor);
+}
 
   removePeca(index: number): void {
     const itemId = (this.osPecas.at(index) as FormGroup).get('id')?.value;
-    if (this.isEditMode && itemId) this.idsPecasParaDeletar.push(itemId);
+    if (this.isEditMode && itemId) {
+      this.idsPecasParaDeletar.push(itemId);
+    }
     this.osPecas.removeAt(index);
     this.form.markAsDirty();
   }
@@ -1019,15 +977,11 @@ carregarOsParaEdicao(idOs: number): void {
     const osPayload: OrdemServicoCriacaoPayload = {
       codigo: formValue.codigo || undefined,
       valorTotal: parseFloat(formValue.valor_total_orcamento) || 0,
-      dataRetirada: formValue.data_saida
-        ? formValue.data_saida
-        : null,
+      dataRetirada: formValue.data_saida ? formValue.data_saida : null,
       dataExecucao: formValue.data_execucao
         ? new Date(formValue.data_execucao)
         : null,
-      dataConclusao: formValue.data_conclusao
-        ? formValue.data_conclusao
-        : null,
+      dataConclusao: formValue.data_conclusao ? formValue.data_conclusao : null,
       descricaoProblema: formValue.defeito_relatado_cliente,
       diagnosticoTecnico: formValue.defeito_constatado_tecnico || undefined,
       observacoes: formValue.observacoes_gerais || undefined,
@@ -1057,23 +1011,37 @@ carregarOsParaEdicao(idOs: number): void {
         idEstado: this.idEstadoOs, // ou this.dataModificacaoOriginal
         idWorkflow: this.idWorkflowOs,
       };
-
+      console.log(osUpdatePayload);
       limparDatasInvalidas(this.isEditMode ? osPayload : osUpdatePayload, [
-          'dataConclusao',
-          'dataRetirada',
-          'dataExecucao',
-          'dataInicioGarantia',
-          'dataFimGarantia',
-          'data_saida',
-          'data_entrada',
-          'data_expiracao_garantia',
+        'dataConclusao',
+        'dataRetirada',
+        'dataExecucao',
+        'dataInicioGarantia',
+        'dataFimGarantia',
+        'data_saida',
+        'data_entrada',
+        'data_expiracao_garantia',
       ]);
 
       this.ordemServicoService
         .atualizar(this.ordemServicoId, osUpdatePayload)
-        .pipe(switchMap(() => this.processarItensDaOs(this.ordemServicoId!)))
+        .pipe(
+          switchMap((dadosDaOsAtualizada) =>
+            // Combina o resultado do processamento de itens com os dados da OS
+            this.processarItensDaOs(this.ordemServicoId!).pipe(
+              map((resultadoDosItens) => ({
+                os: dadosDaOsAtualizada,
+                itens: resultadoDosItens,
+              }))
+            )
+          )
+        )
         .subscribe({
-          next: () => {
+          next: (resultado) => {
+            this.dataUltimaModificacaoOriginal = resultado.os.dataModificacao;
+            this.form.patchValue({
+              valor_total_orcamento: resultado.os.valorTotal?.toFixed(2),
+            });
             this.handleSuccess('Ordem de Serviço e itens atualizados.');
           },
           error: (err) => {
@@ -1152,32 +1120,6 @@ carregarOsParaEdicao(idOs: number): void {
     });
     this.idsServicosParaDeletar.forEach((id) =>
       operacoesItens.push(this.osServicoService.deleteOsServico(id))
-    );
-
-    // Peças
-    this.osPecas.controls.forEach((ctrl) => {
-      const formGroup = ctrl as FormGroup;
-      if (isCriacaoTotal || !formGroup.value.id || formGroup.dirty) {
-        const pecaItem: OsPeca = {
-          id: formGroup.value.id || undefined,
-          id_os: osId,
-          id_peca: formGroup.value.id_peca_catalogo, // FK para o catálogo
-          quantidade: formGroup.value.quantidade,
-          valor_unitario: formGroup.value.valor_unitario,
-          valor_total:
-            (formGroup.value.quantidade || 0) *
-            (formGroup.value.valor_unitario || 0),
-        };
-        if (!pecaItem.id)
-          operacoesItens.push(this.osPecaService.createOsPeca(pecaItem));
-        else if (formGroup.dirty)
-          operacoesItens.push(
-            this.osPecaService.updateOsPeca(pecaItem.id!, pecaItem)
-          );
-      }
-    });
-    this.idsPecasParaDeletar.forEach((id) =>
-      operacoesItens.push(this.osPecaService.deleteOsPeca(id))
     );
 
     // Anexos
@@ -1366,5 +1308,105 @@ carregarOsParaEdicao(idOs: number): void {
     if (!data) return false;
     const dataObj = new Date(data);
     return dataObj.getFullYear() > 1900; // Evita 0001, 0000 etc.
+  }
+
+  salvarPeca(): void {
+    if (!this.isEditMode || !this.ordemServicoId) return;
+
+    if (!this.novaPeca.idPeca || this.novaPeca.quantidade <= 0) {
+      this.toastService.warning(
+        'Preencha todos os campos obrigatórios da peça.'
+      );
+      return;
+    }
+
+    this.novaPeca.idOrdemServico = this.ordemServicoId;
+    this.novaPeca.valorTotal =
+      this.novaPeca.quantidade * this.novaPeca.valorUnitario;
+    this.novaPeca.valorMaoObra = 0;
+  }
+
+  resetarNovaPeca(): void {
+    this.novaPeca = {
+      idOrdemServico: this.ordemServicoId!,
+      idPeca: null!,
+      quantidade: 1,
+      valorUnitario: 0,
+      valorMaoObra: 0,
+      valorTotal: 0,
+      observacao: '',
+    };
+  }
+
+  carregarPecasDaOs(): void {
+    this.ordemServicoPecaService
+      .obterPorOrdemServico(this.ordemServicoId!)
+      .subscribe({
+        next: (res) => {
+          this.pecasAdicionadas = res.dados || [];
+          this.calculateAllTotals(); // já existente no seu código
+        },
+        error: (err) =>
+          this.toastService.error('Erro ao carregar peças: ' + err.message),
+      });
+  }
+
+  calcularTotalPecas(): number {
+    return this.pecasAdicionadas.reduce(
+      (acc, p) => acc + (p.valorTotal || 0),
+      0
+    );
+  }
+
+  atualizarDataModificacao(data: Date): void {
+    this.form.patchValue({ data_ultima_modificacao: data });
+  }
+
+  handleOsAtualizadaPeloFilho(osVindaDoFilho: OrdemServico): void {
+    this.atualizarFormularioComDadosDaApi(osVindaDoFilho);
+    this.ativarAba(this.abaAtiva);
+  }
+
+  // Certifique-se que este método também existe no seu componente
+  private atualizarFormularioComDadosDaApi(os: OrdemServico): void {
+    if (!os) return;
+
+    this.form.patchValue({
+      valor_total_servicos: os.valorServicos?.toFixed(2),
+      valor_total_pecas: os.valorPecas?.toFixed(2),
+      valor_total_orcamento: os.valorTotal?.toFixed(2),
+    });
+
+    // Muito importante: atualize a data de modificação para a próxima vez que salvar
+    this.dataUltimaModificacaoOriginal = os.dataModificacao;
+
+    this.form.markAsPristine();
+    this.toastService.success('Valores da OS sincronizados com o servidor.');
+  }
+
+  setAbaAtiva(nomeAba: string): void {
+    this.abaAtiva = nomeAba;
+    console.log('Aba ativa agora é:', this.abaAtiva); // Ótimo para depuração
+  }
+
+  private ativarAba(nomeAba: string): void {
+    setTimeout(() => {
+      // Constrói o ID do botão dinamicamente. Ex: 'pecas' -> 'pecas-tab'
+      const tabButtonId = `${nomeAba}-tab`;
+      const tabButtonElement = document.getElementById(tabButtonId);
+
+      if (tabButtonElement) {
+        try {
+          const tab = new bootstrap.Tab(tabButtonElement);
+          tab.show();
+        } catch (e) {
+          console.error(`Erro ao tentar reativar a aba '${nomeAba}'.`, e);
+        }
+      } else {
+        console.warn(
+          `Botão da aba com ID '${tabButtonId}' não foi encontrado.`
+        );
+      }
+    }, 0);
   }
 }

@@ -3,7 +3,7 @@ import { ClienteService } from './../../../services/cliente.service';
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DatePipe } from '@angular/common';
-import { OrdemServico } from '../../../Models/ordem-servico/ordem_servico.model';
+import { OrdemServico } from '../../../Models/ordem-servico/ordem-servico.model';
 import { Cliente } from '../../../Models/cliente.model';
 import { Aparelho } from '../../../Models/aparelho.model';
 import { AparelhoService } from '../../../services/aparelho.service';

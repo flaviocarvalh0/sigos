@@ -1,5 +1,5 @@
 export const environment = {
   production: false,
-  apiUrl: 'https://localhost:7119/api',
-  appName: 'Sigos'
+  apiUrl: 'https://localhost:7119/api/v1',
+  appName: 'sigos'
 };

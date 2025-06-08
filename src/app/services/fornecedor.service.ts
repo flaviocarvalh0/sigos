@@ -5,12 +5,13 @@ import { map, catchError } from 'rxjs/operators';
 import { Fornecedor, FornecedorCriacaoPayload, FornecedorAtualizacaoPayload } from '../Models/fornecedor.model';
 import { CrudService } from './crud.service';
 import { RespostaApi } from '../Models/reposta-api.model';
+import { environment } from '../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class FornecedorService extends CrudService<Fornecedor, number> {
-  protected readonly apiUrlBase = 'https://localhost:7119/api'; // <<--- AJUSTE SE NECESSÁRIO
+  protected readonly apiUrlBase = environment.apiUrl;
   protected readonly endpoint = 'fornecedores'; // Conforme seu FornecedorController
 
   constructor(http: HttpClient) {

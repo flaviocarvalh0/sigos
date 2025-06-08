@@ -5,6 +5,7 @@ import { catchError, delay, map } from 'rxjs/operators';// Importe o CrudService
 import { Usuario, Grupo, UsuarioCriacaoPayload, UsuarioAtualizacaoPayload } from '../Models/usuario.model';
 import { CrudService } from './crud.service';
 import { RespostaApi } from '../Models/reposta-api.model';
+import { environment } from '../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -13,38 +14,19 @@ export class UsuarioService extends CrudService<Usuario, number> {
 
   // apiUrlBase é herdado ou pode ser definido aqui se diferente do CrudService padrão
   // (se CrudService não tiver um apiUrlBase default, defina-o aqui ou no construtor)
-  protected override readonly apiUrlBase = 'https://localhost:7119/api'; // Se diferente do default no CrudService
+  protected override readonly apiUrlBase = environment.apiUrl;
   protected readonly endpoint = 'usuarios'; // Endpoint específico para usuários
 
 
   constructor(http: HttpClient) {
-    super(http); // Chama o construtor da classe base CrudService
-    // Se apiUrlBase não for definido na classe CrudService ou aqui,
-    // você pode precisar passá-lo para o super() ou definir de outra forma.
-    // Assumindo que CrudService espera que apiUrlBase seja definido na classe derivada ou tenha um default.
-    // Para este exemplo, vou assumir que você definirá apiUrlBase em CrudService ou aqui.
-    // Se CrudService não define apiUrlBase, você pode adicionar:
-    // this.apiUrlBase = 'http://localhost:7119/api'; // Defina aqui se necessário
+    super(http); 
   }
 
-  // Os métodos getUsuarios (agora obterTodos), getUsuarioById (agora obterPorId),
-  // deleteUsuario (agora remover) são herdados do CrudService.
-
-  // createUsuario e updateUsuario precisam de atenção especial devido aos DTOs.
-  // O CrudService.criar espera Omit<Usuario, 'id'>.
-  // O CrudService.atualizar espera Partial<Usuario>.
-  // Seus DTOs (UsuarioCriacaoPayload, UsuarioAtualizacaoPayload) são um pouco diferentes.
-  // Podemos sobrescrever os métodos ou ajustar os payloads antes de chamar super.
 
   // Sobrescrevendo criar para usar UsuarioCriacaoPayload
   criarUsuario(usuarioData: UsuarioCriacaoPayload): Observable<Usuario> {
-    // O endpoint POST da sua API /api/usuarios espera UsuarioCriacaoDto
-    // A classe base CrudService.criar já faz POST para this.fullApiUrl
-    // Se UsuarioCriacaoPayload for compatível com o que o backend espera (sem 'id'),
-    // podemos chamar o método da classe base.
-    // Se precisar de mapeamento específico, faça aqui.
-    // Assumindo que UsuarioCriacaoPayload é o que a API espera no corpo.
-    return super.criar(usuarioData as Omit<Usuario, 'id'>); // Faz cast se necessário ou mapeia
+
+    return super.criar(usuarioData as Omit<Usuario, 'id'>);
   }
 
   atualizarUsuario(id: number, usuarioData: UsuarioAtualizacaoPayload): Observable<Usuario> {

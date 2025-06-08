@@ -4,12 +4,13 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { RespostaApi } from '../Models/reposta-api.model';
 import { GrupoUsuario } from '../Models/grupo_usuario.model';
+import { environment } from '../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class GrupoUsuarioService {
-  private api = 'https://localhost:7119/api/grupos-usuarios';
+  private api = `${environment.apiUrl}/grupos-usuarios`;
 
   constructor(private http: HttpClient) {}
 

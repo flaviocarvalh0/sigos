@@ -5,7 +5,7 @@ import { MetricCardComponent } from '../metric-card/metric-card.component';
 import { OrderFiltersComponent } from '../order-filters/order-filters.component';
 import { ServiceOrderCardComponent } from '../service-order-card/service-order-card.component';
 import { OrdemServicoService } from '../../../services/ordem-servico/ordem-servico.service';
-import { OrdemServico } from '../../../Models/ordem-servico/ordem_servico.model';
+import { OrdemServico } from '../../../Models/ordem-servico/ordem-servico.model';
 
 @Component({
   selector: 'app-ordem-servico',

@@ -1,4 +1,4 @@
-import { ModelBase, ModelBaseCriacaoAtualizacao } from "../model_base.model";
+import { ModelBase, ModelBaseCriacaoAtualizacao } from "../model-base.model";
 
 export interface Workflow extends ModelBase{
   id: number;

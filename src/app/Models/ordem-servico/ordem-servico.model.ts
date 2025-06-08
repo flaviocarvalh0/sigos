@@ -1,4 +1,4 @@
-import { ModelBase } from "../model_base.model";
+import { ModelBase } from "../model-base.model";
 
 export interface OrdemServico extends ModelBase {
   codigo?: string;

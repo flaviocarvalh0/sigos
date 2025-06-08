@@ -9,7 +9,7 @@ import {
 import { ActivatedRoute, Router } from '@angular/router';
 import { NgIf } from '@angular/common';
 import { PrazoGarantiaService } from '../../../services/prazo_garantia.service';
-import { PrazoGarantia } from '../../../Models/prazo_garantia.model';
+import { PrazoGarantia } from '../../../Models/prazo-garantia.model';
 import { ToastService } from '../../../services/toast.service';
 import { ConfirmationService } from '../../../services/confirmation.service';
 

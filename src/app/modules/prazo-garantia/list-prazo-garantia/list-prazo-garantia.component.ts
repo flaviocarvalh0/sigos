@@ -2,7 +2,7 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { PrazoGarantiaService } from '../../../services/prazo_garantia.service';
-import { PrazoGarantia } from '../../../Models/prazo_garantia.model';
+import { PrazoGarantia } from '../../../Models/prazo-garantia.model';
 import { ListagemDinamicaComponent } from '../../../shared/components/listagem-dinamica/listagem-dinamica.component';
 import { ToastService } from '../../../services/toast.service';
 import { ConfirmationService } from '../../../services/confirmation.service';

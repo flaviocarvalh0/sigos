@@ -8,6 +8,7 @@ import { UsuarioLogado, LoginPayload, LoginResponse } from '../../Models/usuario
 
 // Para decodificar JWT (instale com: npm install jwt-decode)
 import { jwtDecode, JwtPayload } from "jwt-decode";
+import { environment } from '../../environments/environment';
 
 // Estenda JwtPayload se você tiver claims customizados que quer tipar
 interface CustomJwtPayload extends JwtPayload {
@@ -22,7 +23,7 @@ interface CustomJwtPayload extends JwtPayload {
   providedIn: 'root'
 })
 export class AuthService {
-  private apiUrl = 'https://localhost:7119/api'; // <<--- AJUSTE PARA A URL BASE DA SUA API REAL
+  private apiUrl = environment.apiUrl;
   private readonly TOKEN_KEY = 'sigos_auth_token_real_v1';
   private readonly USER_INFO_KEY = 'sigos_user_info_real_v1';
 

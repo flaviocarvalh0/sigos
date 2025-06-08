@@ -7,12 +7,13 @@ import { Cliente, ClienteCriacaoPayload, ClienteAtualizacaoPayload } from '../Mo
 // Se o buscarPorCliente do AparelhoService for movido para cá ou referenciado
 import { CrudService } from './crud.service';
 import { RespostaApi } from '../Models/reposta-api.model';
+import { environment } from '../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ClienteService extends CrudService<Cliente, number> {
-  protected readonly apiUrlBase = 'https://localhost:7119/api'; // <<--- AJUSTE SE NECESSÁRIO
+  protected readonly apiUrlBase = environment.apiUrl;
   protected readonly endpoint = 'clientes'; // Conforme seu ClienteController
 
   constructor(http: HttpClient) {

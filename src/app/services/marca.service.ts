@@ -8,12 +8,13 @@ import { map, catchError } from 'rxjs/operators';
 import { Marca, MarcaCriacaoPayload, MarcaAtualizacaoPayload } from '../Models/marca.model'; // Ajuste o path
 import { RespostaApi } from '../Models/reposta-api.model'; // Ajuste o path
 import { CrudService } from './crud.service';
+import { environment } from '../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class MarcaService extends CrudService<Marca, number> {
-  protected readonly apiUrlBase = 'https://localhost:7119/api'; // Ajuste a URL/porta da sua API
+  protected readonly apiUrlBase = environment.apiUrl;
   protected readonly endpoint = 'marcas'; // Endpoint da API para Marcas
 
   constructor(http: HttpClient) {

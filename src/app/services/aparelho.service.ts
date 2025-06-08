@@ -7,13 +7,14 @@ import { map, catchError } from 'rxjs/operators';
 import { Aparelho, AparelhoCriacaoPayload, AparelhoAtualizacaoPayload } from '../Models/aparelho.model';
 import { RespostaApi } from '../Models/reposta-api.model'; // Ajuste o path se seu modelo RespostaApi estiver
 import { CrudService } from './crud.service';
+import { environment } from '../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AparelhoService extends CrudService<Aparelho, number> {
   // Definindo as propriedades abstratas da classe base
-  protected readonly apiUrlBase = 'https://localhost:7119/api'; // Ajuste a porta se necessário
+  protected readonly apiUrlBase = environment.apiUrl;
   protected readonly endpoint = 'aparelhos';
 
   constructor(http: HttpClient) {

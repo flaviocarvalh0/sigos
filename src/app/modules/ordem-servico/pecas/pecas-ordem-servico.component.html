@@ -1,0 +1,71 @@
+<h5 class="text-primary">Adicionar Peça</h5>
+<div class="card mb-3">
+  <div class="card-body">
+    <div class="row gx-2">
+      <div class="col-md-4">
+        <label>Peça</label>
+       <ng-select
+          [(ngModel)]="novaPeca.idPeca"
+          [items]="pecasDisponiveis"
+          bindLabel="descricao"
+          bindValue="id"
+          placeholder="Selecione..."
+          [searchable]="true"
+          [clearable]="false"
+          (change)="aoSelecionarPeca()"
+          [ngModelOptions]="{standalone: true}">
+        </ng-select>
+
+      </div>
+      <div class="col-md-2">
+        <label>Qtd.</label>
+        <input type="number" class="form-control" [(ngModel)]="novaPeca.quantidade" min="1" [ngModelOptions]="{standalone: true}">
+      </div>
+      <div class="col-md-2">
+        <label>Val. Unitário</label>
+        <input type="number" class="form-control" [(ngModel)]="novaPeca.valorUnitario" [ngModelOptions]="{standalone: true}">
+      </div>
+      <div class="col-md-2 d-flex align-items-end">
+        <button class="btn btn-success w-100" (click)="salvarPeca()">
+          <i class="bi bi-check-circle"></i> Adicionar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h5 class="text-primary">Peças Adicionadas</h5>
+<div *ngIf="pecasAdicionadas.length === 0" class="alert alert-light text-center">
+  Nenhuma peça adicionada.
+</div>
+<table *ngIf="pecasAdicionadas.length > 0" class="table table-sm table-bordered">
+  <thead>
+    <tr>
+      <th>Peça</th>
+      <th>Qtd</th>
+      <th>Unitário</th>
+      <th>Total</th>
+      <th style="width: 50px;">Ações</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr *ngFor="let p of pecasAdicionadas">
+      <td>{{ getDescricaoPeca(p) }}</td>
+      <td>{{ p.quantidade }}</td>
+      <td>{{ p.valorUnitario | currency:'BRL' }}</td>
+      <td>{{ p.valorTotal | currency:'BRL' }}</td>
+      <td class="text-center">
+        <button class="btn btn-sm btn-outline-danger" (click)="removerPeca(p.id!)">
+          <i class="bi bi-trash"></i>
+        </button>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="row mt-3">
+  <div class="col-md-4 offset-md-8">
+    <label class="form-label fw-bold">Total Peças (R$)</label>
+    <input type="text" class="form-control" [value]="calcularTotal() | currency:'BRL'" readonly>
+  </div>
+</div>

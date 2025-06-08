@@ -8,6 +8,7 @@ import { map, catchError } from 'rxjs/operators';
 import { RespostaApi } from '../Models/reposta-api.model'; // Ajuste o path se necessário
 import { CrudService } from './crud.service';
 import { Servico, ServicoAtualizacaoPayload, ServicoCriacaoPayload } from '../Models/servico.mode';
+import { environment } from '../environments/environment';
    // Ajuste o path para seu CrudService
 
 @Injectable({
@@ -15,12 +16,11 @@ import { Servico, ServicoAtualizacaoPayload, ServicoCriacaoPayload } from '../Mo
 })
 export class ServicoService extends CrudService<Servico, number> {
   // Definindo as propriedades abstratas da classe base
-  protected readonly apiUrlBase = 'https://localhost:7119/api'; // Ajuste a URL/porta da sua API
+  protected readonly apiUrlBase = environment.apiUrl;
   protected readonly endpoint = 'servicos'; // Assumindo que o endpoint da API para Servico será "servicos"
 
   constructor(http: HttpClient) {
-    super(http); // Chama o construtor da classe base
-    console.log(`[ServicoService] Inicializado para interagir com: ${this.fullApiUrl}`);
+    super(http);
   }
 
   // O método obterPorId(id: number): Observable<Servico | undefined> é herdado.
