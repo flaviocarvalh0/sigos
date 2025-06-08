@@ -78,7 +78,8 @@ export class AdminLayoutComponent implements OnInit {
         isInitiallyOpen: true,
         navLinks: [
           { label: 'Usuários', routerLink: '/admin/usuarios', iconClass: 'bi bi-people-fill' },
-          { label: 'Grupos', routerLink: '/admin/grupos', iconClass: 'bi bi-collection-fill' }
+          { label: 'Grupos', routerLink: '/admin/grupos', iconClass: 'bi bi-collection-fill' },
+          { label: 'Workflows', routerLink: '/admin/workflows', iconClass: 'bi bi-diagram-3' }
         ]
       },
       // Opcional: Link para voltar à aplicação principal, caso não queira na navbar

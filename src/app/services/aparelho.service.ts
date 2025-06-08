@@ -5,7 +5,7 @@ import { HttpClient, HttpParams } from '@angular/common/http'; // HttpParams pod
 import { Observable } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { Aparelho, AparelhoCriacaoPayload, AparelhoAtualizacaoPayload } from '../Models/aparelho.model';
-import { RespostaApi } from '../Models/reposta-api.model'; // Ajuste o path se seu modelo RespostaApi estiver 
+import { RespostaApi } from '../Models/reposta-api.model'; // Ajuste o path se seu modelo RespostaApi estiver
 import { CrudService } from './crud.service';
 
 @Injectable({
@@ -17,8 +17,7 @@ export class AparelhoService extends CrudService<Aparelho, number> {
   protected readonly endpoint = 'aparelhos';
 
   constructor(http: HttpClient) {
-    super(http); // Chama o construtor da classe base
-    console.log(`[AparelhoService] Inicializado para interagir com: ${this.fullApiUrl}`);
+    super(http);
   }
 
   override criar(payload: AparelhoCriacaoPayload): Observable<Aparelho> {

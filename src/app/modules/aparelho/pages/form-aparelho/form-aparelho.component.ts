@@ -41,7 +41,7 @@ export class FormAparelhoComponent implements OnInit, OnDestroy {
   marcas: Marca[] = [];
   modelos: Modelo[] = [];
   modelosFiltrados: Modelo[] = [];
-  
+
   private dataModificacaoOriginal: string | Date | null = null;
   private currentAparelhoId?: number; // Unifica ID de edição
   private subscriptions = new Subscription();
@@ -121,8 +121,8 @@ export class FormAparelhoComponent implements OnInit, OnDestroy {
       idModelo: [aparelho?.idModelo || null, Validators.required],
       imei1: [aparelho?.imei1 || '', [Validators.required, Validators.minLength(14), Validators.maxLength(15)]],
       imei2: [aparelho?.imei2 || '', [Validators.minLength(14), Validators.maxLength(15)]],
-      numeroSerie: [aparelho?.numeroSerie || '', Validators.required], // Adicionado
-      cor: [aparelho?.cor || '', Validators.required],
+      numeroSerie: [aparelho?.numeroSerie || ''], // Adicionado
+      cor: [aparelho?.cor || ''],
       descricaoAuxiliar: [aparelho?.descricaoAuxiliar || ''], // Adicionado
       observacoes: [aparelho?.observacoes || '']
       // dataModificacao não é um campo do form, mas é usado para concorrência
@@ -206,7 +206,7 @@ export class FormAparelhoComponent implements OnInit, OnDestroy {
             // A chamada a initForm ou patchValue deve ser cuidadosa aqui
             // this.initForm(aparelho) recria o form, o que pode perder subscriptions.
             // Melhor usar patchValue e configurar o que for necessário.
-            
+
             this.formAparelho.patchValue({
                 idCliente: aparelho.idCliente,
                 idMarca: aparelho.idMarca,
@@ -348,22 +348,19 @@ export class FormAparelhoComponent implements OnInit, OnDestroy {
     }
   }
 
-  onHandleCancelar(): void { // Renomeado para evitar conflito com @Output() cancelar
-    if (this.modoEmbedded) {
-      this.cancelar.emit();
+  onHandleCancelar(): void {
+  if (this.modoEmbedded) {
+    this.cancelar.emit();
+  } else {
+    // Se o form foi aberto embutido dentro de um cliente (clienteIdInput) ou pela rota /cliente/form/:id
+    if (this.clienteIdInput) {
+      this.router.navigate(['/cliente/form', this.clienteIdInput], { queryParams: { aba: 'aparelhos' } });
     } else {
-      // Tenta voltar para o cliente se o ID estiver no form, senão para a lista de aparelhos
-      const idClienteDoForm = this.formAparelho.get('idCliente')?.value;
-      if (idClienteDoForm) {
-        this.router.navigate(['/cliente/form', idClienteDoForm], { queryParams: { aba: 'aparelhos' } });
-      } else if (this.clienteIdInput){
-        this.router.navigate(['/cliente/form', this.clienteIdInput], { queryParams: { aba: 'aparelhos' } });
-      }
-      else {
-        this.router.navigate(['/aparelho']); // Rota para a lista de aparelhos
-      }
+      this.router.navigate(['/aparelho']); // Redireciona corretamente para a listagem de aparelhos
     }
   }
+}
+
 
   onExcluir(): void {
     if (!this.currentAparelhoId) return;
@@ -402,7 +399,7 @@ export class FormAparelhoComponent implements OnInit, OnDestroy {
       })
     );
   }
-  
+
   // Getters para o template (se precisar de títulos dinâmicos como em FormCliente)
   get cardTitle(): string {
     return this.isEditando ? 'Editar Aparelho' : (this.modoEmbedded ? 'Adicionar Aparelho' : 'Cadastrar Novo Aparelho');

@@ -1,4 +1,4 @@
-<!-- <div class="container mt-4 mb-5">
+<div class="container mt-4 mb-5">
   <div class="card shadow-sm">
     <div class="card-header bg-primary text-white">
       <h4 class="mb-0">
@@ -62,11 +62,11 @@
               </div>
               <div class="col-md-3">
                 <label for="id_status_os" class="form-label">Status da OS <span class="text-danger">*</span></label>
-                <select id="id_status_os" formControlName="id_status_os" class="form-select"
+                <!-- <select id="id_status_os" formControlName="id_status_os" class="form-select"
                   [ngClass]="{ 'is-invalid': isInvalid('id_status_os') }">
                   <option [ngValue]="null" disabled>Selecione o Status</option>
                   <option *ngFor="let status of statusOS" [ngValue]="status.id">{{ status.descricao }}</option>
-                </select>
+                </select> -->
                 <div *ngIf="isInvalid('id_status_os')" class="invalid-feedback">Status é obrigatório.</div>
               </div>
               <div class="col-md-3" *ngIf="form.get('id_empresa')?.enabled || form.get('id_empresa')?.value"> <label
@@ -74,7 +74,7 @@
                 <select id="id_empresa" formControlName="id_empresa" class="form-select"
                   [ngClass]="{ 'is-invalid': isInvalid('id_empresa') }">
                   <option [ngValue]="null" disabled>Selecione a Empresa</option>
-                  <option *ngFor="let empresa of empresas" [ngValue]="empresa.id">{{ empresa.razao_social }}</option>
+                  <option *ngFor="let empresa of empresas" [ngValue]="empresa.id">{{ empresa.razaoSocial }}</option>
                 </select>
                 <div *ngIf="isInvalid('id_empresa')" class="invalid-feedback">Empresa é obrigatória.</div>
               </div>
@@ -85,11 +85,10 @@
               <div class="col-md-6 mb-3 mb-md-0">
                 <label for="id_cliente" class="form-label">Cliente <span class="text-danger">*</span></label>
                 <div class="input-group">
-                  <select id="id_cliente" formControlName="id_cliente" class="form-select"
-                    [ngClass]="{ 'is-invalid': isInvalid('id_cliente') }">
-                    <option [ngValue]="null" disabled>Selecione o Cliente</option>
-                    <option *ngFor="let cliente of clientes" [ngValue]="cliente.id">{{ cliente.nome_completo }}</option>
-                  </select>
+                  <ng-select id="id_cliente" formControlName="id_cliente" [items]="clientes" bindLabel="nomeCompleto"
+                    bindValue="id" placeholder="Selecione ou pesquise o Cliente"
+                    [notFoundText]="'Nenhum cliente encontrado'" [ngClass]="{ 'is-invalid': isInvalid('id_cliente') }">
+                  </ng-select>
                   <button type="button" class="btn btn-outline-primary" title="Novo Cliente"
                     (click)="abrirModalNovoCliente()"
                     style="display: flex; align-items: center; justify-content: center;">
@@ -104,20 +103,29 @@
               <div class="col-md-6">
                 <label for="id_aparelho" class="form-label">Aparelho <span class="text-danger">*</span></label>
                 <div class="input-group">
-                  <select id="id_aparelho" formControlName="id_aparelho" class="form-select"
+                  <ng-select id="id_aparelho" formControlName="id_aparelho" [items]="aparelhosDoCliente" bindValue="id"
+                    placeholder="Selecione ou pesquise o Aparelho" [notFoundText]="'Nenhum aparelho encontrado'"
                     [ngClass]="{ 'is-invalid': isInvalid('id_aparelho') }">
-                    <option [ngValue]="null" disabled>Selecione o Aparelho</option>
-                    <option *ngFor="let aparelho of aparelhosDoCliente" [ngValue]="aparelho.id">
-                      {{ getNomeMarca(aparelho.id_marca) }} - {{ getNomeModelo(aparelho.id_modelo) || 'NA'}} - IMEI: {{
-                      aparelho.imei_1 || 'N/A' }}
-                    </option>
-                  </select>
+
+                    <ng-template ng-label-tmp let-item="item">
+                      <span *ngIf="item">{{ getNomeMarca(item.idMarca) }} - {{ getNomeModelo(item.idModelo) || 'NA'
+                        }}</span>
+                    </ng-template>
+
+                    <ng-template ng-option-tmp let-item="item" let-search="searchTerm">
+                      <div>
+                        <strong>{{ getNomeMarca(item.idMarca) }} - {{ getNomeModelo(item.idModelo) || 'NA' }}</strong>
+                      </div>
+                      <small class="text-muted">IMEI: {{ item.imei1 }}</small>
+                    </ng-template>
+
+                  </ng-select>
                   <button type="button" class="btn btn-outline-primary" title="Novo Aparelho para este Cliente"
                     (click)="abrirModalNovoAparelhoParaOS()" [disabled]="!form.get('id_cliente')?.value">
                     <i class="bi bi-plus"></i>
                   </button>
                 </div>
-                <div *ngIf="isInvalid('id_aparelho')" class="invalid-feedback">
+                <div *ngIf="isInvalid('id_aparelho')" class="invalid-feedback d-block">
                   Aparelho é obrigatório.
                 </div>
                 <div
@@ -153,9 +161,10 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                   </div>
                   <div class="modal-body">
-                    <app-form-aparelho *ngIf="exibirConteudoModalAparelhoOs" [clienteId]="form.get('id_cliente')?.value"
-                      [aparelhoIdParaEditar]="editandoAparelhoOsId" [modoEmbedded]="true"
-                      (salvar)="handleAparelhoCriadoNaOS($event)" (cancelar)="handleAparelhoCanceladoNaOS()">
+                    <app-form-aparelho *ngIf="exibirConteudoModalAparelhoOs"
+                      [clienteIdInput]="form.get('id_cliente')?.value" [aparelhoIdParaEditar]="editandoAparelhoOsId"
+                      [modoEmbedded]="true" (salvar)="handleAparelhoCriadoNaOS($event)"
+                      (cancelar)="handleAparelhoCanceladoNaOS()">
                     </app-form-aparelho>
                   </div>
                 </div>
@@ -419,4 +428,4 @@
       </form>
     </div>
   </div>
-</div> -->
+</div>

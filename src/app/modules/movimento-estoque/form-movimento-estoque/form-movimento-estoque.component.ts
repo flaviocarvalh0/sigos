@@ -43,8 +43,11 @@ export class FormMovimentoEstoqueComponent {
   carregarPecas(): void {
     this.carregandoPecas = true;
     this.pecaService.obterParaSelecao().subscribe({
-      next: pecas => this.pecas = pecas,
-      error: () => this.toastService.error('Erro ao carregar peças.'),
+      next: pecas => this.pecas = pecas.map(peca => ({
+        id: peca.id,
+        descricao: peca.nome // ajuste conforme o nome correto do campo de descrição em Peca
+      })),
+      error: (err) => this.toastService.error(`Erro ao carregar peças: ${err.erroW.message}`),
       complete: () => this.carregandoPecas = false
     });
   }

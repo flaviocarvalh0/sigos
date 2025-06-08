@@ -62,7 +62,7 @@ export class FormModeloComponent implements OnInit {
   carregarMarcas(): void {
   this.marcaService.obterParaSelecao().subscribe({
     next: (marcas) => {
-      this.marcas = marcas.map(m => ({ id: m.id, nome: m.descricao }));
+      this.marcas = marcas.map(m => ({ id: m.id, nome: m.nome }));
 
       // Atualiza dinamicamente o campo do select com as marcas
       const campoMarca = this.config.abas[0].campos.find(c => c.nome === 'idMarca');

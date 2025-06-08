@@ -6,13 +6,14 @@ import { CrudService } from './crud.service'; // Seu CrudService genérico
 import { RespostaApi } from '../Models/reposta-api.model'; // Sua interface de RespostaApi
 import { Grupo } from '../Models/usuario.model';
 import { GrupoAtualizacaoPayload, GrupoCriacaoPayload, GrupoSelecao } from '../Models/grupo.model';
+import { environment } from '../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class GrupoService extends CrudService<Grupo, number> {
 
-  protected readonly apiUrlBase = 'https://localhost:7119/api'; // <<--- AJUSTE SE NECESSÁRIO
+  protected readonly apiUrlBase = environment.apiUrl;
   protected readonly endpoint = 'grupos'; // Conforme seu FornecedorController
 
   constructor(http: HttpClient) {
@@ -45,16 +46,4 @@ export class GrupoService extends CrudService<Grupo, number> {
   // criar(payload: GrupoCriacaoPayload): Observable<RespostaApi<Grupo>>
   // atualizar(id: number, payload: GrupoAtualizacaoPayload): Observable<RespostaApi<Grupo>>
   // remover(id: number): Observable<RespostaApi<boolean>>
-
-  // Método específico para /api/grupos/selecao
-  obterParaSelecao(): Observable<{ id: number, descricao: string }[]> {
-    return this.http.get<RespostaApi<{ id: number, descricao: string }[]>>(`${this.fullApiUrl}/selecao`, this.getHttpOptions())
-      .pipe(
-        map(response => {
-          if (response.sucesso && response.dados) return response.dados;
-          throw new Error(response.mensagem || 'Falha ao obter seleção de modelos.');
-        }),
-        catchError(this.handleError)
-      );
-  }
 }

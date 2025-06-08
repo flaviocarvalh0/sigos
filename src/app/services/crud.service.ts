@@ -14,6 +14,10 @@ export abstract class CrudService<T extends { id?: ID }, ID> { // Adicionado T e
     return `${this.apiUrlBase}/${this.endpoint}`;
   }
 
+  protected get apiUrlSelecao(): string {
+    return `${this.apiUrlBase}/${this.endpoint}/selecao`;
+  }
+
   protected getHttpOptions(params?: HttpParams): { headers?: HttpHeaders, params?: HttpParams } {
     return {
       headers: new HttpHeaders({ 'Content-Type': 'application/json' }),
@@ -64,6 +68,28 @@ export abstract class CrudService<T extends { id?: ID }, ID> { // Adicionado T e
       }
     }
     return this.http.get<RespostaApi<T[]>>(`${this.fullApiUrl}`, this.getHttpOptions(params))
+      .pipe(
+        map(response => {
+          if (response.sucesso && response.dados) {
+            return response.dados;
+          }
+          console.error("Erro ao obter lista (resposta API):", response.mensagem, response.erros);
+          throw new Error(response.mensagem || 'Falha ao obter lista de itens.');
+        }),
+        catchError(this.handleError)
+      );
+  }
+
+   obterParaSelecao(queryParams?: Record<string, string | number | boolean>): Observable<T[]> {
+    let params = new HttpParams();
+    if (queryParams) {
+      for (const key in queryParams) {
+        if (queryParams.hasOwnProperty(key)) {
+          params = params.set(key, queryParams[key]);
+        }
+      }
+    }
+    return this.http.get<RespostaApi<T[]>>(`${this.apiUrlSelecao}`, this.getHttpOptions(params))
       .pipe(
         map(response => {
           if (response.sucesso && response.dados) {

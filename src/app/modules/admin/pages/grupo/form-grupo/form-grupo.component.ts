@@ -137,7 +137,12 @@ onSubmit(): void {
   abrirModalSelecaoUsuarios(): void {
     this.usuarioService.obterParaSelecao().subscribe({
       next: (res) => {
-        this.usuariosDisponiveis = res.filter(u => !this.usuariosVinculados.some(v => v.idUsuario === u.id));
+        this.usuariosDisponiveis = res
+          .filter(u => !this.usuariosVinculados.some(v => v.idUsuario === u.id && u.ativo == true))
+          .map(u => ({
+            id: u.id,
+            descricao: u.nome || u.nome || '', // ajuste conforme o campo correto em Usuario
+          }));
         const modal: any = document.getElementById('modalUsuarios');
         if (modal) {
           const bootstrapModal = new (window as any).bootstrap.Modal(modal);

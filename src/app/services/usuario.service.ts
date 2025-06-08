@@ -47,18 +47,6 @@ export class UsuarioService extends CrudService<Usuario, number> {
     return super.criar(usuarioData as Omit<Usuario, 'id'>); // Faz cast se necessário ou mapeia
   }
 
-  obterParaSelecao(): Observable<{ id: number, descricao: string }[]> {
-    return this.http.get<RespostaApi<{ id: number, descricao: string }[]>>(`${this.fullApiUrl}/selecao`, this.getHttpOptions())
-      .pipe(
-        map(response => {
-          if (response.sucesso && response.dados) return response.dados;
-          throw new Error(response.mensagem || 'Falha ao obter seleção de modelos.');
-        }),
-        catchError(this.handleError)
-      );
-  }
-
-
   atualizarUsuario(id: number, usuarioData: UsuarioAtualizacaoPayload): Observable<Usuario> {
     return this.http.put<RespostaApi<Usuario>>(`${this.fullApiUrl}/${id}`, usuarioData, this.getHttpOptions())
       .pipe(

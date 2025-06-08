@@ -17,8 +17,4 @@ export class PrazoGarantiaService extends CrudService<PrazoGarantia, number> {
   constructor(protected override http: HttpClient) {
     super(http);
   }
-
-  obterParaSelecao(): Observable<SelectItem[]> {
-    return this.http.get<SelectItem[]>(`${this.endpoint}/selecao`);
-  }
 }

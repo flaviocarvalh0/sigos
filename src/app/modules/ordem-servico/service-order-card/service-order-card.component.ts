@@ -23,13 +23,13 @@ import { Modelo } from '../../../Models/modelo.model';
         <div class="d-flex justify-content-between align-items-start">
           <div>
             <h3 class="h6 fw-bold mb-1">OS #{{ order.codigo }}</h3>
-            <span class="badge" [ngClass]="getStatusColor(order.status)">
-              {{ formatStatus(order.status) }}
+            <span class="badge" [ngClass]="getStatusColor(order.nomeEstado)">
+              {{ formatStatus(order.nomeEstado) }}
             </span>
           </div>
           <div class="text-end">
             <p class="h6 fw-bold text-primary mb-0">
-              R$ {{ order.valor_total.toFixed(2) }}
+              R$ {{ order.valorTotal }}
             </p>
           </div>
         </div>
@@ -41,7 +41,7 @@ import { Modelo } from '../../../Models/modelo.model';
         <div>
           <div class="d-flex align-items-center gap-2 text-muted small mb-2">
             <i class="bi bi-person"></i>
-            <span class="text-truncate">{{ getNomeClienteById(order.id_cliente) }}</span>
+            <span class="text-truncate">{{ order.nomeCliente}}</span>
           </div>
 
           <div class="d-flex align-items-center gap-2 text-muted small mb-2">
@@ -51,13 +51,13 @@ import { Modelo } from '../../../Models/modelo.model';
 
           <div class="d-flex align-items-center gap-2 text-muted small mb-3">
             <i class="bi bi-calendar"></i>
-            <span>{{ order.data_criacao | date : 'dd/MM/yyyy' }}</span>
+            <span>{{ order.dataCriacao | date : 'dd/MM/yyyy' }}</span>
           </div>
 
           <div class="mb-3">
             <p class="small text-muted mb-1">Problema:</p>
             <p class="small mb-0 text-break line-clamp-2">
-              {{ order.relato_do_problema }}
+              {{ order.descricaoProblema }}
             </p>
           </div>
         </div>

@@ -15,15 +15,4 @@ export class PecaService extends CrudService<Peca, number> {
   constructor(protected override http: HttpClient) {
     super(http);
   }
-
-  obterParaSelecao(): Observable<SelectItem[]> {
-    return this.http.get<RespostaApi<SelectItem[]>>(`${this.fullApiUrl}/selecao`, this.getHttpOptions())
-      .pipe(
-        map(response => {
-          if (response.sucesso && response.dados) return response.dados;
-          throw new Error(response.mensagem || 'Erro ao obter peças para seleção.');
-        }),
-        catchError(this.handleError)
-      );
-  }
 }

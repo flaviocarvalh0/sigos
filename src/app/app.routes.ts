@@ -39,6 +39,8 @@ import { FormCategoriaComponent } from './modules/categoria/pages/form-categoria
 import { AdminLayoutComponent } from './modules/admin/layout/admin-layout/admin-layout.component';
 import { ListGruposComponent } from './modules/admin/pages/grupo/list-grupo/list-grupo.component';
 import { FormGrupoComponent } from './modules/admin/pages/grupo/form-grupo/form-grupo.component';
+import { ListWorkflowComponent } from './modules/admin/pages/workflow/list-workflow/list-workflow.component';
+import { FormWorkflowComponent } from './modules/admin/pages/workflow/form-workflow/form-workflow.component';
 // Supondo que você criará este para a área admin:
 // import { ListGruposComponent } from './admin/pages/list-grupos/list-grupos.component';
 
@@ -88,6 +90,19 @@ export const routes: Routes = [
       {
         path: 'grupo/form/:id',
         component: FormGrupoComponent,
+      },
+        {
+        path: 'workflows',
+        component: ListWorkflowComponent,
+        // canActivate: [RoleGuard], // RoleGuard já está no pai, redundante aqui se a regra for a mesma
+      },
+      {
+        path: 'workflow/form',
+        component: FormWorkflowComponent,
+      },
+      {
+        path: 'workflow/form/:id',
+        component: FormWorkflowComponent,
       },
     ],
   },

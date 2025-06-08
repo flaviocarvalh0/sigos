@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Observable, of, throwError } from 'rxjs';
 import { delay } from 'rxjs/operators';
-import { OsServico } from '../Models/ordem-servico/os-servico.model'; // Ajuste o path
+import { OsServico } from '../../Models/ordem-servico/os-servico.model'; // Ajuste o path
 
 @Injectable({
   providedIn: 'root'
