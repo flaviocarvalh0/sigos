@@ -1,0 +1,79 @@
+<h5 class="text-primary">Adicionar Serviço</h5>
+<div class="card mb-3">
+  <div class="card-body">
+    <div class="row g-2 align-items-end">
+
+      <div class="col-12 col-md-4">
+        <label class="form-label">Serviço</label>
+        <ng-select
+          [(ngModel)]="novoServico.idServico"
+          (change)="aoSelecionarServico()"
+          [items]="servicosDisponiveis"
+          bindLabel="descricao"
+          bindValue="id"
+          placeholder="Selecione um serviço">
+        </ng-select>
+      </div>
+
+      <div class="col-12 col-md">
+        <label class="form-label">Descrição</label>
+        <input type="text" class="form-control" [(ngModel)]="novoServico.observacao" maxlength="100" />
+      </div>
+
+      <div class="col-6 col-sm-4 col-md-2">
+        <label class="form-label">Valor</label>
+        <input type="number" class="form-control" min="0" [(ngModel)]="novoServico.precoPraticado" />
+      </div>
+
+      <div class="col-6 col-sm-4 col-md-2">
+        <label class="form-label">Tempo (min)</label>
+        <input type="number" class="form-control" min="0"  [(ngModel)]="novoServico.tempoEstimadoMinutos" />
+      </div>
+
+      <div class="col-12 col-sm-4 col-md-auto">
+        <button class="btn btn-success w-100" (click)="salvarServico()">
+          <i class="bi bi-check-circle"></i> Adicionar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h5 class="text-primary">Serviços Adicionados</h5>
+<div *ngIf="servicosAdicionados.length === 0" class="alert alert-light text-center">
+  Nenhum serviço adicionado.
+</div>
+
+<div *ngIf="servicosAdicionados.length > 0" class="table-responsive">
+  <table class="table table-sm table-bordered">
+    <thead>
+      <tr>
+        <th>Serviço</th>
+        <th>Descrição</th>
+        <th>Tempo</th>
+        <th>Valor</th>
+        <th style="width: 50px;">Ações</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let s of servicosAdicionados">
+        <td>{{ getDescricaoServico(s) }}</td>
+        <td>{{ s.observacao }}</td>
+        <td>{{ s.tempoEstimadoMinutos }} min</td>
+        <td>{{ s.precoPraticado | currency:'BRL' }}</td>
+        <td class="text-center">
+          <button class="btn btn-sm btn-outline-danger" (click)="removerServico(s.id!)">
+            <i class="bi bi-trash"></i>
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="row mt-3">
+  <div class="col-md-4 offset-md-8">
+    <label class="form-label fw-bold">Total Serviços (R$)</label>
+    <input type="text" class="form-control" [value]="calcularTotal() | currency:'BRL'" readonly>
+  </div>
+</div>

@@ -1,0 +1,32 @@
+/* Garante que os elementos fiquem alinhados e sem quebra */
+.card-body .row > div {
+  display: flex;
+  flex-direction: column;
+}
+
+.card-body .row > div .form-control,
+.card-body .row > div ng-select {
+  flex-grow: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.btn.w-100 {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Deixa o botão de adicionar com tamanho fixo e responsivo */
+button.btn-success.w-100 {
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+button.btn-success.w-100 i {
+  margin-right: 6px;
+}

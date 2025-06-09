@@ -1,0 +1,100 @@
+<h5 class="text-primary">Adicionar {{ titulo }}</h5>
+
+<div class="card mb-3">
+  <div class="card-body">
+    <div class="row gx-2">
+      <ng-container *ngFor="let campo of campos">
+        <div [ngClass]="['col-12', 'col-md-' + (campo.largura || '3')]">
+          <label>{{ campo.label }}</label>
+
+          <!-- Campo SELECT -->
+          <ng-select *ngIf="campo.tipo === 'select'"
+            [(ngModel)]="novoItem[campo.propriedade]"
+            [items]="itensDisponiveis"
+            [bindLabel]="campo.bindLabel!"
+            [bindValue]="campo.bindValue!"
+            [placeholder]="campo.placeholder || 'Selecione...'"
+            [searchable]="true"
+            [clearable]="false"
+            (change)="atualizarCampo.emit({ campo: campo.propriedade, valor: novoItem[campo.propriedade] })"
+            [ngModelOptions]="{ standalone: true }"
+            class="w-100">
+          </ng-select>
+
+          <!-- Campo INPUT padrão -->
+          <input *ngIf="campo.tipo === 'input'"
+            class="form-control"
+            [readonly]="campo.readonly"
+            [(ngModel)]="novoItem[campo.propriedade]"
+            [ngModelOptions]="{ standalone: true }"
+            (ngModelChange)="atualizarCampo.emit({ campo: campo.propriedade, valor: $event })" />
+
+          <!-- Campo NUMÉRICO -->
+          <input *ngIf="campo.tipo === 'number'"
+            type="number"
+            class="form-control"
+            [readonly]="campo.readonly"
+            [(ngModel)]="novoItem[campo.propriedade]"
+            [ngModelOptions]="{ standalone: true }"
+            (ngModelChange)="atualizarCampo.emit({ campo: campo.propriedade, valor: $event })" />
+
+          <!-- Campo MOEDA -->
+          <input *ngIf="campo.propriedade === 'number'"
+            type="number"
+            class="form-control"
+            step="0.01"
+            [readonly]="campo.readonly"
+            [(ngModel)]="novoItem[campo.propriedade]"
+            [ngModelOptions]="{ standalone: true }"
+            (ngModelChange)="atualizarCampo.emit({ campo: campo.propriedade, valor: $event })" />
+        </div>
+      </ng-container>
+
+      <!-- Botão Adicionar -->
+      <div class="col-4 text-end mt-3">
+      <button class="btn btn-success" (click)="salvar.emit()">
+        <i class="bi bi-check-circle"></i> Adicionar
+      </button>
+    </div>
+
+    </div>
+  </div>
+</div>
+
+<h5 class="text-primary">{{ titulo }} Adicionados</h5>
+
+<div *ngIf="itensAdicionados.length === 0" class="alert alert-light text-center">
+  Nenhum(a) {{ titulo.toLowerCase() }} adicionado(a).
+</div>
+<div class="table-responsive">
+<table *ngIf="itensAdicionados.length > 0" class="table table-sm table-bordered">
+  <thead>
+    <tr>
+      <th>Descrição</th>
+      <th *ngFor="let campo of campos" [hidden]="campo.tipo === 'select' && campo.bindValue">
+        {{ campo.label }}
+      </th>
+      <th style="width: 50px;">Ações</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr *ngFor="let item of itensAdicionados">
+      <td>{{ descricaoItem(item) }}</td>
+      <td *ngFor="let campo of campos" [hidden]="campo.tipo === 'select' && campo.bindValue">
+      <ng-container *ngIf="campo.formato === 'moeda'; else normal">
+          {{ item[campo.propriedade] | currency:'BRL':'symbol-narrow':'1.2-2' }}
+        </ng-container>
+        <ng-template #normal>
+          {{ item[campo.propriedade] }}
+        </ng-template>
+      </td>
+
+      <td class="text-center">
+        <button class="btn btn-sm btn-outline-danger" (click)="remover.emit(item.id)">
+          <i class="bi bi-trash"></i>
+        </button>
+      </td>
+    </tr>
+  </tbody>
+</table>
+</div>

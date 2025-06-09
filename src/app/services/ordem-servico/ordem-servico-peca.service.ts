@@ -9,8 +9,8 @@ import { environment } from '../../environments/environment';
   providedIn: 'root'
 })
 export class OrdemServicoPecaService extends CrudService<OrdemServicoPeca, number> {
-  protected override readonly apiUrlBase = 'https://localhost:7119/api'
-  protected override readonly endpoint = ''; // Definido dinamicamente
+  protected override readonly apiUrlBase = environment.apiUrl;
+  protected override readonly endpoint = '';
 
   constructor(protected override http: HttpClient) {
     super(http);

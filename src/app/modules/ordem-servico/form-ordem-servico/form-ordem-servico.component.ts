@@ -47,7 +47,6 @@ import {
 } from '../../../services/servico.service';
 import { PecaService as CatalogoPecaService } from '../../../services/peca.service';
 
-import { OsServico } from '../../../Models/ordem-servico/os-servico.model';
 import {
   OrdemServico,
   OrdemServicoAtualizacaoPayload,
@@ -59,7 +58,6 @@ import { ModeloService } from '../../../services/modelo.service';
 import { FormClienteComponent } from '../../cliente/pages/form-cliente/form-cliente.component';
 import { FormAparelhoComponent } from '../../aparelho/pages/form-aparelho/form-aparelho.component';
 import { OrdemServicoService } from '../../../services/ordem-servico/ordem-servico.service';
-import { OsServicoService } from '../../../services/ordem-servico/os-servico.service';
 import { OsAnexoService } from '../../../services/ordem-servico/os-anexo.service';
 import { ToastService } from '../../../services/toast.service';
 import { UsuarioService } from '../../../services/usuario.service';
@@ -72,6 +70,9 @@ import {
 } from '../../../Models/ordem-servico/ordem-servico-peca.model';
 import { OrdemServicoPecaService } from '../../../services/ordem-servico/ordem-servico-peca.service';
 import { PecasOrdemServicoComponent } from '../pecas/pecas-ordem-servico.component';
+import { OrdemServicoServicoService } from '../../../services/ordem-servico/ordem-servico-servico.service';
+import { OrdemServicoServico } from '../../../Models/ordem-servico/ordem-servico-servico';
+import { ServicosOrdemServicoComponent } from '../servicos-ordem-servico/servicos-ordem-servico.component';
 
 declare const bootstrap: any;
 
@@ -88,6 +89,7 @@ declare const bootstrap: any;
     FormAparelhoComponent,
     FormsModule,
     PecasOrdemServicoComponent,
+    ServicosOrdemServicoComponent
   ],
 })
 export class FormOrdemServicoComponent implements OnInit, OnDestroy {
@@ -105,7 +107,7 @@ export class FormOrdemServicoComponent implements OnInit, OnDestroy {
   pecasAdicionadas: OrdemServicoPeca[] = [];
   prazosGarantia: { id: number; descricao: string; prazoEmDias?: number }[] =
     [];
-  servicosDisponiveis: { id: number; descricao: string; valor?: number }[] = [];
+  servicosDisponiveis: { id: number; descricao: string; valor?: number; tempo?: number }[] = [];
   pecasDisponiveis: { id: number; descricao: string; precoVenda?: number }[] =
     [];
   marcas: { id: number; descricao: string }[] = [];
@@ -150,7 +152,7 @@ export class FormOrdemServicoComponent implements OnInit, OnDestroy {
     private prazoGarantiaService: PrazoGarantiaService,
     private catalogoServicoService: CatalogoServicoService,
     private catalogoPecaService: CatalogoPecaService,
-    private osServicoService: OsServicoService,
+    private ordemServicoServicoService: OrdemServicoServicoService,
     private ordemServicoPecaService: OrdemServicoPecaService,
     private osAnexoService: OsAnexoService,
     private marcaService: MarcaService,
@@ -311,9 +313,6 @@ get osPecas(): FormArray {
       valor_total_pecas: [{ value: 0, disabled: true }],
       valor_total_orcamento: [{ value: 0, disabled: true }],
 
-      // FormArrays
-      os_servicos: this.fb.array([]),
-      os_pecas: this.fb.array([]),
       os_anexos: this.fb.array([]),
     });
   }
@@ -371,12 +370,13 @@ get osPecas(): FormArray {
         tap((data) => (this.prazosGarantia = data))
       ),
       // Serviço: Mapeia nome para descricao
-      this.servicoService.obterParaSelecao().pipe(
+      this.servicoService.obterTodos().pipe(
         map((data) =>
           data.map((item) => ({
             id: item.id,
             descricao: item.nome,
-            valor: item.valor,
+            valor: item.precoPadrao ?? undefined,
+            tempo: item.tempoEstimadoMinutos ?? undefined
           }))
         ),
         tap((data) => (this.servicosDisponiveis = data))
@@ -496,7 +496,7 @@ get osPecas(): FormArray {
           id_status_os: ordem?.idEstado,
           defeito_relatado_cliente: ordem?.descricaoProblema,
           defeito_constatado_tecnico: ordem?.diagnosticoTecnico,
-          valor_orcamento_total: ordem?.valorTotal,
+          valor_orcamento_total: ordem?.valorTotal?.toFixed(2) ?? '0.00',
 
           // Formata as datas válidas e mantém as nulas
           data_entrada: ordem?.dataCriacao
@@ -647,10 +647,9 @@ get osPecas(): FormArray {
             pagamento_realizado: os.pagamentoRealizado ?? false,
             id_atendente: os.idAtendente,
             id_tecnico: os.idTecnico,
-              // ADICIONE/CORRIJA ESTES CAMPOS
-          valor_total_servicos: os.valorServicos,
-          valor_total_pecas: os.valorPecas,
-          valor_total_orcamento: os.valorTotal
+            valor_total_servicos: os.valorServicos,
+            valor_total_pecas: os.valorPecas,
+            valor_total_orcamento: (os.valorTotal ?? 0).toFixed(2)
           });
 
           if (os.idCliente) this.onClienteChange(os.idCliente);
@@ -661,31 +660,17 @@ get osPecas(): FormArray {
             return throwError(() => new Error('ID da OS principal inválido.'));
           return forkJoin({
             osPrincipal: of(os),
-            loadedOsServicos: this.osServicoService
-              .getServicosByOsId(this.ordemServicoId)
-              .pipe(catchError(() => of([] as OsServico[]))),
+            loadedOsServicos: this.ordemServicoServicoService
+              .obterPorOrdemServico(this.ordemServicoId)
+              .pipe(catchError(() => of([] as OrdemServicoServico[]))),
           });
         })
       )
       .subscribe({
         next: ({
           osPrincipal,
-          loadedOsServicos,
           //loadedOsAnexos,
         }) => {
-          this.osServicos.clear();
-          this.idsServicosParaDeletar = [];
-          loadedOsServicos.forEach((s) =>
-            this.addServico(
-              {
-                id: s.id,
-                id_servico: s.id_servico,
-                quantidade: s.quantidade,
-                valor_unitario: s.valor_unitario,
-              },
-              false
-            ))
-
           this.osAnexos.clear();
           this.idsAnexosParaDeletar = [];
           // loadedOsAnexos.forEach((a) =>
@@ -707,7 +692,7 @@ get osPecas(): FormArray {
               300
             );
           }
-         
+
           this.form.markAsPristine();
           this.isLoading = false;
         },
@@ -724,19 +709,15 @@ get osPecas(): FormArray {
     return this.form.get('os_servicos') as FormArray;
   }
 
-  addServico(servicoData?: OsServico, markAsDirty = true): void {
+  addServico(servicoData?: OrdemServicoServico, markAsDirty = true): void {
     const servicoForm = this.fb.group({
       id: [servicoData?.id || null],
       id_servico_catalogo: [
-        servicoData?.id_servico || null,
+        servicoData?.idServico || null,
         Validators.required,
       ],
-      quantidade: [
-        servicoData?.quantidade || 1,
-        [Validators.required, Validators.min(1)],
-      ],
       valor_unitario: [
-        servicoData?.valor_unitario || 0,
+        servicoData?.precoPraticado || 0,
         [Validators.required, Validators.min(0)],
       ],
       valor_total_calculado: [{ value: 0, disabled: true }],
@@ -1094,34 +1075,6 @@ recalcularTotal(form: FormGroup): void {
   ): Observable<any[]> {
     const operacoesItens: Observable<any>[] = [];
 
-    // Serviços
-    this.osServicos.controls.forEach((ctrl) => {
-      const formGroup = ctrl as FormGroup;
-      if (isCriacaoTotal || !formGroup.value.id || formGroup.dirty) {
-        const servicoItem: OsServico = {
-          id: formGroup.value.id || undefined,
-          id_os: osId,
-          id_servico: formGroup.value.id_servico_catalogo, // FK para o catálogo
-          quantidade: formGroup.value.quantidade,
-          valor_unitario: formGroup.value.valor_unitario,
-          valor_total:
-            (formGroup.value.quantidade || 0) *
-            (formGroup.value.valor_unitario || 0),
-        };
-        if (!servicoItem.id)
-          operacoesItens.push(
-            this.osServicoService.createOsServico(servicoItem)
-          );
-        else if (formGroup.dirty)
-          operacoesItens.push(
-            this.osServicoService.updateOsServico(servicoItem.id!, servicoItem)
-          );
-      }
-    });
-    this.idsServicosParaDeletar.forEach((id) =>
-      operacoesItens.push(this.osServicoService.deleteOsServico(id))
-    );
-
     // Anexos
     this.osAnexos.controls.forEach((ctrl) => {
       const formGroup = ctrl as FormGroup;
@@ -1409,4 +1362,19 @@ recalcularTotal(form: FormGroup): void {
       }
     }, 0);
   }
+
+onOrdemAtualizada(ordem: OrdemServico): void {
+  if (ordem) {
+    console.log("entrou aqui: " + ordem);
+      this.form.patchValue({
+      valor_pecas: ordem.valorPecas?.toFixed(2) ?? 0,
+      valor_servicos: ordem.valorServicos?.toFixed(2) ?? 0,
+      valor_total: ordem.valorTotal?.toFixed(2),
+      data_ultima_modificacao: ordem.dataModificacao
+  });
+
+    this.dataUltimaModificacaoOriginal = ordem.dataModificacao;
+  }
+}
+
 }

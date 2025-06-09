@@ -290,65 +290,11 @@
           </div>
 
           <div class="tab-pane fade" id="servicos" role="tabpanel" aria-labelledby="servicos-tab">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-              <h5 class="text-primary">Serviços Adicionados</h5>
-              <button type="button" class="btn btn-sm btn-outline-primary" (click)="addServico()">
-                <i class="bi bi-plus me-1"></i> Adicionar Serviço
-              </button>
-            </div>
-            <div formArrayName="os_servicos">
-              <div *ngIf="osServicos.controls.length === 0" class="alert alert-light text-center">Nenhum serviço
-                adicionado.</div>
-              <div *ngFor="let servicoCtrl of osServicos.controls; let i = index" [formGroupName]="i" class="card mb-3">
-                <div class="card-body">
-                  <div class="row gx-2 align-items-end">
-                    <div class="col-md-4">
-                      <label for="id_servico_catalogo_{{i}}" class="form-label">Serviço <span
-                          class="text-danger">*</span></label>
-                      <select id="id_servico_catalogo_{{i}}" formControlName="id_servico_catalogo"
-                        class="form-select form-select-sm"
-                        [ngClass]="{ 'is-invalid': isFormArrayControlInvalid('os_servicos', i, 'id_servico_catalogo') }">
-                        <option [ngValue]="null" disabled>Selecione...</option>
-                        <option *ngFor="let catServico of servicosDisponiveis" [ngValue]="catServico.id">{{
-                          catServico.descricao }}</option>
-                      </select>
-                    </div>
-                    <div class="col-md-2">
-                      <label for="quantidade_servico_{{i}}" class="form-label">Qtd. <span
-                          class="text-danger">*</span></label>
-                      <input type="number" id="quantidade_servico_{{i}}" formControlName="quantidade"
-                        class="form-control form-control-sm"
-                        [ngClass]="{ 'is-invalid': isFormArrayControlInvalid('os_servicos', i, 'quantidade') }">
-                    </div>
-                    <div class="col-md-2">
-                      <label for="valor_unitario_servico_{{i}}" class="form-label">Val. Unit. <span
-                          class="text-danger">*</span></label>
-                      <input type="number" id="valor_unitario_servico_{{i}}" formControlName="valor_unitario"
-                        class="form-control form-control-sm"
-                        [ngClass]="{ 'is-invalid': isFormArrayControlInvalid('os_servicos', i, 'valor_unitario') }">
-                    </div>
-                    <div class="col-md-2">
-                      <label for="valor_total_servico_item_{{i}}" class="form-label">Subtotal</label>
-                      <input type="number" id="valor_total_servico_item_{{i}}" formControlName="valor_total_calculado"
-                        class="form-control form-control-sm" readonly>
-                    </div>
-                    <div class="col-md-2 text-end">
-                      <button type="button" class="btn btn-sm btn-outline-danger" (click)="removeServico(i)"
-                        title="Remover Serviço">
-                        <i class="bi bi-trash"></i>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="row mt-3">
-              <div class="col-md-4 offset-md-8">
-                <label for="valor_total_servicos" class="form-label fw-bold">Total Serviços (R$)</label>
-                <input type="number" id="valor_total_servicos" formControlName="valor_total_servicos"
-                  class="form-control" readonly>
-              </div>
-            </div>
+            <app-servicos-ordem-servico
+              [ordemServicoId]="ordemServicoId!"
+              [servicosDisponiveis]="servicosDisponiveis"
+              (osAtualizada)="onOrdemAtualizada($event)">
+            </app-servicos-ordem-servico>
           </div>
 
         <div class="tab-pane fade" id="pecas" role="tabpanel" aria-labelledby="pecas-tab">
