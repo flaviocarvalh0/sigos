@@ -7,6 +7,8 @@ import { OrdemServicoServicoService } from '../../../services/ordem-servico/orde
 import { ToastService } from '../../../services/toast.service';
 import { OrdemServicoServico, OrdemServicoServicoCriacaoPayload } from '../../../Models/ordem-servico/ordem-servico-servico';
 import { OrdemServico } from '../../../Models/ordem-servico/ordem-servico.model';
+import { RespostaApi } from '../../../Models/reposta-api.model';
+import { OrdemServicoServiceResponse } from '../../../Models/ordem-servico/ordem-servico-service-response';
 
 
 
@@ -64,30 +66,34 @@ export class ServicosOrdemServicoComponent implements OnInit {
     this.novoServico.idOrdemServico = this.ordemServicoId;
 
     console.log(this.novoServico);
-    this.servicoService.criarServico(this.ordemServicoId, this.novoServico).subscribe({
-      next: (res) => {
+    this.servicoService
+      .criarServico(this.ordemServicoId, this.novoServico)
+      .subscribe({
+        next: (res: RespostaApi<OrdemServicoServiceResponse>) => {
 
-        this.toast.success('Serviço adicionado.');
-        console.log(res.dados.ordemServicoAtualizada);
-        this.osAtualizada.emit(res.dados.ordemServicoAtualizada);
-        this.resetarFormulario();
-        this.carregarServicos();
-      },
-      error: (err) => this.toast.error(err.message)
-    });
+          this.toast.success('Serviço adicionado.');
+          console.log(res.dados.ordemServicoAtualizada);
+          this.osAtualizada.emit(res.dados.ordemServicoAtualizada);
+          this.resetarFormulario();
+          this.carregarServicos();
+        },
+        error: (err) => this.toast.error(err.message),
+      });
   }
 
-   removerServico(id: number): void {
-    this.servicoOsService.removerServico(this.ordemServicoId, id).subscribe({
-      next: (resposta) => {
-        this.toast.success('Serviço removido com sucesso.');
-        // Emite a OS atualizada para o componente pai
-        this.osAtualizada.emit(resposta.ordemServicoAtualizada);
-        this.resetarFormulario();
-        this.carregarServicos(); // Recarrega a lista
-      },
-      error: (err) => this.toast.error(err.message || 'Erro ao remover serviço'),
-    });
+  removerServico(id: number): void {
+    this.servicoOsService
+      .removerServico(this.ordemServicoId, id)
+      .subscribe({
+        next: (resposta: RespostaApi<OrdemServicoServiceResponse>) => {
+          this.toast.success('Serviço removido com sucesso.');
+          this.osAtualizada.emit(resposta.dados.ordemServicoAtualizada);
+          this.resetarFormulario();
+          this.carregarServicos();
+        },
+        error: (err) =>
+          this.toast.error(err.message || 'Erro ao remover serviço'),
+      });
   }
 
   carregarServicos(): void {

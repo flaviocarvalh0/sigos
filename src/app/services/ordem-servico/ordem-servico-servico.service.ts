@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { RespostaApi } from '../../Models/reposta-api.model';
 import { OrdemServicoServico, OrdemServicoServicoAtualizacaoPayload, OrdemServicoServicoCriacaoPayload } from '../../Models/ordem-servico/ordem-servico-servico';
+import { OrdemServicoServiceResponse } from '../../Models/ordem-servico/ordem-servico-service-response';
 import { CrudService } from '../crud.service';
 
 @Injectable({
@@ -21,15 +22,15 @@ export class OrdemServicoServicoService extends CrudService<OrdemServicoServico,
     return this.http.get<RespostaApi<OrdemServicoServico[]>>(`${this.apiUrlBase}/ordens-servico/${ordemServicoId}/servicos`);
   }
 
-  criarServico(ordemServicoId: number, payload: OrdemServicoServicoCriacaoPayload): Observable<RespostaApi<any>> {
-    return this.http.post<RespostaApi<any>>(`${this.apiUrlBase}/ordens-servico/${ordemServicoId}/servicos`, payload);
+  criarServico(ordemServicoId: number, payload: OrdemServicoServicoCriacaoPayload): Observable<RespostaApi<OrdemServicoServiceResponse>> {
+    return this.http.post<RespostaApi<OrdemServicoServiceResponse>>(`${this.apiUrlBase}/ordens-servico/${ordemServicoId}/servicos`, payload);
   }
 
-  atualizarServico(id: number, payload: OrdemServicoServicoAtualizacaoPayload): Observable<RespostaApi<any>> {
-    return this.http.put<RespostaApi<any>>(`${this.apiUrlBase}/ordens-servico/${payload.idOrdemServico}/servicos/${id}`, payload);
+  atualizarServico(id: number, payload: OrdemServicoServicoAtualizacaoPayload): Observable<RespostaApi<OrdemServicoServiceResponse>> {
+    return this.http.put<RespostaApi<OrdemServicoServiceResponse>>(`${this.apiUrlBase}/ordens-servico/${payload.idOrdemServico}/servicos/${id}`, payload);
   }
 
-  removerServico(ordemServicoId: number, id: number): Observable<any> {
-    return this.http.delete<any>(`${this.apiUrlBase}/ordens-servico/${ordemServicoId}/servicos/${id}`);
+  removerServico(ordemServicoId: number, id: number): Observable<RespostaApi<OrdemServicoServiceResponse>> {
+    return this.http.delete<RespostaApi<OrdemServicoServiceResponse>>(`${this.apiUrlBase}/ordens-servico/${ordemServicoId}/servicos/${id}`);
   }
 }

@@ -16,6 +16,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule, NgSelectOption } from '@angular/forms';
 import { OrdemServico } from '../../../Models/ordem-servico/ordem-servico.model';
 import { NgSelectModule } from '@ng-select/ng-select';
+import { RespostaApi } from '../../../Models/reposta-api.model';
+import { OrdemServicoServiceResponse } from '../../../Models/ordem-servico/ordem-servico-service-response';
 
 @Component({
   selector: 'app-pecas-ordem-servico',
@@ -63,7 +65,7 @@ export class PecasOrdemServicoComponent implements OnInit {
   this.novaPeca.valorTotal = this.novaPeca.quantidade * this.novaPeca.valorUnitario;
   this.novaPeca.idOrdemServico = this.ordemServicoId;
   this.pecaService.criarPeca(this.ordemServicoId, this.novaPeca).subscribe({
-    next: (resposta) => {
+    next: (resposta: OrdemServicoServiceResponse) => {
       this.toast.success('Peça adicionada.');
       this.ordemServico = resposta.ordemServicoAtualizada; // <- IMPORTANTE
       this.osAtualizada.emit(resposta.ordemServicoAtualizada);
@@ -77,7 +79,7 @@ export class PecasOrdemServicoComponent implements OnInit {
 
   removerPeca(id: number): void {
     this.pecaService.removerPeca(this.ordemServicoId, id).subscribe({
-      next: (resposta) => {
+      next: (resposta: OrdemServicoServiceResponse) => {
         this.toast.success('Peça removida.');
         this.osAtualizada.emit(resposta.ordemServicoAtualizada);
         this.carregarPecas();
