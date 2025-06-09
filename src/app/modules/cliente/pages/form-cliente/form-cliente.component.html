@@ -58,7 +58,7 @@
             <h5 class="mb-3 mt-3 text-primary border-bottom pb-2">Contato</h5>
             <div class="row">
               <div class="col-md-4 mb-3">
-                <label for="celular" class="form-label">Celular <span class="text-danger">*</span></label>
+                <label for="celular" class="form-label">Celular</label>
                 <input id="celular" type="text" class="form-control" formControlName="celular"
                   placeholder="(00) 00000-0000" mask="(00) 00000-0000"
                   [ngClass]="{'is-invalid': isInvalidControl('celular')}" />
@@ -67,7 +67,7 @@
                 </div>
               </div>
               <div class="col-md-4 mb-3">
-                <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
+                <label for="email" class="form-label">Email</label>
                 <input id="email" type="email" class="form-control" formControlName="email"
                   placeholder="email@exemplo.com" [ngClass]="{'is-invalid': isInvalidControl('email')}" />
                 <div *ngIf="isInvalidControl('email')" class="invalid-feedback">
@@ -76,7 +76,7 @@
                 </div>
               </div>
               <div class="col-md-4 mb-3">
-                <label for="telefone" class="form-label">Telefone Fixo <span class="text-danger">*</span></label>
+                <label for="telefone" class="form-label">Telefone Fixo</label>
                 <input id="telefone" type="text" class="form-control" formControlName="telefone"
                   placeholder="(00) 0000-0000" mask="(00) 0000-0000"
                   [ngClass]="{'is-invalid': isInvalidControl('telefone')}" />
@@ -102,28 +102,28 @@
 
               <div class="col-md-6 mb-3">
                 <div *ngIf="form.get('tipoPessoa')?.value === 'Física'">
-                  <label for="cpf" class="form-label">CPF <span class="text-danger">*</span></label>
+                  <label for="cpf" class="form-label">CPF</label>
                   <input id="cpf" type="text" class="form-control" formControlName="cpf" placeholder="000.000.000-00"
                     mask="000.000.000-00" [ngClass]="{'is-invalid': isInvalidControl('cpf')}" />
-                  <div *ngIf="isInvalidControl('cpf')" class="invalid-feedback">
+                  <!-- <div *ngIf="isInvalidControl('cpf')" class="invalid-feedback">
                     <span *ngIf="getControlErrors('cpf')?.['required']">CPF é obrigatório.</span>
                     <span *ngIf="getControlErrors('cpf')?.['cpfInvalid']">
                       {{ getControlErrors('cpf')?.['message'] || 'CPF inválido.' }}
                     </span>
-                  </div>
+                  </div> -->
                 </div>
 
                 <div *ngIf="form.get('tipoPessoa')?.value === 'Jurídica'">
-                  <label for="cnpj" class="form-label">CNPJ <span class="text-danger">*</span></label>
+                  <label for="cnpj" class="form-label">CNPJ</label>
                   <input id="cnpj" type="text" class="form-control" formControlName="cnpj"
                     placeholder="00.000.000/0000-00" mask="00.000.000/0000-00"
                     [ngClass]="{'is-invalid': isInvalidControl('cnpj')}" />
-                  <div *ngIf="isInvalidControl('cnpj')" class="invalid-feedback">
+                  <!-- <div *ngIf="isInvalidControl('cnpj')" class="invalid-feedback">
                     <span *ngIf="getControlErrors('cnpj')?.['required']">CNPJ é obrigatório.</span>
                     <span *ngIf="getControlErrors('cnpj')?.['cnpjInvalid']">
                       {{ getControlErrors('cnpj')?.['message'] || 'CNPJ inválido.' }}
                     </span>
-                  </div>
+                  </div> -->
                 </div>
               </div>
             </div>
@@ -273,9 +273,9 @@
                 </thead>
                 <tbody>
                   <tr *ngFor="let aparelho of aparelhos">
-                    <td></td>
-                    <td></td>
-                    <td></td>
+                    <td>{{ aparelho.nomeMarca }}</td>
+                    <td>{{ aparelho.nomeModelo }}</td>
+                    <td>{{ aparelho.imei1 }}</td>
                     <td>
                       <button class="btn btn-sm btn-outline-primary me-1" title="Editar Aparelho"
                         (click)="editarAparelho(aparelho.id!)">

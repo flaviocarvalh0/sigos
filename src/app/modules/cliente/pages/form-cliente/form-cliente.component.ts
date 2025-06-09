@@ -199,14 +199,14 @@ export class FormClienteComponent implements OnInit, OnDestroy, AfterViewInit {
     }
 
     if (tipoPessoa === 'Física') {
-      cpfControl.setValidators([Validators.required, cpfValidator()]);
+      cpfControl.setValidators([ cpfValidator()]);
       cpfControl.enable({ emitEvent: false });
       cnpjControl.setValidators([cnpjValidator()]);
       cnpjControl.disable({ emitEvent: false });
       if (limparCamposCondicionais)
         cnpjControl.setValue('', { emitEvent: false }); // Limpa o campo desabilitado se a flag estiver ativa
     } else if (tipoPessoa === 'Jurídica') {
-      cnpjControl.setValidators([Validators.required, cnpjValidator()]);
+      cnpjControl.setValidators([ cnpjValidator()]);
       cnpjControl.enable({ emitEvent: false });
       cpfControl.setValidators([cpfValidator()]);
       cpfControl.disable({ emitEvent: false });
@@ -234,17 +234,24 @@ export class FormClienteComponent implements OnInit, OnDestroy, AfterViewInit {
 
   initForm(cliente?: Cliente): void {
     this.form = this.fb.group({
+      // DADOS PESSOAIS
       nomeCompleto: [
         cliente?.nomeCompleto || '',
-        [Validators.required, Validators.minLength(3)],
+        [Validators.required, Validators.minLength(3)], // <-- MANTIDO OBRIGATÓRIO
       ],
       apelido: [cliente?.apelido || ''],
-      tipoPessoa: [cliente?.tipoPessoa || 'Física', Validators.required],
-      cpf: [cliente?.cpf || '', [cpfValidator()]],
-      cnpj: [cliente?.cnpj || '', [cnpjValidator()]],
-      celular: [cliente?.celular || '', Validators.required],
-      email: [cliente?.email || '', [Validators.required, Validators.email]],
-      telefone: [cliente?.telefone || ''], // Telefone Fixo agora é obrigatório
+
+      // DOCUMENTAÇÃO
+      tipoPessoa: [cliente?.tipoPessoa || 'Física', Validators.required], // <-- MANTIDO OBRIGATÓRIO
+      cpf: [cliente?.cpf || '', [cpfValidator()]], // Validador de formato mantido, mas não é mais 'required'
+      cnpj: [cliente?.cnpj || '', [cnpjValidator()]], // Validador de formato mantido, mas não é mais 'required'
+
+      // CONTATO
+      celular: [cliente?.celular || null],
+      email: [cliente?.email || null, [Validators.email]], // Validador de formato de email mantido, mas não é mais 'required'
+      telefone: [cliente?.telefone || null],
+
+      // ENDEREÇO
       cep: [cliente?.cep || ''],
       logradouro: [cliente?.logradouro || ''],
       numero: [cliente?.numero || ''],
@@ -253,8 +260,9 @@ export class FormClienteComponent implements OnInit, OnDestroy, AfterViewInit {
       cidade: [cliente?.cidade || ''],
       uf: [cliente?.uf || ''],
       pais: [cliente?.pais || 'Brasil'],
+
+      // CONFIGURAÇÕES
       ativo: [cliente ? (cliente as any).ativo ?? true : true],
-      // dataModificacao não precisa estar no form, mas é lido de 'cliente' e armazenado em this.dataModificacaoOriginal
     });
 
     // O valueChanges é adicionado APÓS o form ser criado.
@@ -317,6 +325,11 @@ export class FormClienteComponent implements OnInit, OnDestroy, AfterViewInit {
     ) {
       cnpjParaSalvar = String(clienteDataFromForm.cnpj).replace(/\D/g, '');
     }
+    const formValue = this.form.getRawValue();
+
+    const emailParaEnviar = formValue.email && formValue.email.trim() !== '' ? formValue.email : null;
+    const celularParaEnviar = formValue.celular && formValue.celular.trim() !== '' ? formValue.celular : null;
+    const telefoneParaEnviar = formValue.telefone && formValue.telefone.trim() !== '' ? formValue.telefone : null;
 
     if (this.isEditando && this.clienteId) {
       this.isLoading = true;
@@ -355,9 +368,9 @@ export class FormClienteComponent implements OnInit, OnDestroy, AfterViewInit {
               id: this.clienteId!,
               nomeCompleto: clienteDataFromForm.nomeCompleto,
               apelido: clienteDataFromForm.apelido,
-              telefone: telefoneParaSalvar, // Obrigatório
-              celular: clienteDataFromForm.celular,
-              email: clienteDataFromForm.email,
+              telefone: telefoneParaEnviar, // Obrigatório
+              celular: celularParaEnviar,
+              email: emailParaEnviar,
               tipoPessoa: clienteDataFromForm.tipoPessoa,
               cpf: cpfParaSalvar,
               cnpj: cnpjParaSalvar,
@@ -369,6 +382,7 @@ export class FormClienteComponent implements OnInit, OnDestroy, AfterViewInit {
               bairro: clienteDataFromForm.bairro,
               logradouro: clienteDataFromForm.logradouro,
               numero: clienteDataFromForm.numero,
+              ativo: clienteDataFromForm.ativo,
               dataUltimaModificacao: this.dataModificacaoOriginal, // Envia a data que o form carregou
             };
             return this.clienteService.atualizarCliente(
@@ -436,11 +450,9 @@ export class FormClienteComponent implements OnInit, OnDestroy, AfterViewInit {
 
               // Re-patch do CPF/CNPJ para garantir, se necessário (após o setup ser chamado se o tipo mudou)
               if (clienteAtualizado.tipoPessoa === 'Física') {
-                this.form
-                  .get('cpf')
-                  ?.patchValue(clienteAtualizado.cpf || '', {
-                    emitEvent: false,
-                  });
+                this.form.get('cpf')?.patchValue(clienteAtualizado.cpf || '', {
+                  emitEvent: false,
+                });
               } else if (clienteAtualizado.tipoPessoa === 'Jurídica') {
                 this.form
                   .get('cnpj')
@@ -487,12 +499,13 @@ export class FormClienteComponent implements OnInit, OnDestroy, AfterViewInit {
       // MODO CRIAÇÃO (NOVO CLIENTE)
       this.isLoading = true; // Ativa o spinner para a operação de criação
       const payload: ClienteCriacaoPayload = {
-        // ... (payload como estava)
+        
+        
         nomeCompleto: clienteDataFromForm.nomeCompleto,
         apelido: clienteDataFromForm.apelido,
-        telefone: telefoneParaSalvar,
-        celular: clienteDataFromForm.celular,
-        email: clienteDataFromForm.email,
+        telefone: telefoneParaSalvar !== null && telefoneParaSalvar.trim() !== '' ? telefoneParaSalvar : null,
+        celular: clienteDataFromForm.celular !== null && clienteDataFromForm.celular.trim() !== '' ?  clienteDataFromForm.celular : null,
+        email: clienteDataFromForm.email !== null && clienteDataFromForm.email.trim() !== '' ? clienteDataFromForm.email : null,
         tipoPessoa: clienteDataFromForm.tipoPessoa,
         cpf: cpfParaSalvar,
         cnpj: cnpjParaSalvar,
@@ -504,7 +517,10 @@ export class FormClienteComponent implements OnInit, OnDestroy, AfterViewInit {
         bairro: clienteDataFromForm.bairro,
         logradouro: clienteDataFromForm.logradouro,
         numero: clienteDataFromForm.numero,
+        ativo: clienteDataFromForm.ativo,
       };
+
+      console.log(payload);
 
       const addSub = this.clienteService.criarCliente(payload).subscribe({
         next: (clienteCriado) => {
@@ -786,6 +802,7 @@ export class FormClienteComponent implements OnInit, OnDestroy, AfterViewInit {
       .subscribe({
         next: (aparelhos) => {
           this.aparelhos = aparelhos;
+          console.log(aparelhos);
         },
         error: (err) => {
           console.error('Erro ao carregar aparelhos do cliente:', err);

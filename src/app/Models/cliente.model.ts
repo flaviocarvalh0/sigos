@@ -46,6 +46,7 @@ export interface ClienteCriacaoPayload {
   bairro?: string | null;
   logradouro?: string | null;
   numero?: string | null;
+  ativo?: boolean;
   // O seu DTO PessoaViewModel não tem 'ativo'. O Cliente.cs não tem 'ativo'.
   // Mas o FormClienteComponent.ts tem 'ativo'. Se for necessário, adicione ao DTO/Modelo backend.
   // ativo?: boolean; // Se for necessário
@@ -70,7 +71,6 @@ export interface ClienteAtualizacaoPayload {
   bairro?: string | null;
   logradouro?: string | null;
   numero?: string | null;
-  // O DTO ClienteAtualizacaoDto não tem 'ativo'. Se for necessário, adicione.
-  // ativo?: boolean;
+  ativo?: boolean;
   dataUltimaModificacao?:  Date; // Conforme ClienteAtualizacaoDto
 }
