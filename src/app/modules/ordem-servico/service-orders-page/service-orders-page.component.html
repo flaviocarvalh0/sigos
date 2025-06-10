@@ -1,22 +1,23 @@
 <div class="min-vh-100 d-flex bg-light">
   <main class="flex-grow-1 d-flex flex-column overflow-hidden">
-    <!-- Header -->
     <header class="bg-white border-bottom px-3 py-2 sticky-top">
       <div class="d-flex align-items-center justify-content-between">
         <div>
           <h1 class="h5 mb-0 fw-bold">Ordens de Serviço</h1>
+          <p class="text-muted small mb-0">Visão geral e acesso rápido</p>
         </div>
         <button class="btn btn-primary btn-sm" (click)="novaOrdemServico()">
-          <i class="bi bi-plus d-none d-sm-inline me-1"></i>
-          <span class="d-none d-sm-inline">Nova OS</span>
-          <i class="bi bi-plus d-sm-none"></i>
+          <i class="bi bi-plus-lg me-1"></i>
+          Nova OS
         </button>
       </div>
     </header>
 
-    <!-- Content -->
     <div class="flex-grow-1 overflow-auto p-3">
-      <!-- Metrics Grid -->
+      <div class="row g-3 mb-3">
+        </div>
+
+         <!-- Metrics Grid -->
       <div class="row g-2 mb-3">
         <div class="col-6 col-md-4">
           <app-metric-card
@@ -53,43 +54,48 @@
         </div>
       </div>
 
-      <!-- Recent Orders Section -->
+      <div class="mb-3">
+        <button class="btn btn-outline-secondary w-100" type="button" data-bs-toggle="collapse" data-bs-target="#filterCollapse" aria-expanded="false" aria-controls="filterCollapse">
+          <i class="bi bi-funnel me-2"></i>
+          Mostrar/Ocultar Filtros
+        </button>
+        <div class="collapse" id="filterCollapse">
+          <div class="card card-body mt-2">
+            <app-order-filters (filterChange)="handleFilterChange($event)"></app-order-filters>
+          </div>
+        </div>
+      </div>
+
       <div class="card border-0 shadow-sm">
-        <div class="card-header bg-white border-0 pb-0">
-          <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="card-header bg-white border-0">
+          <div class="d-flex justify-content-between align-items-center">
             <h5 class="card-title mb-0">
               <i class="bi bi-list-task me-2"></i>
-              Ordens Recentes
+              {{ pageTitle }}
             </h5>
             <button class="btn btn-sm btn-outline-secondary" (click)="loadAllOrders()">
               Ver Todas
             </button>
           </div>
-          
-          <!-- Filtros com espaçamento -->
-          <app-order-filters
-            (filterChange)="handleFilterChange($event)"
-            class="mb-3"
-          ></app-order-filters>
         </div>
-        
+
         <div class="card-body p-0">
           <div class="p-3">
-            <div *ngIf="isLoading" class="text-center py-4">
+            <div *ngIf="isLoading" class="text-center py-5">
               <div class="spinner-border text-primary" role="status">
                 <span class="visually-hidden">Carregando...</span>
               </div>
             </div>
 
-            <div *ngIf="!isLoading && filteredOrders.length === 0" class="text-center py-4">
+            <div *ngIf="!isLoading && filteredOrders.length === 0" class="text-center py-5">
               <i class="bi bi-inbox text-muted fs-1 mb-3"></i>
-              <p class="text-muted mb-0">Nenhuma ordem de serviço encontrada</p>
-              <button class="btn btn-link btn-sm mt-2" (click)="resetFilters()">
-                Limpar filtros
-              </button>
+              <p class="text-muted mb-0">Nenhuma ordem de serviço encontrada para os critérios selecionados.</p>
+             <div class="col-12 col-lg-auto">
+  <button type="button" class="btn btn-sm btn-outline-secondary w-100 w-lg-auto" (click)="resetFilters()">Limpar Filtros</button>
+</div>
             </div>
 
-            <div *ngIf="!isLoading" class="row g-2">
+            <div *ngIf="!isLoading && filteredOrders.length > 0" class="row g-3">
               <div *ngFor="let order of filteredOrders" class="col-12 col-md-6 col-lg-4">
                 <app-service-order-card
                   [order]="order"

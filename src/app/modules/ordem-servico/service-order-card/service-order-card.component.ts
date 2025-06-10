@@ -46,7 +46,7 @@ import { Modelo } from '../../../Models/modelo.model';
 
           <div class="d-flex align-items-center gap-2 text-muted small mb-2">
             <i class="bi bi-phone"></i>
-            <span class="text-truncate"></span>
+            <span class="text-truncate">{{ order.descricaoAparelho }}</span>
           </div>
 
           <div class="d-flex align-items-center gap-2 text-muted small mb-3">

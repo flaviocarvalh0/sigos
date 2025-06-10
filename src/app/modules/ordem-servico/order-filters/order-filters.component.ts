@@ -15,69 +15,74 @@ interface FilterState {
   imports: [CommonModule, FormsModule],
   template: `
     <div class="card mb-4">
-  <div class="card-body p-4">
-    <div class="d-flex flex-column gap-3"> <!-- Adicionado gap-3 para espaçamento vertical -->
-      
-      <!-- Search - Agora com mais margem -->
-      <div class="position-relative mb-3"> <!-- Adicionado mb-3 -->
-        <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
-        <input
-          type="text"
-          class="form-control ps-5 py-2" 
-          placeholder="Buscar por código, cliente ou problema..."
-          [(ngModel)]="filters.search"
-          (ngModelChange)="handleFilterChange('search', $event)"
-        />
-      </div>
+      <div class="card-body p-4">
+        <div class="d-flex flex-column gap-3">
+          <!-- Adicionado gap-3 para espaçamento vertical -->
 
-      <!-- Filters Row - Agora com mais espaçamento -->
-      <div class="row g-3"> <!-- Alterado de gap-4 para g-3 -->
-        <div class="col-md-6">
-          <select 
-            class="form-select py-2" 
-            [(ngModel)]="filters.status"
-            (ngModelChange)="handleFilterChange('status', $event)"
-          >
-            <option value="todos">Todos os Status</option>
-            <option value="pendente">Pendente</option>
-            <option value="em_andamento">Em Andamento</option>
-            <option value="concluido">Concluído</option>
-            <option value="cancelado">Cancelado</option>
-          </select>
-        </div>
+          <!-- Search - Agora com mais margem -->
+          <div class="position-relative mb-3">
+            <!-- Adicionado mb-3 -->
+            <i
+              class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"
+            ></i>
+            <input
+              type="text"
+              class="form-control ps-5 py-2"
+              placeholder="Buscar por código, cliente ou problema..."
+              [(ngModel)]="filters.search"
+              (ngModelChange)="handleFilterChange('search', $event)"
+            />
+          </div>
 
-        <div class="col-md-6">
-          <select 
-            class="form-select py-2" 
-            [(ngModel)]="filters.dateRange"
-            (ngModelChange)="handleFilterChange('dateRange', $event)"
-          >
-            <option value="todos">Todos os Períodos</option>
-            <option value="hoje">Hoje</option>
-            <option value="semana">Esta Semana</option>
-            <option value="mes">Este Mês</option>
-            <option value="trimestre">Últimos 3 Meses</option>
-          </select>
-        </div>
-      </div>
+          <!-- Filters Row - Agora com mais espaçamento -->
+          <div class="row g-3">
+            <!-- Alterado de gap-4 para g-3 -->
+            <div class="col-md-6">
+              <select
+                class="form-select py-2"
+                [(ngModel)]="filters.status"
+                (ngModelChange)="handleFilterChange('status', $event)"
+              >
+                <option value="todos">Todos os Status</option>
+                <option value="pendente">Pendente</option>
+                <option value="em_andamento">Em Andamento</option>
+                <option value="concluido">Concluído</option>
+                <option value="cancelado">Cancelado</option>
+              </select>
+            </div>
 
-      <!-- Clear Filters - Agora com mais margem -->
-      <button
-        class="btn btn-outline-secondary mt-3 py-2" 
-        (click)="clearFilters()"
-      >
-        Limpar Filtros
-      </button>
-    </div>
-  </div>
+            <div class="col-md-6">
+              <select
+                class="form-select py-2"
+                [(ngModel)]="filters.dateRange"
+                (ngModelChange)="handleFilterChange('dateRange', $event)"
+              >
+                <option value="todos">Todos os Períodos</option>
+                <option value="hoje">Hoje</option>
+                <option value="semana">Esta Semana</option>
+                <option value="mes">Este Mês</option>
+                <option value="trimestre">Últimos 3 Meses</option>
+              </select>
+            </div>
+          </div>
+
+       <div class="col-12 col-lg-auto ms-auto">
+  <button
+    type="button" class="btn btn-outline-secondary mt-3 mt-lg-0 py-2" (click)="clearFilters()"
+  >
+    Limpar Filtros
+  </button>
 </div>
-  `
+        </div>
+      </div>
+    </div>
+  `,
 })
 export class OrderFiltersComponent {
   filters: FilterState = {
     search: '',
     status: 'todos',
-    dateRange: 'todos'
+    dateRange: 'todos',
   };
 
   @Output() filterChange = new EventEmitter<FilterState>();

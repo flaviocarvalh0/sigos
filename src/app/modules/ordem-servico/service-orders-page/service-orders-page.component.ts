@@ -24,8 +24,9 @@ export class OrdemServicoComponent implements OnInit {
   allOrders: OrdemServico[] = [];
   metrics: any = {};
   isLoading: boolean = true;
-  currentFilters: any = {};
+  currentFilters: any = { search: '', status: 'todos', dateRange: 'todos' };
   showingAll: boolean = false;
+  pageTitle: string = 'Ordens Recentes';
 
   constructor(private serviceOrderService: OrdemServicoService, private router: Router) {}
 
@@ -37,30 +38,11 @@ export class OrdemServicoComponent implements OnInit {
     return date.toISOString().split('T')[0];
   }
 
-  loadInitialData(): void {
-    this.isLoading = true;
 
-    this.serviceOrderService.obterTodos().subscribe({
-      next: (orders) => {
-        this.allOrders = orders;
-        this.filteredOrders = this.getRecentOrders(orders);
-        this.calculateMetrics(orders);
-        this.isLoading = false;
-      },
-      error: (err) => {
-        console.error('Erro ao carregar ordens:', err);
-        this.isLoading = false;
-      }
-    });
-  }
-
-  getRecentOrders(orders: OrdemServico[]): OrdemServico[] {
-    // Retorna as últimas 10 ordens ou todas se tiver menos que 10
-    return orders.length > 10
-      ? [...orders].sort((a, b) =>
-          new Date(b.dataCriacao ?? 0).getTime() - new Date(a.dataCriacao ?? 0).getTime()
-        ).slice(0, 10)
-      : orders;
+getRecentOrders(orders: OrdemServico[]): OrdemServico[] {
+    return [...orders].sort((a, b) =>
+        new Date(b.dataCriacao ?? 0).getTime() - new Date(a.dataCriacao ?? 0).getTime()
+      ).slice(0, 6);
   }
 
   calculateMetrics(orders: OrdemServico[]): void {
@@ -126,15 +108,37 @@ export class OrdemServicoComponent implements OnInit {
     };
   }
 
-  loadOrders(filters: any = {}): void {
+   loadOrders(filters: any): void {
     this.isLoading = true;
     this.currentFilters = filters;
-    this.showingAll = false;
+    this.pageTitle = 'Resultados do Filtro';
 
+    // Assumindo que seu service.obterTodos() aceita filtros
     this.serviceOrderService.obterTodos(filters).subscribe({
       next: (orders) => {
-        this.filteredOrders = this.getRecentOrders(orders);
-        this.calculateMetrics(orders);
+        // CORREÇÃO: Não limita mais aos recentes, mostra todos os resultados do filtro
+        this.filteredOrders = orders;
+        this.isLoading = false;
+      },
+      error: (err) => {
+        console.error('Erro ao carregar ordens filtradas:', err);
+        this.isLoading = false;
+      }
+    });
+  }
+
+
+   loadInitialData(): void {
+    this.isLoading = true;
+    this.pageTitle = 'Ordens Recentes';
+
+    this.serviceOrderService.obterTodos().subscribe({
+      next: (orders) => {
+        this.allOrders = orders.sort((a, b) =>
+          new Date(b.dataCriacao ?? 0).getTime() - new Date(a.dataCriacao ?? 0).getTime()
+        );
+        this.applyFilters(true); // Aplica o filtro inicial de "recentes"
+        this.calculateMetrics(this.allOrders);
         this.isLoading = false;
       },
       error: (err) => {
@@ -144,28 +148,90 @@ export class OrdemServicoComponent implements OnInit {
     });
   }
 
-  loadAllOrders(): void {
-    this.isLoading = true;
-    this.showingAll = true;
-
-    this.serviceOrderService.obterTodos().subscribe({
-      next: (orders) => {
-        this.filteredOrders = orders;
-        this.isLoading = false;
-      },
-      error: (err) => {
-        console.error('Erro ao carregar todas as ordens:', err);
-        this.isLoading = false;
-      }
-    });
+  handleFilterChange(filters: any): void {
+    this.currentFilters = filters;
+    this.pageTitle = 'Resultados do Filtro';
+    this.applyFilters();
   }
 
-  handleFilterChange(filters: any): void {
-    this.loadOrders(filters);
+  // MÉTODO applyFilters COMPLETAMENTE REESCRITO
+  applyFilters(initialLoad = false): void {
+    this.isLoading = true;
+    let results = [...this.allOrders];
+    const filters = this.currentFilters;
+
+    // Filtro por termo de busca (search)
+    if (filters.search) {
+      const termo = filters.search.toLowerCase();
+      results = results.filter(order =>
+        order.codigo?.toLowerCase().includes(termo) ||
+        order.nomeCliente?.toLowerCase().includes(termo) ||
+        order.descricaoProblema?.toLowerCase().includes(termo)
+      );
+    }
+
+    // Filtro por Status
+    if (filters.status && filters.status !== 'todos') {
+      // O valor do filtro é "em_andamento", mas o nome no objeto é "Em Andamento"
+      const statusFormatado = filters.status.replace('_', ' ');
+      results = results.filter(order =>
+        order.nomeEstado?.toLowerCase() === statusFormatado.toLowerCase()
+      );
+    }
+
+    // Filtro por Período de Data (dateRange)
+    if (filters.dateRange && filters.dateRange !== 'todos') {
+      const hoje = new Date();
+      hoje.setHours(0, 0, 0, 0); // Zera a hora para comparações de dia
+
+      let dataInicioFiltro: Date | null = null;
+
+      switch (filters.dateRange) {
+        case 'hoje':
+          dataInicioFiltro = hoje;
+          break;
+        case 'semana':
+          dataInicioFiltro = new Date(hoje);
+          dataInicioFiltro.setDate(hoje.getDate() - 7);
+          break;
+        case 'mes':
+          dataInicioFiltro = new Date(hoje);
+          dataInicioFiltro.setMonth(hoje.getMonth() - 1);
+          break;
+        case 'trimestre':
+          dataInicioFiltro = new Date(hoje);
+          dataInicioFiltro.setMonth(hoje.getMonth() - 3);
+          break;
+      }
+
+      if (dataInicioFiltro) {
+        results = results.filter(order => {
+          if (!order.dataCriacao) return false;
+          return new Date(order.dataCriacao) >= dataInicioFiltro!;
+        });
+      }
+    }
+
+    // Lógica para mostrar apenas recentes na carga inicial
+    if (initialLoad) {
+      this.filteredOrders = results.slice(0, 6);
+    } else {
+      this.filteredOrders = results;
+    }
+
+    this.isLoading = false;
+  }
+
+  loadAllOrders(): void {
+    this.pageTitle = 'Todas as Ordens de Serviço';
+    this.currentFilters = { search: '', status: 'todos', dateRange: 'todos' };
+    this.applyFilters(); // Re-aplica os filtros (agora vazios) para mostrar tudo
   }
 
   resetFilters(): void {
-    this.loadOrders({});
+    this.loadInitialData(); // Volta ao estado inicial da página
+    // Aqui você também pode querer emitir um evento para o componente filho limpar seus campos,
+    // mas por enquanto, recarregar a página resolve.
   }
 
   handleViewDetails(order: OrdemServico): void {
