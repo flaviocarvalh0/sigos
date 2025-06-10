@@ -64,14 +64,13 @@
                 <div *ngIf="isInvalid('data_entrada')" class="invalid-feedback">Data de entrada é obrigatória.</div>
               </div>
               <div class="col-md-3">
-                <label for="id_status_os" class="form-label">Status da OS <span class="text-danger">*</span></label>
-                <!-- <select id="id_status_os" formControlName="id_status_os" class="form-select"
-                  [ngClass]="{ 'is-invalid': isInvalid('id_status_os') }">
-                  <option [ngValue]="null" disabled>Selecione o Status</option>
-                  <option *ngFor="let status of statusOS" [ngValue]="status.id">{{ status.descricao }}</option>
-                </select> -->
-                <div *ngIf="isInvalid('id_status_os')" class="invalid-feedback">Status é obrigatório.</div>
+              <label class="form-label">Status da OS</label>
+              <div>
+                <span class="badge fs-6 {{ statusBadgeClass }}">
+                  {{ form.get('nome_estado_display')?.value }}
+                </span>
               </div>
+            </div>
               <div class="col-md-3">
                 <label for="id_empresa" class="form-label">Empresa <span class="text-danger">*</span></label>
                 <select id="id_empresa" formControlName="id_empresa" class="form-select"
@@ -321,18 +320,42 @@
         <hr class="my-4">
         <div class="row justify-content-end mb-3 align-items-end">
 
-          <div class="col-md-4">
-            <label for="desconto" class="form-label fw-bold text-danger">Desconto (R$)</label>
-            <input type="number" id="desconto" class="form-control" formControlName="desconto" placeholder="0.00">
-            <div *ngIf="isInvalid('desconto')" class="invalid-feedback">
-              O desconto não pode ser negativo.
+         <div class="col-12 col-sm-6 col-lg-3">
+            <label for="valor_total_servicos" class="form-label">Total Serviços</label>
+            <div class="input-group">
+              <span class="input-group-text">R$</span>
+              <input type="text" id="valor_total_servicos" class="form-control"
+                    [value]="form.get('valor_total_servicos')?.value | number:'1.2-2'" readonly>
             </div>
           </div>
 
-          <div class="col-md-4">
-            <label for="valor_total_orcamento" class="form-label fw-bold fs-5">Valor Total da OS (R$)</label>
-            <input type="number" id="valor_total_orcamento" formControlName="valor_total_orcamento"
-              class="form-control fs-5" readonly>
+          <div class="col-12 col-sm-6 col-lg-3">
+            <label for="valor_total_pecas" class="form-label">Total Peças</label>
+            <div class="input-group">
+              <span class="input-group-text">R$</span>
+              <input type="text" id="valor_total_pecas" class="form-control"
+                    [value]="form.get('valor_total_pecas')?.value | number:'1.2-2'" readonly>
+            </div>
+          </div>
+
+         <div class="col-12 col-sm-6 col-lg-3">
+  <label for="desconto" class="form-label text-danger">Desconto</label>
+  <div class="input-group">
+    <span class="input-group-text text-danger">R$</span>
+    <input type="number" step="0.01" class="form-control" id="desconto"
+           formControlName="desconto"
+           placeholder="0,00"
+           (blur)="formatarCampoDesconto()">
+  </div>
+</div>
+
+          <div class="col-12 col-sm-6 col-lg-3">
+            <label for="valor_total_orcamento" class="form-label fw-bold">VALOR TOTAL</label>
+            <div class="input-group">
+              <span class="input-group-text fw-bold">R$</span>
+              <input type="text" id="valor_total_orcamento" class="form-control fw-bold"
+                    [value]="form.get('valor_total_orcamento')?.value | number:'1.2-2'" readonly>
+            </div>
           </div>
         </div>
 
@@ -357,19 +380,41 @@
           </div>
         </div>
 
-        <div class="d-flex justify-content-end">
-          <button type="button" class="btn btn-secondary me-2" (click)="goBack()">
-            <i class="fas fa-times me-1"></i> Cancelar
-          </button>
-          <button class="btn btn-danger me-2" *ngIf="isEditMode" type="button" (click)="excluir()">
-            <i class="bi bi-trash me-1"></i> Excluir
-          </button>
-          <button type="submit" class="btn btn-success" [disabled]="form.invalid || isLoading">
-            <i class="fas fa-save me-1"></i>
-            <span *ngIf="!isLoading">{{ isEditMode ? 'Atualizar' : 'Salvar' }} Ordem de Serviço</span>
-            <span *ngIf="isLoading">Salvando... <span class="spinner-border spinner-border-sm"></span></span>
-          </button>
-        </div>
+      <div class="d-flex justify-content-end align-items-center">
+
+  <div *ngIf="isEditMode" class="btn-group me-2">
+    <button type="button" class="btn btn-info dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"
+            [disabled]="isTransicoesLoading || transicoesDisponiveis.length === 0">
+      <span *ngIf="isTransicoesLoading" class="spinner-border spinner-border-sm"></span>
+      <i *ngIf="!isTransicoesLoading" class="bi bi-diagram-3"></i>
+      <span *ngIf="!isTransicoesLoading" class="d-none d-sm-inline ms-1">Ações</span>
+    </button>
+    <ul class="dropdown-menu dropdown-menu-end">
+      <li *ngFor="let transicao of transicoesDisponiveis">
+        <a class="dropdown-item" href="javascript:void(0)" (click)="executarTransicao(transicao)">
+          {{ transicao.nomeAcao }}
+          <small class="text-muted d-block">Mover para: {{ transicao.nomeEstadoDestino }}</small>
+        </a>
+      </li>
+    </ul>
+  </div>
+
+  <button type="button" class="btn btn-secondary me-2" (click)="goBack()">
+    <i class="bi bi-x-lg"></i>
+    <span class="d-none d-sm-inline ms-1">Cancelar</span>
+  </button>
+
+  <button class="btn btn-danger me-2" *ngIf="isEditMode" type="button" (click)="excluir()">
+    <i class="bi bi-trash"></i>
+    <span class="d-none d-sm-inline ms-1">Excluir</span>
+  </button>
+
+  <button type="submit" class="btn btn-success" [disabled]="form.invalid || isLoading">
+    <i class="bi bi-save"></i>
+    <span *ngIf="!isLoading" class="d-none d-sm-inline ms-1">{{ isEditMode ? 'Atualizar' : 'Salvar' }}</span>
+    <span *ngIf="isLoading">Salvando...</span>
+  </button>
+</div>
       </form>
     </div>
   </div>
