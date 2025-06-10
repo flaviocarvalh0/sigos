@@ -21,15 +21,19 @@ export class OrdemServicoServicoService extends CrudService<OrdemServicoServico,
     return this.http.get<RespostaApi<OrdemServicoServico[]>>(`${this.apiUrlBase}/ordens-servico/${ordemServicoId}/servicos`);
   }
 
-  criarServico(ordemServicoId: number, payload: OrdemServicoServicoCriacaoPayload): Observable<RespostaApi<any>> {
-    return this.http.post<RespostaApi<any>>(`${this.apiUrlBase}/ordens-servico/${ordemServicoId}/servicos`, payload);
+  obterItemPorId(idOrdemServico: number, idServico: number) {
+    return this.http.get<any>(`${this.apiUrlBase}/${this.endpoint}ordens-servico/${idOrdemServico}/servicos/${idServico}`);
   }
 
-  atualizarServico(id: number, payload: OrdemServicoServicoAtualizacaoPayload): Observable<RespostaApi<any>> {
-    return this.http.put<RespostaApi<any>>(`${this.apiUrlBase}/ordens-servico/${payload.idOrdemServico}/servicos/${id}`, payload);
+  criarServico(idOrdemServico: number, payload: OrdemServicoServicoCriacaoPayload): Observable<any> {
+    return this.http.post<any>(`${this.apiUrlBase}/${this.endpoint}ordens-servico/${idOrdemServico}/servicos`, payload);
   }
 
-  removerServico(ordemServicoId: number, id: number): Observable<any> {
-    return this.http.delete<any>(`${this.apiUrlBase}/ordens-servico/${ordemServicoId}/servicos/${id}`);
+  atualizarServico(idOrdemServico: number, id: number, payload: OrdemServicoServicoAtualizacaoPayload): Observable<any> {
+    return this.http.put<any>(`${this.apiUrlBase}/${this.endpoint}ordens-servico/${idOrdemServico}/servicos/${id}`, payload);
+  }
+
+  removerServico(idOrdemServico: number, id: number): Observable<any> {
+    return this.http.delete<any>(`${this.apiUrlBase}/${this.endpoint}ordens-servico/${idOrdemServico}/servicos/${id}`);
   }
 }

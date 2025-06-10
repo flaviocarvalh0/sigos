@@ -28,7 +28,7 @@ export class PecasOrdemServicoComponent implements OnInit {
   @Input() ordemServicoId!: number;
   @Input() ordemServico!: OrdemServico;
   @Input() pecasDisponiveis: any[] = [];
-  @Output() osAtualizada = new EventEmitter<OrdemServico>();
+  @Output() itemAlterado = new EventEmitter<void>();
 
   novaPeca: OrdemServicoPecaCriacaoPayload = this.criarNovaPeca();
   pecasAdicionadas: OrdemServicoPeca[] = [];
@@ -54,7 +54,7 @@ export class PecasOrdemServicoComponent implements OnInit {
     };
   }
 
-  salvarPeca(): void {
+salvarPeca(): void {
   if (!this.novaPeca.idPeca || this.novaPeca.quantidade <= 0) {
     this.toast.warning('Preencha todos os campos obrigatórios.');
     return;
@@ -66,7 +66,7 @@ export class PecasOrdemServicoComponent implements OnInit {
     next: (resposta) => {
       this.toast.success('Peça adicionada.');
       this.ordemServico = resposta.ordemServicoAtualizada; // <- IMPORTANTE
-      this.osAtualizada.emit(resposta.ordemServicoAtualizada);
+       this.itemAlterado.emit();
       this.novaPeca = this.criarNovaPeca();
       this.carregarPecas();
     },
@@ -79,7 +79,7 @@ export class PecasOrdemServicoComponent implements OnInit {
     this.pecaService.removerPeca(this.ordemServicoId, id).subscribe({
       next: (resposta) => {
         this.toast.success('Peça removida.');
-        this.osAtualizada.emit(resposta.ordemServicoAtualizada);
+         this.itemAlterado.emit();
         this.carregarPecas();
       },
       error: (err) => this.toast.error(err.message),
@@ -116,7 +116,7 @@ export class PecasOrdemServicoComponent implements OnInit {
     if (pecaSelecionada) {
       this.novaPeca.valorUnitario = pecaSelecionada.precoVenda || 0;
       this.novaPeca.valorTotal =
-        this.novaPeca.quantidade * this.novaPeca.valorUnitario;
+      this.novaPeca.quantidade * this.novaPeca.valorUnitario;
     }
   }
 }

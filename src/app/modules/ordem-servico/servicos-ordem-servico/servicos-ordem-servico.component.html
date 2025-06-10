@@ -11,7 +11,8 @@
           [items]="servicosDisponiveis"
           bindLabel="descricao"
           bindValue="id"
-          placeholder="Selecione um serviço">
+          placeholder="Selecione um serviço"
+          [ngModelOptions]="{standalone: true}">
         </ng-select>
       </div>
 
@@ -31,7 +32,7 @@
       </div>
 
       <div class="col-12 col-sm-4 col-md-auto">
-        <button class="btn btn-success w-100" (click)="salvarServico()">
+        <button type="button" class="btn btn-success w-100" (click)="salvarServico()">
           <i class="bi bi-check-circle"></i> Adicionar
         </button>
       </div>
@@ -62,7 +63,7 @@
         <td>{{ s.tempoEstimadoMinutos }} min</td>
         <td>{{ s.precoPraticado | currency:'BRL' }}</td>
         <td class="text-center">
-          <button class="btn btn-sm btn-outline-danger" (click)="removerServico(s.id!)">
+          <button type="button" class="btn btn-sm btn-outline-danger" (click)="removerServico(s.id!)">
             <i class="bi bi-trash"></i>
           </button>
         </td>

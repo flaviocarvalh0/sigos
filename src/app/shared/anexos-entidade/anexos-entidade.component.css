@@ -1,0 +1,6 @@
+.modal.show.d-block {
+  background: rgba(0, 0, 0, 0.5);
+}
+.modal .modal-dialog {
+  margin-top: 10vh;
+}

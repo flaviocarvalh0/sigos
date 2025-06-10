@@ -1,14 +1,24 @@
-import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
+import {
+  Component,
+  Input,
+  Output,
+  EventEmitter,
+  OnInit,
+  OnChanges,
+  SimpleChanges
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NgSelectModule } from '@ng-select/ng-select';
 
 import { OrdemServicoServicoService } from '../../../services/ordem-servico/ordem-servico-servico.service';
 import { ToastService } from '../../../services/toast.service';
-import { OrdemServicoServico, OrdemServicoServicoCriacaoPayload } from '../../../Models/ordem-servico/ordem-servico-servico';
+import {
+  OrdemServicoServico,
+  OrdemServicoServicoCriacaoPayload
+} from '../../../Models/ordem-servico/ordem-servico-servico';
 import { OrdemServico } from '../../../Models/ordem-servico/ordem-servico.model';
-
-
+import { OrdemServicoService } from '../../../services/ordem-servico/ordem-servico.service';
 
 @Component({
   selector: 'app-servicos-ordem-servico',
@@ -17,23 +27,35 @@ import { OrdemServico } from '../../../Models/ordem-servico/ordem-servico.model'
   templateUrl: './servicos-ordem-servico.component.html',
   styleUrls: ['./servicos-ordem-servico.component.css']
 })
-export class ServicosOrdemServicoComponent implements OnInit {
+export class ServicosOrdemServicoComponent implements OnInit, OnChanges {
   @Input() ordemServicoId!: number;
   @Input() servicosDisponiveis: any[] = [];
-  @Output() osAtualizada = new EventEmitter<OrdemServico>();
+  @Input() ordemServico!: OrdemServico;
+  @Output() itemAlterado = new EventEmitter<void>();
 
   servicosAdicionados: OrdemServicoServico[] = [];
-
   novoServico: OrdemServicoServicoCriacaoPayload = this.criarNovoServico();
 
   constructor(
-    private servicoService: OrdemServicoServicoService,
     private toast: ToastService,
     private servicoOsService: OrdemServicoServicoService,
+    private ordemServicoService: OrdemServicoService
   ) {}
 
   ngOnInit(): void {
-    this.carregarServicos();
+    if (this.ordemServicoId) {
+      this.carregarServicos();
+    }
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (
+      changes['ordemServicoId'] &&
+      changes['ordemServicoId'].currentValue &&
+      changes['ordemServicoId'].currentValue !== changes['ordemServicoId'].previousValue
+    ) {
+      this.carregarServicos();
+    }
   }
 
   criarNovoServico(): OrdemServicoServicoCriacaoPayload {
@@ -63,35 +85,33 @@ export class ServicosOrdemServicoComponent implements OnInit {
 
     this.novoServico.idOrdemServico = this.ordemServicoId;
 
-    console.log(this.novoServico);
-    this.servicoService.criarServico(this.ordemServicoId, this.novoServico).subscribe({
-      next: (res) => {
-
+    this.servicoOsService.criarServico(this.ordemServicoId, this.novoServico).subscribe({
+      next: (resposta) => {
         this.toast.success('Serviço adicionado.');
-        console.log(res.dados.ordemServicoAtualizada);
-        this.osAtualizada.emit(res.dados.ordemServicoAtualizada);
-        this.resetarFormulario();
+        this.ordemServico = resposta.dados;
+        this.itemAlterado.emit();
+        this.novoServico = this.criarNovoServico();
         this.carregarServicos();
       },
-      error: (err) => this.toast.error(err.message)
+      error: (err) => this.toast.error(err.message),
     });
   }
 
-   removerServico(id: number): void {
-    this.servicoOsService.removerServico(this.ordemServicoId, id).subscribe({
+  removerServico(servicoId: number): void {
+    this.servicoOsService.removerServico(this.ordemServicoId, servicoId).subscribe({
       next: (resposta) => {
-        this.toast.success('Serviço removido com sucesso.');
-        // Emite a OS atualizada para o componente pai
-        this.osAtualizada.emit(resposta.ordemServicoAtualizada);
-        this.resetarFormulario();
-        this.carregarServicos(); // Recarrega a lista
+        this.toast.success('Serviço removido.');
+        this.itemAlterado.emit(resposta.ordemServicoAtualizada);
+        this.carregarServicos();
       },
-      error: (err) => this.toast.error(err.message || 'Erro ao remover serviço'),
+      error: (err) => this.toast.error('Erro ao remover serviço: ' + err.message)
     });
   }
 
   carregarServicos(): void {
-    this.servicoService.obterPorOrdemServico(this.ordemServicoId).subscribe({
+    if (!this.ordemServicoId) return;
+
+    this.servicoOsService.obterPorOrdemServico(this.ordemServicoId).subscribe({
       next: (res) => this.servicosAdicionados = res.dados || [],
       error: (err) => this.toast.error(err.message)
     });
@@ -106,7 +126,6 @@ export class ServicosOrdemServicoComponent implements OnInit {
   }
 
   resetarFormulario(): void {
-  this.novoServico = this.criarNovoServico();
-}
-
+    this.novoServico = this.criarNovoServico();
+  }
 }

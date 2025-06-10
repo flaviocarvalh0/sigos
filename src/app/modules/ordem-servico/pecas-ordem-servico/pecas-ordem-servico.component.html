@@ -32,7 +32,7 @@
       </div>
 
       <div class="col-12 col-sm-4 col-md-auto">
-        <button class="btn btn-success w-100" (click)="salvarPeca()">
+        <button type="button" class="btn btn-success w-100" (click)="salvarPeca()">
           <i class="bi bi-check-circle"></i> Adicionar
         </button>
       </div>
@@ -63,7 +63,7 @@
         <td>{{ p.valorUnitario | currency:'BRL' }}</td>
         <td>{{ p.valorTotal | currency:'BRL' }}</td>
         <td class="text-center">
-          <button class="btn btn-sm btn-outline-danger" (click)="removerPeca(p.id!)">
+          <button type="button" class="btn btn-sm btn-outline-danger" (click)="removerPeca(p.id!)">
             <i class="bi bi-trash"></i>
           </button>
         </td>

@@ -1,0 +1,91 @@
+<div class="card">
+  <div class="card-header">
+    <h5 class="mb-0">Gerenciador de Anexos</h5>
+  </div>
+  <div class="card-body">
+    <div class="mb-4 p-3 border rounded bg-light">
+      <label for="anexo-file-input" class="form-label fw-bold">Adicionar Novo Anexo</label>
+      <div class="input-group">
+        <input type="file" class="form-control" id="anexo-file-input" (change)="onArquivoSelecionado($event)">
+        <button class="btn btn-primary" type="button" (click)="fazerUpload()" [disabled]="!arquivoSelecionado || isUploading">
+          <span *ngIf="!isUploading"><i class="bi bi-upload me-1"></i> Enviar</span>
+          <span *ngIf="isUploading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+          <span *ngIf="isUploading"> Enviando...</span>
+        </button>
+      </div>
+      <div *ngIf="arquivoSelecionado" class="form-text mt-2">
+        Arquivo selecionado: <strong>{{ arquivoSelecionado.name }}</strong>
+      </div>
+    </div>
+
+    <h6 class="text-muted">Anexos Adicionados</h6>
+
+    <div *ngIf="isLoading && anexos.length === 0" class="text-center my-3">
+      <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Carregando...</span></div>
+    </div>
+
+    <div *ngIf="!isLoading && anexos.length === 0" class="alert alert-secondary text-center py-2 mt-2">
+      Nenhum anexo encontrado.
+    </div>
+
+    <ul *ngIf="anexos.length > 0" class="list-group">
+      <li *ngFor="let anexo of anexos" class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
+        <div class="me-auto my-1">
+          <i class="bi bi-paperclip me-2"></i>
+          <span class="fw-bold">{{ anexo.titulo || anexo.nomeArquivo }}</span>
+          <small class="text-muted ms-2 d-block d-sm-inline"> (Enviado em: {{ formatarData(anexo.dataCriacao) }})</small>
+        </div>
+        <div class="ms-2 my-1">
+          <button type="button" class="btn btn-sm btn-outline-primary me-2" title="Editar Metadados" (click)="abrirModalEdicao(anexo)">
+            <i class="bi bi-pencil-square"></i>
+          </button>
+          <button type="button" class="btn btn-sm btn-outline-secondary me-2" title="Baixar Anexo" (click)="baixarAnexo(anexo)">
+            <i class="bi bi-download"></i>
+          </button>
+          <button type="button" class="btn btn-sm btn-outline-danger" title="Remover Anexo" (click)="removerAnexo(anexo)">
+            <i class="bi bi-trash"></i>
+          </button>
+        </div>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<div class="modal fade" id="modalEditarAnexo" #modalEditarAnexoRef tabindex="-1" aria-labelledby="modalEditarAnexoLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalEditarAnexoLabel">Editar Metadados do Anexo</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <form *ngIf="anexoParaEditar" [formGroup]="formEdicao" (ngSubmit)="salvarAlteracoesAnexo()">
+        <div class="modal-body">
+          <div class="mb-3">
+              <label class="form-label">Nome do Arquivo:</label>
+              <p class="form-control-plaintext">{{ anexoParaEditar.nomeArquivo }}</p>
+          </div>
+          <div class="mb-3">
+            <label for="anexoTitulo" class="form-label">Título</label>
+            <input type="text" class="form-control" id="anexoTitulo" formControlName="titulo">
+          </div>
+          <div class="mb-3">
+            <label for="anexoLegenda" class="form-label">Legenda</label>
+            <input type="text" class="form-control" id="anexoLegenda" formControlName="legenda">
+          </div>
+          <div class="mb-3">
+            <label for="anexoObservacoes" class="form-label">Observações</label>
+            <textarea class="form-control" id="anexoObservacoes" rows="3" formControlName="observacoes"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary" [disabled]="isUploading || !formEdicao.dirty">
+             <span *ngIf="!isUploading">Salvar Alterações</span>
+             <span *ngIf="isUploading" class="spinner-border spinner-border-sm"></span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

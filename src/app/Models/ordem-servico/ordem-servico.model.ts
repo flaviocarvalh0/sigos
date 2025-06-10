@@ -23,6 +23,7 @@ export interface OrdemServico extends ModelBase {
   valorPecas?: number;
   idAtendente: number;
   idTecnico: number;
+  desconto?: number;
 
   // Campos extras de exibição
   nomeCliente?: string;
@@ -43,7 +44,7 @@ export interface OrdemServicoCriacaoPayload {
   descricaoProblema: string;
   diagnosticoTecnico?: string;
   observacoes?: string;
-  dataInicioGarantia?: Date | null;
+  dataInicioGarantia?: Date;
   dataFimGarantia?: Date | null;
   idPrazoGarantia?: number;
   idCliente: number;
@@ -55,6 +56,8 @@ export interface OrdemServicoCriacaoPayload {
   valorPecas?: number;
   idAtendente: number;
   idTecnico: number;
+  desconto?: number;
+
 }
 
 export interface OrdemServicoAtualizacaoPayload extends OrdemServicoCriacaoPayload {
