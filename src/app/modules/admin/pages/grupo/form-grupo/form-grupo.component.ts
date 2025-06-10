@@ -12,7 +12,7 @@ import { GrupoUsuario } from '../../../../../Models/grupo_usuario.model';
 import { GrupoUsuarioService } from '../../../../../services/grupo_usuario.service';
 import { UsuarioService } from '../../../../../services/usuario.service';
 import { Usuario } from '../../../../../Models/usuario.model';
-import { FilterPipe } from '../../../../../shared/helpers/filter.pipe';
+import { FilterPipe } from '../../../../../helpers/filter.pipe';
 
 @Component({
   selector: 'app-form-grupo',

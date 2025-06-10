@@ -60,7 +60,7 @@ import { OrdemServicoService } from '../../../services/ordem-servico/ordem-servi
 import { ToastService } from '../../../services/toast.service';
 import { UsuarioService } from '../../../services/usuario.service';
 import { ConfirmationConfig } from '../../../Models/confirmation.model';
-import { limparDatasInvalidas } from '../../../shared/helpers/form-helpers.';
+import { limparDatasInvalidas } from '../../../helpers/form-helpers.';
 import {
   OrdemServicoPeca,
   OrdemServicoPecaAtualizacaoPayload,
@@ -75,6 +75,7 @@ import { AnexosEntidadeComponent } from '../../../shared/anexos-entidade/anexos-
 import { WorkflowService } from '../../../services/workflow/workflow.service';
 import { TransicaoDisponivel } from '../../../Models/workflow/workflow-transicao.model';
 import { WorkflowtTransacaoService } from '../../../services/workflow/workflow-transicao.service';
+import { markAllAsTouchedAndDirty } from '../../../helpers/form-validation.helper';
 
 declare const bootstrap: any;
 
@@ -234,14 +235,14 @@ export class FormOrdemServicoComponent implements OnInit, OnDestroy {
     this.subscriptions.add(dataInicioGarantiaSub);
 
     const servicosChangesSub = this.osServicos.valueChanges.subscribe(() =>
-      this.calculateAllTotals()
+      this.recalcularValores()
     );
     const pecasChangesSub = this.osPecas.valueChanges.subscribe(() =>
-      this.calculateAllTotals()
+      this.recalcularValores()
     );
     const descontoChangesSub = this.form
       .get('desconto')
-      ?.valueChanges.subscribe(() => this.recalcularTotalOrcamento());
+      ?.valueChanges.subscribe(() => this.recalcularValores());
 
     this.subscriptions.add(servicosChangesSub);
     this.subscriptions.add(pecasChangesSub);
@@ -954,42 +955,44 @@ export class FormOrdemServicoComponent implements OnInit, OnDestroy {
   }
 
   // Método calculateAllTotals() completo
-  calculateAllTotals(): void {
-    let totalServicos = 0;
-    this.osServicos.controls.forEach((ctrl) => {
-      const formGroup = ctrl as FormGroup;
-      totalServicos +=
-        (formGroup.get('quantidade')?.value || 0) *
-        (formGroup.get('valor_unitario')?.value || 0);
-    });
-    this.form.get('valor_total_servicos')?.setValue(totalServicos.toFixed(2));
+ // Remova os métodos antigos e adicione este:
+private recalcularValores(): void {
+  const totalServicos = this.osServicos.controls.reduce((acc, ctrl) => {
+    const formGroup = ctrl as FormGroup;
+    return acc + ((formGroup.get('quantidade')?.value || 0) * (formGroup.get('valor_unitario')?.value || 0));
+  }, 0);
 
-    let totalPecas = 0;
-    this.osPecas.controls.forEach((ctrl) => {
-      const formGroup = ctrl as FormGroup;
-      totalPecas +=
-        (formGroup.get('quantidade')?.value || 0) *
-        (formGroup.get('valor_unitario')?.value || 0);
-    });
-    this.form.get('valor_total_pecas')?.setValue(totalPecas.toFixed(2));
+  const totalPecas = this.osPecas.controls.reduce((acc, ctrl) => {
+    const formGroup = ctrl as FormGroup;
+    return acc + ((formGroup.get('quantidade')?.value || 0) * (formGroup.get('valor_unitario')?.value || 0));
+  }, 0);
 
-    // LÓGICA DO DESCONTO ADICIONADA AQUI
-    const desconto = this.form.get('desconto')?.value || 0;
-    const valorTotalOrcamento = totalServicos + totalPecas - desconto;
+  const subTotal = totalServicos + totalPecas;
+  let desconto = this.form.get('desconto')?.value || 0;
 
-    this.form
-      .get('valor_total_orcamento')
-      ?.setValue(valorTotalOrcamento.toFixed(2));
-
-    this.form.get('valor_total')?.setValue(valorTotalOrcamento);
+  // *** LÓGICA PRINCIPAL DA VALIDAÇÃO ***
+  // Se o desconto for maior que o subtotal, ajusta o desconto e avisa o usuário.
+  if (desconto > subTotal) {
+    desconto = subTotal;
+    this.toastService.warning('O desconto não pode ser maior que o valor total. Ele foi ajustado automaticamente.');
+    // Usamos { emitEvent: false } para não disparar um loop infinito de atualizações.
+    this.form.get('desconto')?.setValue(desconto, { emitEvent: false });
   }
+
+  const valorTotalOrcamento = subTotal - desconto;
+
+  // Atualiza os valores no formulário
+  this.form.patchValue({
+    valor_total_servicos: totalServicos.toFixed(2),
+    valor_total_pecas: totalPecas.toFixed(2),
+    valor_total_orcamento: valorTotalOrcamento.toFixed(2)
+  }, { emitEvent: false }); // Usar aqui também para evitar re-gatilhos desnecessários
+}
 
   onSubmit(): void {
     if (this.form.invalid) {
-      this.form.markAllAsTouched();
-      this.toastService.error(
-        `Formulário inválido. Verifique os campos destacados.`
-      );
+      markAllAsTouchedAndDirty(this.form); // Marca todos os campos para exibir os erros
+      this.toastService.error('Existem campos obrigatórios não preenchidos. Por favor, verifique.');
       console.error('Erros do formulário:', this.collectFormErrors(this.form));
       return;
     }
@@ -1028,9 +1031,6 @@ export class FormOrdemServicoComponent implements OnInit, OnDestroy {
       'dataInicioGarantia',
       'dataFimGarantia',
     ]);
-
-    // --- FLUXO DE ATUALIZAÇÃO (MODO EDIÇÃO) ---
-    // Esta parte não precisa de alteração.
     if (this.isEditMode && this.ordemServicoId) {
       const osUpdatePayload: OrdemServicoAtualizacaoPayload = {
         ...osPayload,
@@ -1039,9 +1039,6 @@ export class FormOrdemServicoComponent implements OnInit, OnDestroy {
         idEstado: this.idEstadoOs,
         idWorkflow: this.idWorkflowOs,
       };
-
-      console.log(osPayload);
-
       this.ordemServicoService
         .atualizar(this.ordemServicoId, osUpdatePayload)
         .pipe(
@@ -1070,8 +1067,6 @@ export class FormOrdemServicoComponent implements OnInit, OnDestroy {
           },
         });
     }
-    // --- FLUXO DE CRIAÇÃO (NOVA OS) ---
-    // Lógica reescrita para "Salvar e Ficar na Tela"
     else {
       this.ordemServicoService.criar(osPayload).subscribe({
         next: (osCriada) => {
@@ -1082,33 +1077,38 @@ export class FormOrdemServicoComponent implements OnInit, OnDestroy {
             );
             return;
           }
-
-          // 1. Dê feedback ao usuário
           this.toastService.success('Ordem de Serviço criada com sucesso!');
 
-          // 2. ATUALIZE O ESTADO DO COMPONENTE PARA MODO DE EDIÇÃO
           this.isEditMode = true;
           this.ordemServicoId = osCriada.id;
 
-          // 3. ATUALIZE OS DADOS DE CONTROLE (MUITO IMPORTANTE PARA O PRÓXIMO 'SALVAR')
           this.dataUltimaModificacaoOriginal = osCriada.dataModificacao;
           this.idEstadoOs = osCriada.idEstado;
           this.idWorkflowOs = osCriada.idWorkflow;
 
-          // 4. ATUALIZE O FORMULÁRIO com dados gerados pelo backend (como código e ID)
           this.form.patchValue({
             id: osCriada.id,
             codigo: osCriada.codigo,
           });
 
-          // 5. MARQUE O FORMULÁRIO como "não modificado"
+          this.form.patchValue({ nome_estado_display: osCriada.nomeEstado });
+          this.statusBadgeClass = this.definirClasseBadgeStatus(osCriada.nomeEstado);
+
+          this.criadorNome = osCriada.criadoPor || 'Não disponível';
+          this.dataCriacaoDisplay = this.formatarDataParaDisplay(osCriada.dataCriacao);
+          this.modificadorNome = osCriada.modificadoPor || 'Não disponível';
+          this.dataModificacaoDisplay = this.formatarDataParaDisplay(osCriada.dataModificacao);
+
+          if (this.idWorkflowOs && this.idEstadoOs) {
+            this.carregarTransicoesDisponiveis(
+              this.idWorkflowOs,
+              this.idEstadoOs
+            );
+          }
+
           this.form.markAsPristine();
 
-          // 6. PARE O INDICADOR DE CARREGAMENTO
           this.isLoading = false;
-
-          // A mágica acontece aqui: ao mudar isEditMode e ordemServicoId, os *ngIf no
-          // template se tornam verdadeiros e o Angular criará as abas de Serviços/Peças.
         },
         error: (err) => {
           this.handleError('Erro ao criar Ordem de Serviço:', err);
@@ -1335,7 +1335,7 @@ export class FormOrdemServicoComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (res) => {
           this.pecasAdicionadas = res.dados || [];
-          this.calculateAllTotals(); // já existente no seu código
+          this.recalcularValores(); // já existente no seu código
         },
         error: (err) =>
           this.toastService.error('Erro ao carregar peças: ' + err.message),
@@ -1420,16 +1420,6 @@ export class FormOrdemServicoComponent implements OnInit, OnDestroy {
     const numero = Number(rawValue.replace(/[^\d,-]/g, '').replace(',', '.'));
 
     this.form.get('desconto')?.setValue(isNaN(numero) ? 0 : numero);
-  }
-
-  recalcularTotalOrcamento(): void {
-    const totalAtual = this.form.get('valor_total_orcamento')?.value ?? 0;
-    const desconto = this.form.get('desconto')?.value ?? 0;
-
-    const totalComDesconto = totalAtual - desconto;
-    const valorFinal = totalComDesconto >= 0 ? totalComDesconto : 0;
-
-    this.form.get('valor_total_orcamento')?.setValue(valorFinal);
   }
 
   recarregarDadosOs(): void {
@@ -1590,4 +1580,16 @@ export class FormOrdemServicoComponent implements OnInit, OnDestroy {
       }
     }
   }
+
+  getAsteriskClass(controlName: string): any {
+    const control = this.form.get(controlName);
+    // Se o campo for inválido E já foi tocado/modificado, o asterisco fica vermelho.
+    // Caso contrário, fica com a cor padrão de texto.
+    if (control && control.errors && (control.dirty || control.touched)) {
+      return { 'text-danger': true };
+    }
+    return {};
+  }
+
+
 }

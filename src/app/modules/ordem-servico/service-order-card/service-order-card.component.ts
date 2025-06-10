@@ -22,7 +22,7 @@ import { Modelo } from '../../../Models/modelo.model';
       <div class="card-header">
         <div class="d-flex justify-content-between align-items-start">
           <div>
-            <h3 class="h6 fw-bold mb-1">OS #{{ order.codigo }}</h3>
+            <h3 class="h6 fw-bold mb-1">{{ order.codigo }}</h3>
             <span class="badge" [ngClass]="getStatusColor(order.nomeEstado!)">
               {{ formatStatus(order.nomeEstado!) }}
             </span>
@@ -51,7 +51,7 @@ import { Modelo } from '../../../Models/modelo.model';
 
           <div class="d-flex align-items-center gap-2 text-muted small mb-3">
             <i class="bi bi-calendar"></i>
-            <span>{{ order.dataCriacao | date : 'dd/MM/yyyy' }}</span>
+            <span>Data de Entrada: {{ order.dataCriacao | date : 'dd/MM/yyyy' }}</span>
           </div>
 
           <div class="mb-3">

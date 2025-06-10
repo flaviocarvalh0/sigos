@@ -229,4 +229,6 @@ export class AnexosEntidadeComponent implements OnInit, AfterViewInit {
   formatarData(data: Date | string): string {
     return new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(data));
   }
+
+  
 }

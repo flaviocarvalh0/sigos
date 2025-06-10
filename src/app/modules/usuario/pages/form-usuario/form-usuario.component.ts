@@ -36,7 +36,7 @@ import { ConfirmationConfig } from '../../../../Models/confirmation.model';
 import { AuthService } from '../../../../services/auth/auth.service';
 import { GrupoUsuarioService } from '../../../../services/grupo_usuario.service';
 import { GrupoUsuario } from '../../../../Models/grupo_usuario.model';
-import { FilterPipe } from '../../../../shared/helpers/filter.pipe';
+import { FilterPipe } from '../../../../helpers/filter.pipe';
 
 @Component({
   selector: 'app-form-usuario',
@@ -417,7 +417,7 @@ export class FormUsuarioComponent implements OnInit, OnDestroy {
       ]);
     };
       navigateToDefault();
-  
+
   }
 
   toggleSenhaVisivel(): void {
