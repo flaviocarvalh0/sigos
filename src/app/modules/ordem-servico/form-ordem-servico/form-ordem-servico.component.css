@@ -26,3 +26,26 @@
   display: flex;
   align-items: center;
 }
+
+/*
+  Estilo unificado para todos os campos não-editáveis do formulário.
+*/
+:host ::ng-deep input[readonly],
+:host ::ng-deep input:disabled,
+:host ::ng-deep select:disabled,
+:host ::ng-deep textarea:disabled,
+:host ::ng-deep .ng-select.ng-select-disabled .ng-select-container {
+  background-color: #e9ecef; /* Cor cinza padrão do Bootstrap para campos desabilitados */
+  cursor: not-allowed;     /* Exibe o cursor de "proibido" */
+  opacity: 1;              /* Garante que o fundo cinza não fique transparente */
+}
+
+.input-group-disabled {
+  cursor: not-allowed;
+}
+
+/* Garante que os itens dentro do grupo também herdem o cursor */
+.input-group-disabled .btn,
+.input-group-disabled .ng-select {
+  cursor: not-allowed;
+}

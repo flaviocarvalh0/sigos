@@ -266,7 +266,14 @@ export class FormOrdemServicoComponent implements OnInit, OnDestroy {
             this.cdr.detectChanges();
           })
         );
-      }
+
+         setTimeout(() => {
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+          return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+      }, 500);
+    }
 
       // Novo Modal Aparelho (controlado pela OS)
       const modalAparelhoOsEl = this.modalNovoAparelhoOsRef?.nativeElement;
