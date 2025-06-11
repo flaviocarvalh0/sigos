@@ -21,28 +21,37 @@
       </div>
 
       <!-- 2. Grid de Métricas -->
+       <!-- Grid de Métricas (agora com 4 colunas) -->
       <div class="row g-3 mb-4">
-        <div class="col-12 col-md-4">
+        <div class="col-6 col-md-3">
           <app-metric-card
             title="Total de OS"
             [value]="metrics.totalOrders || '0'"
-            [change]="metrics.changeTotal"
-            [changeType]="metrics.changeTotalType"
             color="bg-primary">
             <i class="bi bi-clipboard2-data text-white" icon></i>
           </app-metric-card>
         </div>
-        <div class="col-12 col-md-4">
+
+        <!-- NOVO CARD: Em Execução -->
+        <div class="col-6 col-md-3">
+          <app-metric-card
+            title="Em Execução"
+            [value]="metrics.inExecutionOrders || '0'"
+            color="bg-info">
+            <i class="bi bi-gear-wide-connected text-white" icon></i>
+          </app-metric-card>
+        </div>
+
+        <div class="col-6 col-md-3">
           <app-metric-card
             title="Pendentes"
             [value]="metrics.pendingOrders || '0'"
-            [change]="metrics.urgentOrders"
-            [changeType]="metrics.changeTotalTypePeding"
             color="bg-warning">
             <i class="bi bi-exclamation-triangle text-white" icon></i>
           </app-metric-card>
         </div>
-        <div class="col-12 col-md-4">
+
+        <div class="col-6 col-md-3">
           <app-metric-card
             title="Concluídas Hoje"
             [value]="metrics.completedToday || '0'"
@@ -53,7 +62,6 @@
           </app-metric-card>
         </div>
       </div>
-
       <!-- Seção de Filtros (fica oculta por padrão) -->
       <div class="collapse" id="filterCollapse">
         <div class="card card-body mb-3 border-0 shadow-sm">

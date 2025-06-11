@@ -56,11 +56,14 @@ getRecentOrders(orders: OrdemServico[]): OrdemServico[] {
       ).slice(0, 6);
   }
 
-  calculateMetrics(orders: OrdemServico[]): void {
+ calculateMetrics(orders: OrdemServico[]): void {
     const today = new Date();
-    const yesterday = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const yesterday = new Date(today);
     yesterday.setDate(today.getDate() - 1);
 
+    // Listas de estados para categorização
     const estadosPendentes = ['recebida', 'em análise', 'aguardando aprovação', 'aprovada', 'em execução', 'pausada', 'reaberta'];
     const estadosConcluidos = ['finalizada', 'entregue'];
 
@@ -71,31 +74,29 @@ getRecentOrders(orders: OrdemServico[]): OrdemServico[] {
       const nomeEstado = order.nomeEstado?.toLowerCase() || '';
 
       if (estadosConcluidos.includes(nomeEstado) && order.dataConclusao) {
-        // Converte a data da OS para um objeto Date local
         const dataConclusao = new Date(order.dataConclusao);
+        dataConclusao.setHours(0, 0, 0, 0);
 
-        // Compara ano, mês e dia no fuso horário LOCAL do usuário
-        if (dataConclusao.getFullYear() === today.getFullYear() &&
-            dataConclusao.getMonth() === today.getMonth() &&
-            dataConclusao.getDate() === today.getDate()) {
+        if (dataConclusao.getTime() === today.getTime()) {
           completedToday++;
         }
 
-        if (dataConclusao.getFullYear() === yesterday.getFullYear() &&
-            dataConclusao.getMonth() === yesterday.getMonth() &&
-            dataConclusao.getDate() === yesterday.getDate()) {
+        if (dataConclusao.getTime() === yesterday.getTime()) {
           completedYesterday++;
         }
       }
     }
 
+    // **LÓGICA CORRIGIDA E REINSERIDA**
     const totalOrders = orders.length;
     const pendingOrders = orders.filter(o => estadosPendentes.includes(o.nomeEstado?.toLowerCase() || '')).length;
+    const inExecutionOrders = orders.filter(o => o.nomeEstado?.toLowerCase() === 'em execução').length;
     const changeCompleted = completedToday - completedYesterday;
 
     this.metrics = {
       totalOrders: totalOrders.toString(),
-      pendingOrders: pendingOrders.toString(),
+      pendingOrders: pendingOrders.toString(), // <-- Linha corrigida
+      inExecutionOrders: inExecutionOrders.toString(),
       completedToday: completedToday.toString(),
       changeTotal: `Total de ${totalOrders} ordens no sistema`,
       changeTotalType: 'neutral',
