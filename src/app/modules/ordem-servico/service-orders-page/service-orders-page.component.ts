@@ -131,7 +131,7 @@ getRecentOrders(orders: OrdemServico[]): OrdemServico[] {
 
     forkJoin({
       orders: this.serviceOrderService.obterTodos(),
-      statusList: this.workflowEstadoService.obterParaSelecao(),
+      statusList: this.workflowEstadoService.obterParaSelecao(1),
     }).subscribe({
       next: ({ orders, statusList }) => {
         this.allOrders = orders.sort((a, b) => new Date(b.dataCriacao ?? 0).getTime() - new Date(a.dataCriacao ?? 0).getTime());
