@@ -38,8 +38,15 @@ export class OrdemServicoComponent implements OnInit {
     this.loadInitialData();
   }
 
+   // MÉTODO formatDate CORRIGIDO para respeitar o fuso horário local
   private formatDate(date: Date): string {
-    return date.toISOString().split('T')[0];
+    const pad = (num: number) => num.toString().padStart(2, '0');
+
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1; // getMonth() é base 0 (janeiro = 0)
+    const day = date.getDate();
+
+    return `${year}-${pad(month)}-${pad(day)}`;
   }
 
 
@@ -52,63 +59,48 @@ getRecentOrders(orders: OrdemServico[]): OrdemServico[] {
   calculateMetrics(orders: OrdemServico[]): void {
     const today = new Date();
     const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
+    yesterday.setDate(today.getDate() - 1);
 
-    const todayISO = this.formatDate(today);
-    const yesterdayISO = this.formatDate(yesterday);
+    const estadosPendentes = ['recebida', 'em análise', 'aguardando aprovação', 'aprovada', 'em execução', 'pausada', 'reaberta'];
+    const estadosConcluidos = ['finalizada', 'entregue'];
 
-    // Ordens concluídas hoje
-    const completedToday = orders.filter(o =>
-      o.nomeEstado!.toLocaleLowerCase() === 'concluído' &&
-      o.dataConclusao &&
-      this.formatDate(new Date(o.dataConclusao)) === todayISO
-    ).length;
+    let completedToday = 0;
+    let completedYesterday = 0;
 
-    // Ordens concluídas ontem
-    const completedYesterday = orders.filter(o =>
-      o.nomeEstado!.toLocaleLowerCase() === 'concluído' &&
-      o.dataConclusao &&
-      this.formatDate(new Date(o.dataConclusao)) === yesterdayISO
-    ).length;
+    for (const order of orders) {
+      const nomeEstado = order.nomeEstado?.toLowerCase() || '';
 
+      if (estadosConcluidos.includes(nomeEstado) && order.dataConclusao) {
+        // Converte a data da OS para um objeto Date local
+        const dataConclusao = new Date(order.dataConclusao);
 
-    // Cálculo da variação percentual deste mês
-    const currentMonth = today.getMonth();
-    const currentYear = today.getFullYear();
+        // Compara ano, mês e dia no fuso horário LOCAL do usuário
+        if (dataConclusao.getFullYear() === today.getFullYear() &&
+            dataConclusao.getMonth() === today.getMonth() &&
+            dataConclusao.getDate() === today.getDate()) {
+          completedToday++;
+        }
 
-    const thisMonthOrders = orders.filter(o => {
-      if (!o.dataCriacao) return false;
-      const date = new Date(o.dataCriacao);
-      return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
-    }).length;
+        if (dataConclusao.getFullYear() === yesterday.getFullYear() &&
+            dataConclusao.getMonth() === yesterday.getMonth() &&
+            dataConclusao.getDate() === yesterday.getDate()) {
+          completedYesterday++;
+        }
+      }
+    }
 
-    const lastMonthOrders = orders.filter(o => {
-      if (!o.dataCriacao) return false;
-      const date = new Date(o.dataCriacao);
-      const lastMonth = currentMonth === 0 ? 11 : currentMonth - 1;
-      const year = currentMonth === 0 ? currentYear - 1 : currentYear;
-      return date.getMonth() === lastMonth && date.getFullYear() === year;
-    }).length;
-
-    const changePercent = lastMonthOrders > 0
-      ? Math.round(((thisMonthOrders - lastMonthOrders) / lastMonthOrders) * 100)
-      : thisMonthOrders > 0 ? 100 : 0;
-
-    const totalPendentes = orders.filter(o => o.nomeEstado!!.toLocaleLowerCase() === 'pendente').length;
+    const totalOrders = orders.length;
+    const pendingOrders = orders.filter(o => estadosPendentes.includes(o.nomeEstado?.toLowerCase() || '')).length;
+    const changeCompleted = completedToday - completedYesterday;
 
     this.metrics = {
-      totalOrders: orders.length.toString(),
-      pendingOrders: orders.filter(o => o.nomeEstado!!.toLocaleLowerCase() === 'pendente').length.toString(),
+      totalOrders: totalOrders.toString(),
+      pendingOrders: pendingOrders.toString(),
       completedToday: completedToday.toString(),
-      changeTotal: changePercent >= 0 ? `+${changePercent}% este mês` : `${changePercent}% este mês`,
-      changeTotalType: changePercent >= 0 ? 'positive' : 'negative',
-      changeTotalTypePeding: totalPendentes == 0 ? '' : 'Nenhuma Pendente',
-      changeCompleted: completedYesterday > 0
-        ? `+${completedToday - completedYesterday} desde ontem`
-        : 'Nenhuma ontem',
-      changeCompletedType: completedYesterday > 0
-        ? (completedToday >= completedYesterday ? 'positive' : 'negative')
-        : 'neutral'
+      changeTotal: `Total de ${totalOrders} ordens no sistema`,
+      changeTotalType: 'neutral',
+      changeCompleted: changeCompleted === 0 ? 'Nenhuma variação' : (changeCompleted > 0 ? `+${changeCompleted} desde ontem` : `${changeCompleted} desde ontem`),
+      changeCompletedType: changeCompleted === 0 ? 'neutral' : (changeCompleted > 0 ? 'positive' : 'negative'),
     };
   }
 
@@ -132,19 +124,18 @@ getRecentOrders(orders: OrdemServico[]): OrdemServico[] {
   }
 
 
-loadInitialData(): void {
+  loadInitialData(): void {
     this.isLoading = true;
+    this.pageTitle = 'Ordens Recentes';
 
-    // Usamos forkJoin para buscar as OS e os Status em paralelo
     forkJoin({
       orders: this.serviceOrderService.obterTodos(),
-      statusList: this.workflowEstadoService.obterParaSelecao()
+      statusList: this.workflowEstadoService.obterParaSelecao(),
     }).subscribe({
       next: ({ orders, statusList }) => {
-        this.allOrders = orders;
-        this.statusOptions = statusList; // Guarda as opções de status
+        this.allOrders = orders.sort((a, b) => new Date(b.dataCriacao ?? 0).getTime() - new Date(a.dataCriacao ?? 0).getTime());
+        this.statusOptions = statusList;
 
-        // Continua com a lógica existente
         this.applyFilters(true);
         this.calculateMetrics(this.allOrders);
         this.isLoading = false;
@@ -176,7 +167,7 @@ loadInitialData(): void {
         order.descricaoProblema?.toLowerCase().includes(termo)
       );
     }
-    
+
     if (filters.statusId) {
       results = results.filter(order => order.idEstado === filters.statusId);
     }

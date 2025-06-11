@@ -363,11 +363,8 @@ export class FormOrdemServicoComponent implements OnInit, OnDestroy {
       );
       return;
     }
-    this.editandoAparelhoOsId = aparelhoId; // Define se está editando ou criando novo
-    // A flag exibirConteudoModalAparelhoOs será true pelo evento 'show.bs.modal'
+    this.editandoAparelhoOsId = aparelhoId;
     if (isPlatformBrowser(this.platformId)) {
-      // Um pequeno timeout pode ajudar se o *ngIf precisar de um ciclo para renderizar o conteúdo
-      // antes do Bootstrap JS calcular o tamanho do modal.
       setTimeout(() => {
         this.modalAparelhoOsInstance?.show();
       }, 0);
@@ -1010,14 +1007,9 @@ private recalcularValores(): void {
     const osPayload: OrdemServicoCriacaoPayload = {
       codigo: formValue.codigo || undefined,
       valorTotal: parseFloat(formValue.valor_total_orcamento) || 0,
-      dataRetirada: formValue.data_saida || null,
-      dataExecucao: formValue.data_execucao || null,
-      dataConclusao: formValue.data_conclusao || null,
       descricaoProblema: formValue.defeito_relatado_cliente,
       diagnosticoTecnico: formValue.defeito_constatado_tecnico || undefined,
       observacoes: formValue.observacoes_gerais || undefined,
-      dataInicioGarantia: formValue.data_inicio_garantia || null,
-      dataFimGarantia: formValue.data_expiracao_garantia || null,
       idPrazoGarantia: formValue.id_prazo_garantia || undefined,
       idCliente: formValue.id_cliente,
       idAparelho: formValue.id_aparelho,
@@ -1029,6 +1021,12 @@ private recalcularValores(): void {
       idAtendente: formValue.id_atendente,
       idTecnico: formValue.id_tecnico,
       desconto: parseFloat(formValue.desconto) || 0,
+
+      dataRetirada: this.toLocalDate(formValue.data_saida),
+      dataExecucao: this.toLocalDate(formValue.data_execucao),
+      dataConclusao: this.toLocalDate(formValue.data_conclusao),
+      dataInicioGarantia: this.toLocalDate(formValue.data_inicio_garantia) ?? undefined,
+      dataFimGarantia: this.toLocalDate(formValue.data_expiracao_garantia) ?? undefined
     };
 
     limparDatasInvalidas(osPayload, [
@@ -1596,6 +1594,15 @@ private recalcularValores(): void {
       return { 'text-danger': true };
     }
     return {};
+  }
+
+    private toLocalDate(dateString: string | null | undefined): Date | null {
+    if (!dateString) {
+      return null;
+    }
+    // Adicionar 'T00:00:00' força o JavaScript a interpretar a data na hora local,
+    // em vez do padrão UTC, o que resolve o problema de conversão de fuso horário.
+    return new Date(`${dateString}T00:00:00`);
   }
 
 
