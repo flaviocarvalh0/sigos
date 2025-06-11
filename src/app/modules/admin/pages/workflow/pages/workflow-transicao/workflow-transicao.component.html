@@ -1,0 +1,76 @@
+<div class="p-2">
+  <!-- Formulário de Cadastro -->
+  <div class="card card-body bg-light border-dashed mb-4">
+    <h6 class="mb-3">Adicionar Nova Transição</h6>
+    <form [formGroup]="form" (ngSubmit)="onSubmit()">
+      <div class="row g-3 align-items-center">
+        <!-- Dropdown Estado de Origem -->
+        <div class="col-12 col-md-3">
+          <ng-select formControlName="idEstadoOrigem" [items]="estados" bindLabel="descricao" bindValue="id" placeholder="Estado de Origem" [clearable]="true" appendTo="body"></ng-select>
+        </div>
+
+        <div class="col-auto text-muted">
+          <i class="bi bi-arrow-right-short"></i>
+        </div>
+
+        <!-- Dropdown Ação -->
+        <div class="col-12 col-md-3">
+          <ng-select formControlName="idAcao" [items]="acoes" bindLabel="descricao" bindValue="id" placeholder="Ação a ser Executada" [clearable]="true" appendTo="body"></ng-select>
+        </div>
+
+        <div class="col-auto text-muted">
+          <i class="bi bi-arrow-right-short"></i>
+        </div>
+
+        <!-- Dropdown Estado de Destino -->
+        <div class="col-12 col-md-3">
+          <ng-select formControlName="idEstadoDestino" [items]="estados" bindLabel="descricao" bindValue="id" placeholder="Estado de Destino" [clearable]="true" appendTo="body"></ng-select>
+        </div>
+
+        <!-- Botão de Adicionar -->
+        <div class="col-12 col-md-auto">
+          <button type="button" class="btn btn-sm btn-success w-100" [disabled]="form.invalid" (click)="onSubmit()">
+            <i class="bi bi-plus-circle me-1"></i> Adicionar
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- Tabela de Transições Existentes -->
+  <h6 class="text-muted">Transições Cadastradas</h6>
+  <div *ngIf="isLoading" class="text-center p-4">
+    <div class="spinner-border spinner-border-sm" role="status">
+      <span class="visually-hidden">Carregando...</span>
+    </div>
+  </div>
+
+  <div *ngIf="!isLoading && transicoes.length === 0" class="alert alert-secondary text-center">
+    Nenhuma transição cadastrada para este workflow.
+  </div>
+
+  <div *ngIf="!isLoading && transicoes.length > 0" class="table-responsive">
+    <table class="table table-sm table-hover align-middle">
+      <thead>
+        <tr>
+          <th>De (Estado Origem)</th>
+          <th>Executando (Ação)</th>
+          <th>Para (Estado Destino)</th>
+          <th style="width: 50px;" class="text-center"></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let transicao of transicoes">
+          <td><span class="badge bg-secondary">{{ transicao.nomeEstadoOrigem }}</span></td>
+          <td><span class="badge bg-primary">{{ transicao.nomeAcao }}</span></td>
+          <td><span class="badge bg-success">{{ transicao.nomeEstadoDestino }}</span></td>
+          <td class="text-center">
+            <button type="button" class="btn btn-sm btn-outline-danger" title="Excluir Transição" (click)="onRemover(transicao)">
+              <i class="bi bi-trash"></i>
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

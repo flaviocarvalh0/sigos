@@ -9,6 +9,8 @@ import { ToastService } from '../../../../../../services/toast.service';
 import { WorkflowService } from '../../../../../../services/workflow/workflow.service';
 import { WorkflowAtualizacaoPayload, WorkflowCriacaoPayload } from '../../../../../../Models/workflow/workflow.model';
 import { WorkflowEstadosComponent } from '../workflow-estado/workflow-estado.component';
+import { WorkflowAcoesComponent } from '../workflow-acoes/workflow-acoes.component';
+import { WorkflowTransicoesComponent } from '../workflow-transicao/workflow-transicao.component';
 
 
 @Component({
@@ -17,7 +19,9 @@ import { WorkflowEstadosComponent } from '../workflow-estado/workflow-estado.com
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    WorkflowEstadosComponent
+    WorkflowEstadosComponent,
+    WorkflowAcoesComponent,
+    WorkflowTransicoesComponent
   ],
   templateUrl: './form-workflow.component.html',
 })
@@ -52,6 +56,8 @@ export class FormWorkflowComponent implements OnInit {
     this.form = this.fb.group({
       nome: ['', [Validators.required, Validators.maxLength(100)]],
       descricao: ['', [Validators.maxLength(500)]],
+      nomeTabela: ['', [Validators.required, Validators.maxLength(100)]],
+      isPadrao: [true]
     });
   }
 
@@ -68,7 +74,9 @@ export class FormWorkflowComponent implements OnInit {
       const payload: WorkflowAtualizacaoPayload = {
         id: this.workflowId,
         nome: formValue.nome,
-        descricao: formValue.descricao
+        descricao: formValue.descricao,
+        nomeTabela: formValue.nomeTabela,
+        isPadrao: true
       };
       this.service.atualizar(this.workflowId, payload).subscribe(() => {
         this.toast.success('Workflow atualizado com sucesso!');
@@ -78,7 +86,9 @@ export class FormWorkflowComponent implements OnInit {
       // CRIAÇÃO
       const payload: WorkflowCriacaoPayload = {
         nome: formValue.nome,
-        descricao: formValue.descricao
+        descricao: formValue.descricao,
+        nomeTabela: formValue.nomeTabela, // Novo campo
+        isPadrao: formValue.isPadrao,
       };
       this.service.criar(payload).subscribe(novoWorkflow => {
         this.toast.success('Workflow criado com sucesso!');

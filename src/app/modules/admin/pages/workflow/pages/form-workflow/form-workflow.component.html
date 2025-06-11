@@ -58,6 +58,19 @@
                 <label for="descricao" class="form-label">Descrição (opcional)</label>
                 <input type="text" id="descricao" formControlName="descricao" class="form-control" maxlength="500" />
               </div>
+
+               <div class="col-md-6">
+                <label for="nomeTabela" class="form-label">Nome da Tabela Principal <span *ngIf="form.get('nomeTabela')?.invalid" class="text-danger ms-1">*</span></label>
+                <input type="text" id="nomeTabela" formControlName="nomeTabela" class="form-control" maxlength="100" placeholder="Ex: ordem_servico">
+              </div>
+
+              <!-- NOVO CAMPO: Flag Padrão -->
+              <div class="col-md-6 d-flex align-items-end">
+                  <div class="form-check form-switch mb-1">
+                    <input class="form-check-input" type="checkbox" id="isPadrao" formControlName="isPadrao" role="switch">
+                    <label class="form-check-label" for="isPadrao">Definir como padrão para esta tabela?</label>
+                  </div>
+              </div>
             </div>
           </div>
 
@@ -65,12 +78,12 @@
           <div class="tab-pane fade" id="estados" role="tabpanel">
             <app-workflow-estados *ngIf="workflowId" [workflowId]="workflowId"></app-workflow-estados>
           </div>
-          <!-- <div class="tab-pane fade" id="acoes" role="tabpanel">
+           <div class="tab-pane fade" id="acoes" role="tabpanel">
             <app-workflow-acoes *ngIf="workflowId" [workflowId]="workflowId"></app-workflow-acoes>
           </div>
           <div class="tab-pane fade" id="transicoes" role="tabpanel">
             <app-workflow-transicoes *ngIf="workflowId" [workflowId]="workflowId"></app-workflow-transicoes>
-          </div> -->
+          </div>
         </div>
 
         <!-- 3. Rodapé com Botões de Ação (fora das abas) -->

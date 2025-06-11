@@ -1,38 +1,39 @@
-// src/app/pages/admin/workflow/workflow-estados/workflow-estados.component.ts
+// src/app/pages/admin/workflow/workflow-acoes/workflow-acoes.component.ts
 
 import { Component, EventEmitter, Input, OnInit, Output, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { take } from 'rxjs';
-
-import { WorkflowEstado, WorkflowEstadoCriacaoPayload } from '../../../../../../Models/workflow/workflow-estado.model';
-import { WorkflowEstadoService } from '../../../../../../services/workflow/workflow-estado.service';
+import { WorkFlowAcao, WorkFlowAcaoCriacaoPayload } from '../../../../../../Models/workflow/workflow-acao.model';
+import { WorkflowAcaoService } from '../../../../../../services/workflow/workflow-acao.service';
 import { ToastService } from '../../../../../../services/toast.service';
 import { ConfirmationService } from '../../../../../../services/confirmation.service';
 
+
+
 @Component({
-  selector: 'app-workflow-estados',
+  selector: 'app-workflow-acoes',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
-  templateUrl: './workflow-estado.component.html',
+  templateUrl: './workflow-acoes.component.html',
 })
-export class WorkflowEstadosComponent implements OnInit {
+export class WorkflowAcoesComponent implements OnInit {
   @Input() workflowId!: number;
   @Output() dataChanged = new EventEmitter<void>();
 
-  estados: WorkflowEstado[] = [];
+  acoes: WorkFlowAcao[] = [];
   form!: FormGroup;
   isLoading = false;
 
   private fb = inject(FormBuilder);
-  private estadoService = inject(WorkflowEstadoService);
+  private acaoService = inject(WorkflowAcaoService);
   private toast = inject(ToastService);
   private confirmationService = inject(ConfirmationService);
 
   ngOnInit(): void {
     this.buildForm();
     if (this.workflowId) {
-      this.carregarEstados();
+      this.carregarAcoes();
     }
   }
 
@@ -40,22 +41,19 @@ export class WorkflowEstadosComponent implements OnInit {
     this.form = this.fb.group({
       nome: ['', [Validators.required, Validators.maxLength(100)]],
       descricao: ['', [Validators.maxLength(500)]],
-      isEstadoInicial: [false]
     });
   }
 
-  carregarEstados(): void {
+  carregarAcoes(): void {
     this.isLoading = true;
-    // CORREÇÃO: Chamamos o método correto que espera o ID do workflow.
-    this.estadoService.obterEstadosPorWorkflow(this.workflowId).subscribe({
-      next: (estadosDoWorkflow) => {
-        // A API já retorna a lista filtrada, então podemos atribuir diretamente.
-        this.estados = estadosDoWorkflow;
-        console.log(estadosDoWorkflow);
+    this.acaoService.obterAcoesPorWorkflow(this.workflowId).subscribe({
+      next: (acoesDoWorkflow) => {
+        this.acoes = acoesDoWorkflow;
+        console.log(acoesDoWorkflow);
         this.isLoading = false;
       },
       error: (err) => {
-        this.toast.error('Erro ao carregar os estados do workflow.');
+        this.toast.error('Erro ao carregar as ações do workflow.');
         console.error(err);
         this.isLoading = false;
       }
@@ -70,45 +68,43 @@ export class WorkflowEstadosComponent implements OnInit {
 
     const formValue = this.form.value;
 
-    const payload: WorkflowEstadoCriacaoPayload = {
+    const payload: WorkFlowAcaoCriacaoPayload = {
       idWorkFlow: this.workflowId,
       nome: formValue.nome,
       descricao: formValue.descricao,
-      isEstadoInicial: formValue.isEstadoInicial
     };
 
-    this.estadoService.criarEstado(payload).subscribe({
+    this.acaoService.criarAcao(payload).subscribe({
       next: () => {
-        this.toast.success('Novo estado criado com sucesso!');
-        this.form.reset({ isEstadoInicial: false });
-        this.carregarEstados();
+        this.toast.success('Nova ação criada com sucesso!');
+        this.form.reset();
+        this.carregarAcoes();
         this.dataChanged.emit();
       },
       error: (err) => {
-        this.toast.error(`Erro ao criar estado: ${err.message}`);
-        console.error(err);
+        this.toast.error(`Erro ao criar ação: ${err.message}`);
       }
     });
   }
 
-  onRemover(estado: WorkflowEstado): void {
+  onRemover(acao: WorkFlowAcao): void {
     this.confirmationService.confirm({
       title: 'Confirmar Exclusão',
-      message: `Tem certeza que deseja remover o estado "${estado.nome}"? Isso pode afetar transições existentes.`
+      message: `Tem certeza que deseja remover a ação "${acao.nome}"? Isso pode afetar transições existentes.`
     })
     .pipe(take(1))
     .subscribe(confirmado => {
       if (confirmado) {
         this.isLoading = true;
-        this.estadoService.remover(estado.id!).subscribe({
+        this.acaoService.remover(acao.id!).subscribe({
           next: () => {
-            this.toast.success(`Estado "${estado.nome}" removido com sucesso.`);
-            this.estados = this.estados.filter(e => e.id !== estado.id);
+            this.toast.success(`Ação "${acao.nome}" removida com sucesso.`);
+            this.acoes = this.acoes.filter(a => a.id !== acao.id);
             this.dataChanged.emit();
             this.isLoading = false;
           },
           error: (err) => {
-            this.toast.error(`Erro ao remover o estado. ${err.message}`);
+            this.toast.error(`Erro ao remover a ação. ${err.message}`);
             this.isLoading = false;
           }
         });

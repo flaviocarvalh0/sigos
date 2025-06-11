@@ -33,14 +33,14 @@ export class WorkflowEstadoService {
       .pipe(
         map(response => {
           const dadosApi = response.dados || [];
-          // Mapeia a resposta para o formato que a aplicação espera.
+
           return dadosApi.map(item => ({
             id: item.id || item.idEstado, // Usa 'id' ou 'idEstado'
             nome: item.nome || item.nomeEstado, // Usa 'nome' ou 'nomeEstado'
             descricao: item.descricao,
             idWorkFlow: item.idWorkFlow,
             nomeWorFlow: item.nomeWorFlow,
-            isEstadoInicial: item.isEstadoInicial,
+            isEstadoInicial: item.estadoInicial,
             criadoPor: item.criadoPor,
             dataCriacao: item.dataCriacao,
             modificadoPor: item.modificadoPor,

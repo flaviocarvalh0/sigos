@@ -54,6 +54,11 @@ import { Modelo } from '../../../Models/modelo.model';
             <span>Data de Entrada: {{ order.dataCriacao | date : 'dd/MM/yyyy' }}</span>
           </div>
 
+          <div class="d-flex align-items-center gap-2 text-muted small mb-3">
+            <i class="bi bi-calendar"></i>
+            <span>Data de Conclusão: {{ order.dataConclusao | date : 'dd/MM/yyyy' }}</span>
+          </div>
+
           <div class="mb-3">
             <p class="small text-muted mb-1">Problema:</p>
             <p class="small mb-0 text-break line-clamp-2">
