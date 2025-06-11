@@ -1,99 +1,94 @@
-// order-filters.component.ts
-import { Component, EventEmitter, Output } from '@angular/core';
+import { NgSelectModule } from '@ng-select/ng-select';
+import {
+  Component,
+  EventEmitter,
+  Output,
+  OnInit,
+  OnDestroy,
+  Input,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
+import { Subscription } from 'rxjs';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { EstadoSelecao } from '../../../Models/workflow/workflow-estado.model';
 
-interface FilterState {
-  search: string;
-  status: string;
-  dateRange: string;
+// Interface para as opções de status que virão do componente pai
+interface StatusOption {
+  id: number;
+  descricao: string;
 }
 
 @Component({
   selector: 'app-order-filters',
   standalone: true,
-  imports: [CommonModule, FormsModule],
-  template: `
-    <div class="card mb-4">
-      <div class="card-body p-4">
-        <div class="d-flex flex-column gap-3">
-          <!-- Adicionado gap-3 para espaçamento vertical -->
+  imports: [CommonModule, ReactiveFormsModule, NgSelectModule],
+  template: `<form [formGroup]="filterForm" class="row g-3 align-items-center">
 
-          <!-- Search - Agora com mais margem -->
-          <div class="position-relative mb-3">
-            <!-- Adicionado mb-3 -->
-            <i
-              class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"
-            ></i>
-            <input
-              type="text"
-              class="form-control ps-5 py-2"
-              placeholder="Buscar por código, cliente ou problema..."
-              [(ngModel)]="filters.search"
-              (ngModelChange)="handleFilterChange('search', $event)"
-            />
-          </div>
-
-          <!-- Filters Row - Agora com mais espaçamento -->
-          <div class="row g-3">
-            <!-- Alterado de gap-4 para g-3 -->
-            <div class="col-md-6">
-              <select
-                class="form-select py-2"
-                [(ngModel)]="filters.status"
-                (ngModelChange)="handleFilterChange('status', $event)"
-              >
-                <option value="todos">Todos os Status</option>
-                <option value="pendente">Pendente</option>
-                <option value="em_andamento">Em Andamento</option>
-                <option value="concluido">Concluído</option>
-                <option value="cancelado">Cancelado</option>
-              </select>
-            </div>
-
-            <div class="col-md-6">
-              <select
-                class="form-select py-2"
-                [(ngModel)]="filters.dateRange"
-                (ngModelChange)="handleFilterChange('dateRange', $event)"
-              >
-                <option value="todos">Todos os Períodos</option>
-                <option value="hoje">Hoje</option>
-                <option value="semana">Esta Semana</option>
-                <option value="mes">Este Mês</option>
-                <option value="trimestre">Últimos 3 Meses</option>
-              </select>
-            </div>
-          </div>
-
-       <div class="col-12 col-lg-auto ms-auto">
-  <button
-    type="button" class="btn btn-outline-secondary mt-3 mt-lg-0 py-2" (click)="clearFilters()"
-  >
-    Limpar Filtros
-  </button>
-</div>
-        </div>
-      </div>
+  <!-- Campo de Busca -->
+  <div class="col-12 col-md">
+    <div class="input-group input-group-sm">
+      <span class="input-group-text bg-light border-0"><i class="bi bi-search"></i></span>
+      <input type="text" class="form-control bg-light border-0" formControlName="search" placeholder="Buscar por código, cliente, aparelho...">
     </div>
-  `,
+  </div>
+
+  <!-- Filtro de Status (com a largura ajustada) -->
+  <div class="col-12 col-sm-6 col-md-3">
+    <ng-select
+        formControlName="statusId"
+        [items]="statusOptions"
+        bindLabel="descricao"
+        bindValue="id"
+        placeholder="Todos os Status"
+        [clearable]="true"
+        class="ng-select-sm"
+        appendTo="body">
+    </ng-select>
+  </div>
+
+  <!-- Botão Limpar -->
+  <div class="col-12 col-md-auto">
+    <button type="button" class="btn btn-sm btn-outline-secondary w-100 w-md-auto" (click)="clearFilters()">Limpar</button>
+  </div>
+</form>`,
 })
-export class OrderFiltersComponent {
-  filters: FilterState = {
-    search: '',
-    status: 'todos',
-    dateRange: 'todos',
-  };
+export class OrderFiltersComponent implements OnInit, OnDestroy {
+  // Recebe a lista de status do componente pai
+  @Input() statusOptions: EstadoSelecao[] = [];
 
-  @Output() filterChange = new EventEmitter<FilterState>();
+  // Emite o objeto de filtros para o componente pai
+  @Output() filterChange = new EventEmitter<any>();
 
-  handleFilterChange(key: keyof FilterState, value: string) {
-    this.filters = { ...this.filters, [key]: value };
-    this.filterChange.emit(this.filters);
+  filterForm: FormGroup;
+  private formSub: Subscription | undefined;
+
+  constructor(private fb: FormBuilder) {
+    this.filterForm = this.fb.group({
+      search: [''],
+      statusId: [null], // Agora filtramos pelo ID
+      dateRange: ['todos'],
+    });
   }
 
-  clearFilters() {
-    this.filters = { search: '', status: 'todos', dateRange: 'todos' };
-    this.filterChange.emit(this.filters);
+  ngOnInit(): void {
+    // Escuta as mudanças no formulário
+    this.formSub = this.filterForm.valueChanges
+      .pipe(debounceTime(400), distinctUntilChanged())
+      .subscribe((filters) => {
+        this.filterChange.emit(filters);
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.formSub?.unsubscribe();
+  }
+
+  clearFilters(): void {
+    this.filterForm.reset({
+      search: '',
+      statusId: null,
+      dateRange: 'todos',
+    });
   }
 }

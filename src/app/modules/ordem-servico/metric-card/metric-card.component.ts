@@ -7,18 +7,19 @@ import { CommonModule } from '@angular/common';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="card h-100 min-h-100 transition-all duration-200 hover:shadow-md">
-      <div class="card-header d-flex flex-row justify-content-between align-items-center pb-2">
-        <h5 class="text-sm font-medium text-muted mb-0 text-truncate">{{ title }}</h5>
-        <div [class]="'p-2 rounded-lg ' + color">
+ <div class="card h-100 shadow-sm border-0">
+      <div class="card-body d-flex justify-content-between align-items-center p-3">
+        <div>
+          <h6 class="card-title text-muted fw-normal mb-1 text-truncate">{{ title }}</h6>
+          <p class="h4 fw-bold mb-0">{{ value }}</p>
+          <p *ngIf="change" [class]="'small mt-1 mb-0 ' + getChangeColorClass()">
+            {{ change }}
+          </p>
+        </div>
+        <!-- AJUSTE APLICADO AQUI -->
+        <div [class]="'p-3 rounded-3 d-flex align-items-center justify-content-center ' + color">
           <ng-content select="[icon]"></ng-content>
         </div>
-      </div>
-      <div class="card-body">
-        <div class="text-2xl font-bold">{{ value }}</div>
-        <p *ngIf="change" [class]="'text-xs mt-1 ' + getChangeColorClass()">
-          {{ change }}
-        </p>
       </div>
     </div>
   `

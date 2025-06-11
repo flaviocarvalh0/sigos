@@ -6,6 +6,9 @@ import { OrderFiltersComponent } from '../order-filters/order-filters.component'
 import { ServiceOrderCardComponent } from '../service-order-card/service-order-card.component';
 import { OrdemServicoService } from '../../../services/ordem-servico/ordem-servico.service';
 import { OrdemServico } from '../../../Models/ordem-servico/ordem-servico.model';
+import { EstadoSelecao } from '../../../Models/workflow/workflow-estado.model';
+import { WorkflowEstadoService } from '../../../services/workflow/workflow-estado.service';
+import { forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-ordem-servico',
@@ -27,8 +30,9 @@ export class OrdemServicoComponent implements OnInit {
   currentFilters: any = { search: '', status: 'todos', dateRange: 'todos' };
   showingAll: boolean = false;
   pageTitle: string = 'Ordens Recentes';
+  statusOptions: EstadoSelecao[] = [];
 
-  constructor(private serviceOrderService: OrdemServicoService, private router: Router) {}
+  constructor(private serviceOrderService: OrdemServicoService, private workflowEstadoService: WorkflowEstadoService ,private router: Router) {}
 
   ngOnInit(): void {
     this.loadInitialData();
@@ -128,21 +132,25 @@ getRecentOrders(orders: OrdemServico[]): OrdemServico[] {
   }
 
 
-   loadInitialData(): void {
+loadInitialData(): void {
     this.isLoading = true;
-    this.pageTitle = 'Ordens Recentes';
 
-    this.serviceOrderService.obterTodos().subscribe({
-      next: (orders) => {
-        this.allOrders = orders.sort((a, b) =>
-          new Date(b.dataCriacao ?? 0).getTime() - new Date(a.dataCriacao ?? 0).getTime()
-        );
-        this.applyFilters(true); // Aplica o filtro inicial de "recentes"
+    // Usamos forkJoin para buscar as OS e os Status em paralelo
+    forkJoin({
+      orders: this.serviceOrderService.obterTodos(),
+      statusList: this.workflowEstadoService.obterParaSelecao()
+    }).subscribe({
+      next: ({ orders, statusList }) => {
+        this.allOrders = orders;
+        this.statusOptions = statusList; // Guarda as opções de status
+
+        // Continua com a lógica existente
+        this.applyFilters(true);
         this.calculateMetrics(this.allOrders);
         this.isLoading = false;
       },
       error: (err) => {
-        console.error('Erro ao carregar ordens:', err);
+        console.error('Erro ao carregar dados iniciais:', err);
         this.isLoading = false;
       }
     });
@@ -154,13 +162,12 @@ getRecentOrders(orders: OrdemServico[]): OrdemServico[] {
     this.applyFilters();
   }
 
-  // MÉTODO applyFilters COMPLETAMENTE REESCRITO
   applyFilters(initialLoad = false): void {
-    this.isLoading = true;
+       this.isLoading = true;
     let results = [...this.allOrders];
     const filters = this.currentFilters;
 
-    // Filtro por termo de busca (search)
+    // Filtro por termo de busca
     if (filters.search) {
       const termo = filters.search.toLowerCase();
       results = results.filter(order =>
@@ -169,20 +176,16 @@ getRecentOrders(orders: OrdemServico[]): OrdemServico[] {
         order.descricaoProblema?.toLowerCase().includes(termo)
       );
     }
-
-    // Filtro por Status
-    if (filters.status && filters.status !== 'todos') {
-      // O valor do filtro é "em_andamento", mas o nome no objeto é "Em Andamento"
-      const statusFormatado = filters.status.replace('_', ' ');
-      results = results.filter(order =>
-        order.nomeEstado?.toLowerCase() === statusFormatado.toLowerCase()
-      );
+    
+    if (filters.statusId) {
+      results = results.filter(order => order.idEstado === filters.statusId);
     }
+
 
     // Filtro por Período de Data (dateRange)
     if (filters.dateRange && filters.dateRange !== 'todos') {
       const hoje = new Date();
-      hoje.setHours(0, 0, 0, 0); // Zera a hora para comparações de dia
+      hoje.setHours(0, 0, 0, 0);
 
       let dataInicioFiltro: Date | null = null;
 
@@ -199,9 +202,9 @@ getRecentOrders(orders: OrdemServico[]): OrdemServico[] {
           dataInicioFiltro.setMonth(hoje.getMonth() - 1);
           break;
         case 'trimestre':
-          dataInicioFiltro = new Date(hoje);
-          dataInicioFiltro.setMonth(hoje.getMonth() - 3);
-          break;
+            dataInicioFiltro = new Date(hoje);
+            dataInicioFiltro.setMonth(hoje.getMonth() - 3);
+            break;
       }
 
       if (dataInicioFiltro) {
@@ -212,14 +215,11 @@ getRecentOrders(orders: OrdemServico[]): OrdemServico[] {
       }
     }
 
-    // Lógica para mostrar apenas recentes na carga inicial
-    if (initialLoad) {
-      this.filteredOrders = results.slice(0, 6);
-    } else {
-      this.filteredOrders = results;
-    }
-
-    this.isLoading = false;
+    // Pequeno delay para melhorar a percepção de carregamento
+    setTimeout(() => {
+      this.filteredOrders = initialLoad ? results.slice(0, 6) : results;
+      this.isLoading = false;
+    }, 200);
   }
 
   loadAllOrders(): void {
