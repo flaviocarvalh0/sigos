@@ -60,10 +60,19 @@ import { Modelo } from '../../../Models/modelo.model';
           </div>
 
           <div class="mb-3">
-            <p class="small text-muted mb-1">Problema:</p>
-            <p class="small mb-0 text-break line-clamp-2">
-              {{ order.descricaoProblema }}
-            </p>
+            <p
+  class="small mb-0 text-break"
+  [attr.title]="order.descricaoProblema"
+  style="
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  "
+>
+  {{ order.descricaoProblema }}
+</p>
           </div>
         </div>
 
