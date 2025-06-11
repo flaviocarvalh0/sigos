@@ -1,0 +1,71 @@
+<!-- workflow-estados.component.html -->
+<div class="p-2">
+  <!-- Formulário de Cadastro de Novo Estado -->
+  <div class="card card-body bg-light border-dashed mb-4">
+    <h6 class="mb-3">Adicionar Novo Estado</h6>
+
+    <!-- A tag <form> agora não tem mais o evento (ngSubmit) -->
+    <form [formGroup]="form">
+      <div class="row g-3 align-items-end">
+        <div class="col-md-4">
+          <label for="estado-nome" class="form-label form-label-sm">Nome do Estado <span class="text-danger">*</span></label>
+          <input type="text" id="estado-nome" formControlName="nome" class="form-control form-control-sm">
+        </div>
+        <div class="col-md-5">
+          <label for="estado-descricao" class="form-label form-label-sm">Descrição</label>
+          <input type="text" id="estado-descricao" formControlName="descricao" class="form-control form-control-sm">
+        </div>
+        <div class="col-md-3">
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="estado-inicial" formControlName="isEstadoInicial" role="switch">
+            <label class="form-check-label" for="estado-inicial">É o estado inicial?</label>
+          </div>
+        </div>
+      </div>
+      <div class="d-flex justify-content-end mt-3">
+        <!-- O botão agora é type="button" e chama onSubmit() no (click) -->
+        <button type="button" class="btn btn-sm btn-success" [disabled]="form.invalid" (click)="onSubmit()">
+          <i class="bi bi-plus-circle me-1"></i> Adicionar Estado
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Tabela de Estados Existentes -->
+  <h6 class="text-muted">Estados Cadastrados</h6>
+  <div *ngIf="isLoading" class="text-center p-4">
+    <div class="spinner-border spinner-border-sm" role="status">
+      <span class="visually-hidden">Carregando...</span>
+    </div>
+  </div>
+
+  <div *ngIf="!isLoading && estados.length === 0" class="alert alert-secondary text-center">
+    Nenhum estado cadastrado para este workflow.
+  </div>
+
+  <div *ngIf="!isLoading && estados.length > 0" class="table-responsive">
+    <table class="table table-sm table-hover align-middle">
+      <thead>
+        <tr>
+          <th>Nome</th>
+          <th>Descrição</th>
+          <th class="text-center">Estado Inicial</th>
+          <th style="width: 100px;" class="text-center">Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let estado of estados">
+          <td>{{ estado.nome }}</td>
+          <td><small>{{ estado.descricao }}</small></td>
+          <td class="text-center">
+            <span *ngIf="estado.isEstadoInicial" class="badge bg-success">Sim</span>
+            <span *ngIf="!estado.isEstadoInicial" class="text-muted small">Não</span>
+          </td>
+          <td class="text-center">
+            <button type="button" class="btn btn-sm btn-outline-danger" title="Excluir" (click)="onRemover(estado)"><i class="bi bi-trash"></i></button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

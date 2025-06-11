@@ -1,0 +1,88 @@
+<!-- form-workflow.component.html -->
+<div class="container mt-4 mb-5">
+  <div class="card shadow-sm">
+
+    <!-- 1. Cabeçalho Colorido (como no exemplo) -->
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+      <h4 class="mb-0 d-flex align-items-center">
+        <i class="bi bi-diagram-3-fill me-2"></i>
+        {{ workflowId ? 'Editar Workflow' : 'Cadastro de Workflow' }}
+      </h4>
+      <button type="button" class="btn btn-light btn-sm" (click)="cancelar()">
+        <i class="bi bi-arrow-left me-1"></i> Voltar para Lista
+      </button>
+    </div>
+
+    <!-- 2. Corpo do Card -->
+    <div class="card-body">
+      <!-- O formulário agora envolve todo o conteúdo das abas -->
+      <form [formGroup]="form" (ngSubmit)="onSubmit()">
+
+        <!-- Sistema de Abas -->
+        <ul class="nav nav-tabs" id="workflowTab" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="dados-tab" data-bs-toggle="tab" data-bs-target="#dados" type="button" role="tab">
+              <i class="bi bi-card-text me-1"></i> Dados Gerais
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="estados-tab" data-bs-toggle="tab" data-bs-target="#estados" type="button" role="tab" [disabled]="!workflowId">
+              <i class="bi bi-flag me-1"></i> Estados
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="acoes-tab" data-bs-toggle="tab" data-bs-target="#acoes" type="button" role="tab" [disabled]="!workflowId">
+              <i class="bi bi-lightning-charge me-1"></i> Ações
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="transicoes-tab" data-bs-toggle="tab" data-bs-target="#transicoes" type="button" role="tab" [disabled]="!workflowId">
+              <i class="bi bi-shuffle me-1"></i> Transições
+            </button>
+          </li>
+        </ul>
+
+        <!-- Conteúdo das Abas -->
+        <div class="tab-content py-3">
+          <!-- Aba 1: Formulário do Workflow -->
+          <div class="tab-pane fade show active" id="dados" role="tabpanel">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <!-- AJUSTE APLICADO AQUI -->
+                <label for="nome" class="form-label">Nome do Workflow
+                  <span *ngIf="form.get('nome')?.invalid" class="text-danger ms-1">*</span>
+                </label>
+                <input type="text" id="nome" formControlName="nome" class="form-control" maxlength="100" />
+              </div>
+              <div class="col-md-6">
+                <label for="descricao" class="form-label">Descrição (opcional)</label>
+                <input type="text" id="descricao" formControlName="descricao" class="form-control" maxlength="500" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Abas seguintes (com os novos componentes) -->
+          <div class="tab-pane fade" id="estados" role="tabpanel">
+            <app-workflow-estados *ngIf="workflowId" [workflowId]="workflowId"></app-workflow-estados>
+          </div>
+          <!-- <div class="tab-pane fade" id="acoes" role="tabpanel">
+            <app-workflow-acoes *ngIf="workflowId" [workflowId]="workflowId"></app-workflow-acoes>
+          </div>
+          <div class="tab-pane fade" id="transicoes" role="tabpanel">
+            <app-workflow-transicoes *ngIf="workflowId" [workflowId]="workflowId"></app-workflow-transicoes>
+          </div> -->
+        </div>
+
+        <!-- 3. Rodapé com Botões de Ação (fora das abas) -->
+        <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+          <button type="button" class="btn btn-secondary" (click)="cancelar()">
+            <i class="bi bi-x-lg me-1"></i> Cancelar
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="form.invalid || form.pristine">
+            <i class="bi bi-save me-1"></i> {{ workflowId ? 'Salvar Alterações' : 'Criar e Continuar' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

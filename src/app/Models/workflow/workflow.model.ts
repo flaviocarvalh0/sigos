@@ -8,7 +8,7 @@ export interface Workflow extends ModelBase{
 
 export interface WorkflowCriacaoPayload extends ModelBaseCriacaoAtualizacao {
   nome: string;
-  descricao?: string;
+  descricao: string;
 }
 
 export interface WorkflowAtualizacaoPayload extends ModelBaseCriacaoAtualizacao {

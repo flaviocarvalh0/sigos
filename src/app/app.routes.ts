@@ -39,8 +39,8 @@ import { FormCategoriaComponent } from './modules/categoria/pages/form-categoria
 import { AdminLayoutComponent } from './modules/admin/layout/admin-layout/admin-layout.component';
 import { ListGruposComponent } from './modules/admin/pages/grupo/list-grupo/list-grupo.component';
 import { FormGrupoComponent } from './modules/admin/pages/grupo/form-grupo/form-grupo.component';
-import { ListWorkflowComponent } from './modules/admin/pages/workflow/list-workflow/list-workflow.component';
-import { FormWorkflowComponent } from './modules/admin/pages/workflow/form-workflow/form-workflow.component';
+import { ListWorkflowComponent } from './modules/admin/pages/workflow/pages/list-workflow/list-workflow.component';
+import { FormWorkflowComponent } from './modules/admin/pages/workflow/pages/form-workflow/form-workflow.component';
 // Supondo que você criará este para a área admin:
 // import { ListGruposComponent } from './admin/pages/list-grupos/list-grupos.component';
 

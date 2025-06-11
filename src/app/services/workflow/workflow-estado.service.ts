@@ -1,7 +1,7 @@
 // src/app/services/workflow/workflow-estado.service.ts
 
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 
@@ -19,18 +19,34 @@ import { environment } from '../../environments/environment';
   providedIn: 'root'
 })
 export class WorkflowEstadoService {
-  // A URL base para este serviço específico
   private readonly apiUrl = `${environment.apiUrl}/workflow-estados`;
 
   constructor(private http: HttpClient) { }
 
   /**
-   * Busca todos os estados cadastrados.
+   * Busca todos os estados que pertencem a um workflow específico.
+   * Corresponde à rota: GET /estados-do-workflow/{idWorkflow}
    */
-  obterTodos(): Observable<WorkflowEstado[]> {
-    return this.http.get<RespostaApi<WorkflowEstado[]>>(this.apiUrl)
+  obterEstadosPorWorkflow(idWorkflow: number): Observable<WorkflowEstado[]> {
+    // Esperamos uma resposta genérica (any[]) para poder mapear os campos manualmente.
+    return this.http.get<RespostaApi<any[]>>(`${this.apiUrl}/estados-do-workflow/${idWorkflow}`)
       .pipe(
-        map(response => response.dados || []),
+        map(response => {
+          const dadosApi = response.dados || [];
+          // Mapeia a resposta para o formato que a aplicação espera.
+          return dadosApi.map(item => ({
+            id: item.id || item.idEstado, // Usa 'id' ou 'idEstado'
+            nome: item.nome || item.nomeEstado, // Usa 'nome' ou 'nomeEstado'
+            descricao: item.descricao,
+            idWorkFlow: item.idWorkFlow,
+            nomeWorFlow: item.nomeWorFlow,
+            isEstadoInicial: item.isEstadoInicial,
+            criadoPor: item.criadoPor,
+            dataCriacao: item.dataCriacao,
+            modificadoPor: item.modificadoPor,
+            dataModificacao: item.dataModificacao
+          }) as WorkflowEstado);
+        }),
         catchError(this.handleError)
       );
   }
@@ -38,10 +54,9 @@ export class WorkflowEstadoService {
   /**
    * Busca uma lista simplificada de estados para uso em dropdowns,
    * filtrando por um ID de workflow específico.
-   * @param idWorkflow O ID do workflow para o qual buscar os estados.
+   * Corresponde à rota: GET /selecao-por-workflow/{idWorkflow}
    */
-  obterParaSelecao(idWorkflow: number): Observable<EstadoSelecao[]> {
-    // CORREÇÃO: O ID do workflow agora é parte da URL, como solicitado.
+  obterParaSelecaoPorWorkflow(idWorkflow: number): Observable<EstadoSelecao[]> {
     return this.http.get<RespostaApi<EstadoSelecao[]>>(`${this.apiUrl}/selecao-por-workflow/${idWorkflow}`)
       .pipe(
         map(response => response.dados || []),
@@ -51,16 +66,15 @@ export class WorkflowEstadoService {
 
   /**
    * Cria um novo estado de workflow.
-   * @param payload O objeto com os dados para criar o novo estado.
    */
   criarEstado(payload: WorkflowEstadoCriacaoPayload): Observable<WorkflowEstado> {
     return this.http.post<RespostaApi<WorkflowEstado>>(this.apiUrl, payload)
       .pipe(
         map(response => {
-          if (response.dados === undefined || response.dados === null) {
-            throw new Error('Resposta da API não contém dados do estado de workflow.');
+          if (response.dados) {
+            return response.dados;
           }
-          return response.dados;
+          throw new Error(response.mensagem || 'Falha ao criar/atualizar estado do workflow.');
         }),
         catchError(this.handleError)
       );
@@ -68,17 +82,15 @@ export class WorkflowEstadoService {
 
   /**
    * Atualiza um estado de workflow existente.
-   * @param id O ID do estado a ser atualizado.
-   * @param payload O objeto com os dados para atualizar o estado.
    */
   atualizarEstado(id: number, payload: WorkflowEstadoAtualizacaoPayload): Observable<WorkflowEstado> {
     return this.http.put<RespostaApi<WorkflowEstado>>(`${this.apiUrl}/${id}`, payload)
       .pipe(
         map(response => {
-          if (response.dados === undefined || response.dados === null) {
-            throw new Error('Resposta da API não contém dados do estado de workflow.');
+          if (response.dados) {
+            return response.dados;
           }
-          return response.dados;
+          throw new Error(response.mensagem || 'Falha ao atualizar estado do workflow.');
         }),
         catchError(this.handleError)
       );
@@ -86,7 +98,6 @@ export class WorkflowEstadoService {
 
   /**
    * Remove um estado de workflow.
-   * @param id O ID do estado a ser removido.
    */
   remover(id: number): Observable<boolean> {
     return this.http.delete<RespostaApi<boolean>>(`${this.apiUrl}/${id}`)
@@ -96,7 +107,6 @@ export class WorkflowEstadoService {
       );
   }
 
-  // Tratamento de erro privado para o serviço
   private handleError(error: any): Observable<never> {
     console.error('Ocorreu um erro no WorkflowEstadoService:', error);
     const errorMessage = error.error?.mensagem || 'Erro desconhecido. Verifique sua conexão ou contate o suporte.';

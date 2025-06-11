@@ -1,21 +1,29 @@
+// form-workflow.component.ts
+
 import { Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { ToastService } from '../../../../../services/toast.service';
-import { WorkflowService } from '../../../../../services/workflow/workflow.service';
+
+import { ToastService } from '../../../../../../services/toast.service';
+import { WorkflowService } from '../../../../../../services/workflow/workflow.service';
+import { WorkflowAtualizacaoPayload, WorkflowCriacaoPayload } from '../../../../../../Models/workflow/workflow.model';
+import { WorkflowEstadosComponent } from '../workflow-estado/workflow-estado.component';
 
 
 @Component({
   selector: 'app-form-workflow',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    WorkflowEstadosComponent
+  ],
   templateUrl: './form-workflow.component.html',
 })
 export class FormWorkflowComponent implements OnInit {
   form!: FormGroup;
   workflowId: number | null = null;
-  titulo = 'Cadastro de Workflow';
 
   private fb = inject(FormBuilder);
   private service = inject(WorkflowService);
@@ -31,8 +39,7 @@ export class FormWorkflowComponent implements OnInit {
       this.buildForm();
 
       if (this.workflowId) {
-        this.service.obterPorId(this.workflowId).subscribe(res => {
-          const workflow = res;
+        this.service.obterPorId(this.workflowId).subscribe(workflow => {
           if (workflow) {
             this.form.patchValue(workflow);
           }
@@ -49,19 +56,34 @@ export class FormWorkflowComponent implements OnInit {
   }
 
   onSubmit() {
-    if (this.form.invalid) return;
+    if (this.form.invalid) {
+      this.toast.error("Formulário inválido. Verifique os campos.");
+      return;
+    }
 
-    const payload = this.form.value;
+    const formValue = this.form.value;
 
     if (this.workflowId) {
-      this.service.atualizar(this.workflowId, { id: this.workflowId, ...payload }).subscribe(() => {
+      // ATUALIZAÇÃO
+      const payload: WorkflowAtualizacaoPayload = {
+        id: this.workflowId,
+        nome: formValue.nome,
+        descricao: formValue.descricao
+      };
+      this.service.atualizar(this.workflowId, payload).subscribe(() => {
         this.toast.success('Workflow atualizado com sucesso!');
-        this.router.navigate(['/admin/workflows']);
+        // Não navegamos mais, permanecemos na tela
       });
     } else {
-      this.service.criar(payload).subscribe(() => {
+      // CRIAÇÃO
+      const payload: WorkflowCriacaoPayload = {
+        nome: formValue.nome,
+        descricao: formValue.descricao
+      };
+      this.service.criar(payload).subscribe(novoWorkflow => {
         this.toast.success('Workflow criado com sucesso!');
-        this.router.navigate(['/admin/workflows']);
+        // Após criar, navegamos para a rota de edição para habilitar as outras abas
+        this.router.navigate(['/admin/workflow/form', novoWorkflow.id]);
       });
     }
   }
