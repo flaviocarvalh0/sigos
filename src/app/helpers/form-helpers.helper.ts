@@ -15,3 +15,11 @@ export function limparDatasInvalidas(obj: any, campos: string[]): void {
     }
   });
 }
+
+export function permitirSomenteNumeros(event: KeyboardEvent): void {
+  const charCode = event.which ? event.which : event.keyCode;
+  // Permite apenas teclas de 0 a 9
+  if (charCode < 48 || charCode > 57) {
+    event.preventDefault();
+  }
+}

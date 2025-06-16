@@ -41,7 +41,7 @@ import { Modelo } from '../../../Models/modelo.model';
         <div>
           <div class="d-flex align-items-center gap-2 text-muted small mb-2">
             <i class="bi bi-person"></i>
-            <span class="text-truncate">{{ order.nomeCliente}}</span>
+            <span class="text-truncate">{{ order.nomeCliente }}</span>
           </div>
 
           <div class="d-flex align-items-center gap-2 text-muted small mb-2">
@@ -51,23 +51,26 @@ import { Modelo } from '../../../Models/modelo.model';
 
           <div class="d-flex align-items-center gap-2 text-muted small mb-3">
             <i class="bi bi-calendar"></i>
-            <span>Data de Entrada: {{ order.dataCriacao | date : 'dd/MM/yyyy' }}</span>
+            <span
+              >Data de Entrada:
+              {{ order.dataCriacao | date : 'dd/MM/yyyy' }}</span
+            >
           </div>
 
           <div class="mb-3">
             <p
-  class="small mb-0 text-break"
-  [attr.title]="order.descricaoProblema"
-  style="
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  "
->
-  {{ order.descricaoProblema }}
-</p>
+              class="small mb-0 text-break"
+              [attr.title]="order.descricaoProblema"
+              style="
+                    display: -webkit-box;
+                    -webkit-line-clamp: 3;
+                    -webkit-box-orient: vertical;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                  "
+            >
+              {{ order.descricaoProblema }}
+            </p>
           </div>
         </div>
 
@@ -146,19 +149,20 @@ export class ServiceOrderCardComponent {
     }
   }
 
-  getClientes() : void{
-    this.clienteService.obterTodos().subscribe({ // Ou this.clienteService.obterTodos() se você mudou a chamada no card
-  next: (data: Cliente[]) => {
-    this.client = data; // Atribui os clientes carregados à propriedade do componente
-    // this.isLoadingClientes = false;
-    console.log('Clientes carregados para o card:', this.client);
-  },
-  error: (err: any) => {
-    console.error('Erro ao carregar clientes para o card:', err);
-    // this.toastService.error(err.message || 'Falha ao carregar clientes para o card.'); // Exemplo com ToastService
-    // this.isLoadingClientes = false;
-  }
-});
+  getClientes(): void {
+    this.clienteService.obterTodos().subscribe({
+      // Ou this.clienteService.obterTodos() se você mudou a chamada no card
+      next: (data: Cliente[]) => {
+        this.client = data; // Atribui os clientes carregados à propriedade do componente
+        // this.isLoadingClientes = false;
+        console.log('Clientes carregados para o card:', this.client);
+      },
+      error: (err: any) => {
+        console.error('Erro ao carregar clientes para o card:', err);
+        // this.toastService.error(err.message || 'Falha ao carregar clientes para o card.'); // Exemplo com ToastService
+        // this.isLoadingClientes = false;
+      },
+    });
   }
 
   getNomeClienteById(id: number): string {

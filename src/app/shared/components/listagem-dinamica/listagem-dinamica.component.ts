@@ -27,9 +27,9 @@ export class ListagemDinamicaComponent {
   @Input() mostrarNovo = true;
   @Input() mostrarFiltros = true;
 
-  @Output() criarNovo = new EventEmitter<void>();
-  @Output() editar = new EventEmitter<number>();
-  @Output() excluir = new EventEmitter<number>();
+ @Output() criarNovo = new EventEmitter<void>();
+  @Output() editar = new EventEmitter<any>();
+  @Output() excluir = new EventEmitter<any>();
 
   filtros: { [key: string]: string } = {};
   sortColumn: string = '';

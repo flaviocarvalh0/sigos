@@ -1,158 +1,178 @@
-<div class="container mt-4 mb-5" *ngIf="!modoEmbedded">
-  <div class="card shadow-sm">
-    <div class="card-header bg-primary text-white">
-      <h4 class="mb-0">
-        <i class="bi bi-phone me-2"></i>{{ cardTitle }}
-      </h4>
-    </div>
-    <div class="card-body">
-      <ng-container *ngTemplateOutlet="formulario"></ng-container>
-    </div>
-  </div>
-</div>
-
-<!-- Modo Embedded (sem container e header) -->
-<ng-container *ngIf="modoEmbedded">
-  <div class="card shadow-sm border-0 p-3">
-    <ng-container *ngTemplateOutlet="formulario"></ng-container>
-  </div>
-</ng-container>
-
-<ng-template #formulario>
-  <div *ngIf="isLoading" class="text-center my-5">
-    <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
-      <span class="visually-hidden">Carregando...</span>
-    </div>
-    <p class="mt-2">Processando dados do aparelho...</p>
-  </div>
-
-  <form [formGroup]="formAparelho" (ngSubmit)="onSubmit()" *ngIf="!isLoading" novalidate>
+<app-form-layout
+  [form]="formAparelho"
+  [titulo]="cardTitle"
+  [auditoriaData]="auditoria"
+  [isLoading]="isLoading"
+  [isFormInvalid]="formAparelho.invalid"
+  [isFormPristine]="formAparelho.pristine"
+  [isEditMode]="isEditando"
+  (save)="onSubmit()"
+  (cancel)="onHandleCancelar()"
+>
+  <div [formGroup]="formAparelho">
     <div class="row">
-      <div class="col-md-12 mb-3" *ngIf="!modoEmbedded || (modoEmbedded && !clienteIdInput)">
-        <label class="form-label">Cliente <span class="text-danger">*</span></label>
+      <!-- Cliente -->
+      <div class="col-md-6 mb-3">
+        <label>
+          Cliente
+          <span *ngIf="formAparelho.get('idCliente')?.invalid" class="text-danger">*</span>
+        </label>
         <ng-select
           [items]="clientes"
-          bindLabel="nomeCompleto"
+          bindLabel="descricao"
           bindValue="id"
           formControlName="idCliente"
-          placeholder="Selecione o cliente"
-          [searchable]="true"
-          [clearable]="true"
-          [ngClass]="{ 'is-invalid': formAparelho.get('idCliente')?.touched && formAparelho.get('idCliente')?.invalid }">
-        </ng-select>
-        <div class="invalid-feedback d-block" *ngIf="formAparelho.get('idCliente')?.touched && formAparelho.get('idCliente')?.invalid">
-          Cliente é obrigatório.
+          [ngClass]="{ 'is-invalid': isInvalid('idCliente') }"
+        ></ng-select>
+        <div *ngIf="isInvalid('idCliente')" class="invalid-feedback d-block">
+          Campo obrigatório.
         </div>
       </div>
-    </div>
 
-    <div class="row">
+      <!-- Marca -->
       <div class="col-md-6 mb-3">
-        <label class="form-label">Marca <span class="text-danger">*</span></label>
+        <label>
+          Marca
+          <span *ngIf="formAparelho.get('idMarca')?.invalid" class="text-danger">*</span>
+        </label>
         <ng-select
           [items]="marcas"
-          bindLabel="nome"
+          bindLabel="descricao"
           bindValue="id"
           formControlName="idMarca"
-          placeholder="Selecione a marca"
           (change)="onMarcaChange()"
-          [searchable]="true"
-          [clearable]="true"
-          [ngClass]="{ 'is-invalid': formAparelho.get('idMarca')?.touched && formAparelho.get('idMarca')?.invalid }">
-        </ng-select>
-        <div class="invalid-feedback d-block" *ngIf="formAparelho.get('idMarca')?.touched && formAparelho.get('idMarca')?.invalid">
-          Marca é obrigatória.
+          [ngClass]="{ 'is-invalid': isInvalid('idMarca') }"
+        ></ng-select>
+        <div *ngIf="isInvalid('idMarca')" class="invalid-feedback d-block">
+          Campo obrigatório.
         </div>
       </div>
 
+      <!-- Modelo -->
       <div class="col-md-6 mb-3">
-        <label class="form-label">Modelo <span class="text-danger">*</span></label>
+        <label>
+          Modelo
+          <span *ngIf="formAparelho.get('idModelo')?.invalid" class="text-danger">*</span>
+        </label>
         <ng-select
           [items]="modelosFiltrados"
           bindLabel="nome"
           bindValue="id"
           formControlName="idModelo"
-          placeholder="Selecione o modelo"
-          [disabled]="!formAparelho.get('idMarca')?.value"
-          [searchable]="true"
-          [clearable]="true"
-          [ngClass]="{ 'is-invalid': formAparelho.get('idModelo')?.touched && formAparelho.get('idModelo')?.invalid }">
-        </ng-select>
-        <div class="invalid-feedback d-block" *ngIf="formAparelho.get('idModelo')?.touched && formAparelho.get('idModelo')?.invalid">
-          Modelo é obrigatório.
+          [ngClass]="{ 'is-invalid': isInvalid('idModelo') }"
+        ></ng-select>
+        <div *ngIf="isInvalid('idModelo')" class="invalid-feedback d-block">
+          Campo obrigatório.
         </div>
       </div>
-    </div>
 
-    <div class="row">
+      <!-- IMEI 1 -->
       <div class="col-md-6 mb-3">
-        <label class="form-label">IMEI 1 <span class="text-danger">*</span></label>
-        <input type="text" class="form-control" formControlName="imei1" maxlength="15"
-          placeholder="Digite o IMEI principal"
-          [ngClass]="{ 'is-invalid': formAparelho.get('imei1')?.touched && formAparelho.get('imei1')?.invalid }" />
-        <div class="invalid-feedback" *ngIf="formAparelho.get('imei1')?.touched && formAparelho.get('imei1')?.invalid">
-          IMEI 1 é obrigatório e deve ter 14 a 15 dígitos.
+        <label>
+    IMEI 1
+    <span *ngIf="isInvalid('imei1')" class="text-danger">*</span>
+  </label>
+  <input
+    type="text"
+    formControlName="imei1"
+    class="form-control"
+    maxlength="14"
+    inputmode="numeric"
+    pattern="[0-9]*"
+    (keypress)="onKeyPressSomenteNumeros($event)"
+    [ngClass]="{ 'is-invalid': isInvalid('imei1') }"
+  />
+        <div *ngIf="isInvalid('imei1')" class="invalid-feedback d-block">
+          IMEI 1 é obrigatório (14 a 15 dígitos).
         </div>
       </div>
 
+      <!-- IMEI 2 -->
       <div class="col-md-6 mb-3">
-        <label class="form-label">IMEI 2</label>
-        <input type="text" class="form-control" formControlName="imei2" maxlength="15"
-          placeholder="IMEI secundário (opcional)"
-          [ngClass]="{ 'is-invalid': formAparelho.get('imei2')?.touched && formAparelho.get('imei2')?.invalid }" />
-        <div class="invalid-feedback" *ngIf="formAparelho.get('imei2')?.touched && formAparelho.get('imei2')?.invalid">
-          IMEI deve ter entre 14 e 15 dígitos.
+          <label>
+    IMEI 2
+    <span *ngIf="isInvalid('imei2')" class="text-danger">*</span>
+  </label>
+  <input
+    type="text"
+    formControlName="imei2"
+    class="form-control"
+    maxlength="14"
+    inputmode="numeric"
+    pattern="[0-9]*"
+    (keypress)="onKeyPressSomenteNumeros($event)"
+    [ngClass]="{ 'is-invalid': isInvalid('imei2') }"
+  />
+        <div *ngIf="isInvalid('imei2')" class="invalid-feedback d-block">
+          IMEI 2 deve ter entre 14 e 15 dígitos.
         </div>
       </div>
-    </div>
 
-    <div class="row">
+      <!-- Nº de Série -->
       <div class="col-md-6 mb-3">
-        <label class="form-label">Número de Série <span class="text-danger">*</span></label>
-        <input type="text" class="form-control" formControlName="numeroSerie"
-          placeholder="Número de série do aparelho"
-          [ngClass]="{ 'is-invalid': formAparelho.get('numeroSerie')?.touched && formAparelho.get('numeroSerie')?.invalid }" />
-        <div class="invalid-feedback" *ngIf="formAparelho.get('numeroSerie')?.touched && formAparelho.get('numeroSerie')?.invalid">
-          Número de série é obrigatório.
+        <label>
+          Número de Série
+          <span *ngIf="formAparelho.get('numeroSerie')?.invalid" class="text-danger">*</span>
+        </label>
+        <input
+          type="text"
+          formControlName="numeroSerie"
+          class="form-control"
+          [ngClass]="{ 'is-invalid': isInvalid('numeroSerie') }"
+        />
+        <div *ngIf="isInvalid('numeroSerie')" class="invalid-feedback d-block">
+          Campo obrigatório.
         </div>
       </div>
 
+      <!-- Cor -->
       <div class="col-md-6 mb-3">
-        <label class="form-label">Cor <span class="text-danger">*</span></label>
-        <input type="text" class="form-control" formControlName="cor"
-          placeholder="Cor do aparelho"
-          [ngClass]="{ 'is-invalid': formAparelho.get('cor')?.touched && formAparelho.get('cor')?.invalid }" />
-        <div class="invalid-feedback" *ngIf="formAparelho.get('cor')?.touched && formAparelho.get('cor')?.invalid">
-          Cor é obrigatória.
+        <label>
+          Cor
+          <span *ngIf="formAparelho.get('cor')?.invalid" class="text-danger">*</span>
+        </label>
+        <input
+          type="text"
+          formControlName="cor"
+          class="form-control"
+          [ngClass]="{ 'is-invalid': isInvalid('cor') }"
+        />
+        <div *ngIf="isInvalid('cor')" class="invalid-feedback d-block">
+          Campo obrigatório.
+        </div>
+      </div>
+
+      <!-- Descrição Auxiliar -->
+      <div class="col-12 mb-3">
+        <label>
+          Descrição Auxiliar
+          <span *ngIf="formAparelho.get('descricaoAuxiliar')?.invalid" class="text-danger">*</span>
+        </label>
+        <textarea
+          formControlName="descricaoAuxiliar"
+          class="form-control"
+          [ngClass]="{ 'is-invalid': isInvalid('descricaoAuxiliar') }"
+        ></textarea>
+        <div *ngIf="isInvalid('descricaoAuxiliar')" class="invalid-feedback d-block">
+          Campo obrigatório.
+        </div>
+      </div>
+
+      <!-- Observações -->
+      <div class="col-12 mb-3">
+        <label>
+          Observações
+          <span *ngIf="formAparelho.get('observacoes')?.invalid" class="text-danger">*</span>
+        </label>
+        <textarea
+          formControlName="observacoes"
+          class="form-control"
+          [ngClass]="{ 'is-invalid': isInvalid('observacoes') }"
+        ></textarea>
+        <div *ngIf="isInvalid('observacoes')" class="invalid-feedback d-block">
+          Campo obrigatório.
         </div>
       </div>
     </div>
-
-    <div class="mb-3">
-      <label class="form-label">Descrição Auxiliar</label>
-      <input type="text" class="form-control" formControlName="descricaoAuxiliar" placeholder="Ex: iPhone 13 Pro Max 256GB Azul" />
-    </div>
-
-    <div class="mb-3">
-      <label class="form-label">Observações</label>
-      <textarea class="form-control" formControlName="observacoes" rows="3"
-        placeholder="Detalhes adicionais, avarias, acessórios inclusos..."></textarea>
-    </div>
-
-    <div class="d-flex mt-4" [class.justify-content-end]="modoEmbedded" [class.justify-content-end]="!modoEmbedded">
-      <button type="button" class="btn btn-secondary me-2" (click)="onHandleCancelar()">
-        <i class="bi bi-x-lg me-1"></i> Cancelar
-      </button>
-
-      <button *ngIf="isEditando && !modoEmbedded" type="button" class="btn btn-danger me-2" (click)="onExcluir()" [disabled]="isLoading">
-        <span *ngIf="!isLoading"><i class="bi bi-trash me-1"></i> Excluir</span>
-        <span *ngIf="isLoading"><span class="spinner-border spinner-border-sm me-1"></span> Excluindo...</span>
-      </button>
-
-      <button type="submit" class="btn btn-success" [disabled]="formAparelho.invalid || isLoading">
-        <span *ngIf="!isLoading"><i class="bi bi-check-lg me-1"></i> {{ saveButtonText }}</span>
-        <span *ngIf="isLoading"><span class="spinner-border spinner-border-sm me-1"></span> Salvando...</span>
-      </button>
-    </div>
-  </form>
-</ng-template>
+  </div>
+</app-form-layout>

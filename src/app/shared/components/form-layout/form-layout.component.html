@@ -1,0 +1,57 @@
+<!-- O card principal que envolve tudo -->
+<div class="card shadow-sm">
+
+  <!-- Cabeçalho dinâmico -->
+  <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+    <h4 class="mb-0 d-flex align-items-center">
+      <i class="{{ icone }} me-2"></i>
+      {{ titulo }}
+    </h4>
+  </div>
+
+  <div class="card-body">
+    <!-- Spinner de Carregamento -->
+    <div *ngIf="isLoading" class="text-center my-5">
+      <div class="spinner-border text-primary" role="status"></div>
+      <p class="mt-2">Carregando...</p>
+    </div>
+
+    <!-- O "buraco" onde o formulário específico será projetado -->
+    <div [hidden]="isLoading">
+      <ng-content></ng-content>
+    </div>
+  </div>
+
+  <!-- Rodapé Fixo com Auditoria e Botões -->
+  <div class="card-footer bg-light" [hidden]="isLoading">
+    <!-- Seção de Auditoria (só aparece em modo de edição) -->
+    <div *ngIf="isEditMode && auditoriaData" class="border-bottom pb-2 mb-3">
+      <div class="row small text-muted">
+        <div class="col-md-6">
+          <strong>Criado:</strong> {{ auditoriaData.criadoPor }} em {{ formatarData(auditoriaData.dataCriacao) }}
+        </div>
+        <div class="col-md-6 text-md-end">
+          <strong>Modificado:</strong> {{ auditoriaData.modificadoPor }} em {{ formatarData(auditoriaData.dataModificacao) }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Botões de Ação -->
+    <div class="d-flex justify-content-end gap-2">
+      <button type="button" class="btn btn-secondary" (click)="cancel.emit()">
+        <i class="bi bi-x-lg me-1"></i> Cancelar
+      </button>
+
+      <!-- <button *ngIf="isEditMode" type="button" class="btn btn-danger" (click)="delete.emit()">
+        <i class="bi bi-trash me-1"></i> Excluir
+      </button> -->
+
+    <button type="button" class="btn btn-primary" (click)="onSaveClick()" [disabled]="isLoading">
+
+  <i class="bi bi-save me-1"></i>
+  {{ isEditMode ? 'Salvar Alterações' : 'Salvar' }}
+</button>
+
+    </div>
+  </div>
+</div>
