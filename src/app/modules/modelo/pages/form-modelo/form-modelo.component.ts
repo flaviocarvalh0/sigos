@@ -1,198 +1,223 @@
-import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Component, OnInit, OnDestroy, Input, inject } from '@angular/core';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { CommonModule } from '@angular/common';
+import { Subscription } from 'rxjs';
+
 import { ModeloService } from '../../../../services/modelo.service';
 import { MarcaService } from '../../../../services/marca.service';
 import { ToastService } from '../../../../services/toast.service';
-import { CommonModule } from '@angular/common';
-import { FormularioDinamicoComponent, CampoFormularioConfig, FormularioDinamicoConfig } from '../../../../shared/components/formulario-dinamico/formulario-dinamico.component';
+import { ConfirmationService } from '../../../../services/confirmation.service';
+import { FormLayoutComponent } from '../../../../shared/components/form-layout/form-layout.component';
+import { ConfirmationConfig } from '../../../../Models/confirmation.model';
+import { Modelo, ModeloAtualizacaoPayload, ModeloCriacaoPayload } from '../../../../Models/modelo.model';
+import { AuditoriaData } from '../../../../Models/AuditoriaData.model';
 
 @Component({
   selector: 'app-form-modelo',
-  template: `<app-form-dinamico
-    [config]="config"
-    [data]="dadosIniciais"
-    [isLoading]="isLoading"
-    [isEditando]="isEditando"
-    (salvar)="onSubmit($event)"
-    (cancelar)="onCancelar()"
-    (excluir)="onExcluir()"
-  >
-  </app-form-dinamico> `,
-  styleUrls: ['./form-modelo.component.css'],
   standalone: true,
-  imports: [CommonModule, FormularioDinamicoComponent]
+  templateUrl: './form-modelo.component.html',
+  styleUrls: ['./form-modelo.component.css'],
+  imports: [CommonModule, ReactiveFormsModule, FormLayoutComponent],
 })
-export class FormModeloComponent implements OnInit {
+export class FormModeloComponent implements OnInit, OnDestroy {
+  @Input() modeloIdParaEditar?: number;
+  close!: (result?: any) => void;
+
+  private fb = inject(FormBuilder);
+  private modeloService = inject(ModeloService);
+  private marcaService = inject(MarcaService);
+  private toastService = inject(ToastService);
+  private confirmationService = inject(ConfirmationService);
+
+  form!: FormGroup;
   isEditando = false;
   isLoading = false;
-  idModelo?: number;
-  marcas: { id: number, nome: string }[] = [];
-  dadosIniciais: any = {};
-  private dataUltimaModificacaoOriginal?: Date;
+  currentModeloId?: number;
+  dataUltimaModificacao?: Date;
+  marcas: { id: number; nome: string }[] = [];
+  private subscriptions = new Subscription();
 
+  auditoria: AuditoriaData | null = null;
 
-  constructor(
-    private route: ActivatedRoute,
-    private router: Router,
-    private modeloService: ModeloService,
-    private marcaService: MarcaService,
-    private toastService: ToastService
-  ) {}
 
   ngOnInit(): void {
-    this.idModelo = Number(this.route.snapshot.paramMap.get('id'));
-    this.carregarMarcas();
+  this.form = this.fb.group({
+    nome: ['', [Validators.required, Validators.minLength(2)]],
+    idMarca: [null, Validators.required],
 
-    if (this.idModelo) {
-      this.isEditando = true;
-      this.carregarModelo(this.idModelo);
-    }
+    criadoPor: [{ value: '', disabled: true }],
+    dataCriacao: [{ value: '', disabled: true }],
+    modificadoPor: [{ value: '', disabled: true }],
+    dataModificacao: [{ value: '', disabled: true }]
+  });
 
-     this.config = {
-      ...this.config,
-      titulo: this.cardTitle,
-      botoes: {
-        ...this.config.botoes,
-        salvarTexto: this.saveButtonText,
-        excluir: this.isEditando,
-      },
-    };
+  this.carregarMarcas();
+
+  if (this.modeloIdParaEditar !== undefined) {
+    this.currentModeloId = this.modeloIdParaEditar;
+    this.isEditando = true;
+    this.carregarModelo(this.currentModeloId);
+  }
+}
+
+
+  ngOnDestroy(): void {
+    this.subscriptions.unsubscribe();
+  }
+
+  inicializarForm(): void {
+    this.form = this.fb.group({
+      nome: ['', [Validators.required, Validators.minLength(2)]],
+      idMarca: [null, Validators.required],
+      criadoPor: [{ value: '', disabled: true }],
+      dataCriacao: [{ value: '', disabled: true }],
+      modificadoPor: [{ value: '', disabled: true }],
+      dataModificacao: [{ value: '', disabled: true }],
+    });
   }
 
   carregarMarcas(): void {
+    const sub = this.marcaService.obterParaSelecao().subscribe({
+      next: (marcas) => {
+        this.marcas = marcas.map(m => ({ id: m.id, nome: m.descricao }));
+      },
+      error: (err) => this.toastService.error(err.message || 'Erro ao carregar marcas.'),
+    });
+    this.subscriptions.add(sub);
+  }
+
+carregarModelo(id: number): void {
+  this.isLoading = true;
   this.marcaService.obterParaSelecao().subscribe({
     next: (marcas) => {
       this.marcas = marcas.map(m => ({ id: m.id, nome: m.descricao }));
 
-      // Atualiza dinamicamente o campo do select com as marcas
-      const campoMarca = this.config.abas[0].campos.find(c => c.nome === 'idMarca');
-      if (campoMarca) {
-        campoMarca.opcoes = this.marcas;
-      }
+      this.modeloService.obterPorId(id).subscribe({
+        next: (modelo) => {
+          if (modelo) {
+            this.form.patchValue({
+              nome: modelo.nome,
+              idMarca: modelo.idMarca,
+              criadoPor: modelo.criadoPor,
+              dataCriacao: modelo.dataCriacao,
+              modificadoPor: modelo.modificadoPor,
+              dataModificacao: modelo.dataModificacao
+            });
+
+            this.dataUltimaModificacao = modelo.dataModificacao;
+
+            this.auditoria = {
+              criadoPor: modelo.criadoPor ?? undefined,
+              dataCriacao: modelo.dataCriacao,
+              modificadoPor: modelo.modificadoPor ?? undefined,
+              dataModificacao: modelo.dataModificacao
+            };
+          } else {
+            this.toastService.error('Modelo não encontrado.');
+            this.finalizarModal('cancelado');
+          }
+          this.isLoading = false;
+        },
+        error: (err) => {
+          this.toastService.error(err.message || 'Erro ao carregar modelo.');
+          this.isLoading = false;
+          this.finalizarModal('cancelado');
+        }
+      });
     },
-    error: err => this.toastService.error(err.message || 'Erro ao carregar marcas.')
+    error: (err) => {
+      this.toastService.error(err.message || 'Erro ao carregar marcas.');
+      this.isLoading = false;
+    }
   });
 }
 
-  get cardTitle(): string {
-    return this.isEditando ? 'Editar Modelo' : 'Cadastrar Modelo';
+
+
+  onSubmit(): void {
+  if (this.form.invalid) {
+    this.form.markAllAsTouched();
+    return;
   }
 
-  get saveButtonText(): string {
-    return this.isEditando ? 'Atualizar Modelo' : 'Salvar Modelo';
-  }
-  carregarModelo(id: number): void {
-    this.isLoading = true;
-    this.modeloService.obterPorId(id).subscribe({
-      next: modelo => {
-        if (!modelo) return;
-        this.dadosIniciais = {
-          nome: modelo.nome,
-          idMarca: modelo.idMarca,
-        };
-        this.dataUltimaModificacaoOriginal = modelo.dataModificacao;
-        this.isLoading = false;
+  const dados = this.form.getRawValue();
+
+  if (this.isEditando && this.currentModeloId) {
+    const payload: ModeloAtualizacaoPayload = {
+      id: this.currentModeloId,
+      nome: dados.nome,
+      idMarca: dados.idMarca,
+      dataUltimaModificacao: this.dataUltimaModificacao ?? new Date()
+    };
+
+    this.modeloService.atualizar(this.currentModeloId, payload).subscribe({
+      next: () => {
+        this.toastService.success('Modelo atualizado com sucesso!');
+        this.finalizarModal('salvo');
       },
-      error: err => {
-        this.toastService.error(err.message || 'Erro ao carregar modelo.');
+      error: (err) => {
+        this.toastService.error(err.message || 'Erro ao atualizar modelo.');
+        this.isLoading = false;
+      }
+    });
+  } else {
+    const payload: ModeloCriacaoPayload = {
+      nome: dados.nome,
+      idMarca: dados.idMarca
+    };
+
+    this.modeloService.criar(payload).subscribe({
+      next: () => {
+        this.toastService.success('Modelo criado com sucesso!');
+        this.finalizarModal('salvo');
+      },
+      error: (err) => {
+        this.toastService.error(err.message || 'Erro ao criar modelo.');
         this.isLoading = false;
       }
     });
   }
+}
 
-  config: FormularioDinamicoConfig = {
-      titulo: this.isEditando ? 'Editar Modelo' : 'Cadastrar Modelo',
-      iconeTitulo: 'bi-phone',
-      botoes: {
-        salvarTexto: this.isEditando ? 'Atualizar' : 'Salvar',
-        cancelarTexto: 'Cancelar',
-        excluirTexto: 'Excluir',
-        cancelar: true,
-        excluir: this.isEditando
-      },
-      abas: [
-        {
-          titulo: '',
-          campos: [
-            {
-              nome: 'nome',
-              tipo: 'texto',
-              rotulo: 'Nome do Modelo',
-              placeholder: 'Digite o nome do modelo',
-              obrigatorio: true,
-              col: 'col-md-6',
-              mensagensErro: {
-                required: 'Nome é obrigatório.',
-                minlength: 'Nome deve ter pelo menos 2 caracteres.'
-              }
-            },
-            {
-              nome: 'idMarca',
-              tipo: 'select',
-              rotulo: 'Marca',
-              placeholder: 'Selecione a marca',
-              obrigatorio: true,
-              col: 'col-md-6',
-              opcoes: this.marcas,
-              mensagensErro: {
-                required: 'A marca é obrigatória.'
-              }
-            }
-          ]
-        }
-      ]
+
+  onExcluir(): void {
+    if (!this.currentModeloId) return;
+
+    const config: ConfirmationConfig = {
+      title: 'Confirmar Exclusão',
+      message: `Deseja excluir o modelo "${this.form.get('nome')?.value}"?`,
+      acceptButtonText: 'Sim, Excluir',
+      acceptButtonClass: 'btn-danger',
+      cancelButtonText: 'Cancelar',
     };
 
-  onSubmit(dados: any): void {
-    if (!dados.nome || dados.nome.trim().length < 2) {
-      this.toastService.warning('Nome do modelo inválido.');
-      return;
-    }
-    this.isLoading = true;
+    const sub = this.confirmationService.confirm(config).subscribe((confirmed) => {
+      if (confirmed) {
+        this.isLoading = true;
+        const deleteSub = this.modeloService.remover(this.currentModeloId!).subscribe({
+          next: () => {
+            this.toastService.success('Modelo excluído com sucesso!');
+            this.finalizarModal('excluido');
+          },
+          error: (err) => {
+            this.toastService.error(err.message || 'Erro ao excluir modelo.');
+            this.isLoading = false;
+          },
+        });
+        this.subscriptions.add(deleteSub);
+      }
+    });
 
-    if (this.isEditando && this.idModelo) {
-      const payload = { ...dados, id: this.idModelo, dataUltimaModificacao: this.dataUltimaModificacaoOriginal };
-      this.modeloService.atualizar(this.idModelo, payload).subscribe({
-        next: () => {
-          this.toastService.success('Modelo atualizado com sucesso!');
-          this.router.navigate(['/modelo']);
-        },
-        error: err => {
-          this.toastService.error(err.message || 'Erro ao atualizar modelo.');
-          this.isLoading = false;
-        }
-      });
-    } else {
-      const payload = { nome: dados.nome, idMarca: dados.idMarca, dataUltimaModificacao: dados.dataUltimaModificacao };
-      this.modeloService.criar(payload).subscribe({
-        next: () => {
-          this.toastService.success('Modelo criado com sucesso!');
-          this.router.navigate(['/modelo']);
-        },
-        error: err => {
-          this.toastService.error(err.message || 'Erro ao criar modelo.');
-          this.isLoading = false;
-        }
-      });
-    }
+    this.subscriptions.add(sub);
   }
 
   onCancelar(): void {
-    this.router.navigate(['/modelo']);
+    this.finalizarModal('cancelado');
   }
 
-  onExcluir(): void {
-    if (!this.idModelo) return;
-    this.isLoading = true;
-    this.modeloService.remover(this.idModelo).subscribe({
-      next: () => {
-        this.toastService.success('Modelo excluído com sucesso!');
-        this.router.navigate(['/modelo']);
-      },
-      error: err => {
-        this.toastService.error(err.message || 'Erro ao excluir modelo.');
-        this.isLoading = false;
-      }
-    });
+  private finalizarModal(result?: any): void {
+    if (this.close) {
+      this.close(result);
+    }
   }
 }

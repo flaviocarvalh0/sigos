@@ -1,5 +1,4 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { CategoriaService } from '../../../../services/categoria.service';
 import { ToastService } from '../../../../services/toast.service';
@@ -8,6 +7,8 @@ import { Categoria } from '../../../../Models/categoria.model';
 import { ConfirmationConfig } from '../../../../Models/confirmation.model';
 import { CommonModule } from '@angular/common';
 import { ListagemDinamicaComponent } from '../../../../shared/components/listagem-dinamica/listagem-dinamica.component';
+import { ModalService } from '../../../../services/dialog.service';
+import { FormCategoriaComponent } from '../form-categoria/form-categoria.component';
 
 @Component({
   selector: 'app-list-categoria',
@@ -19,9 +20,9 @@ import { ListagemDinamicaComponent } from '../../../../shared/components/listage
       [dados]="categorias"
       [colunas]="colunas"
       [carregando]="isLoading"
-      (criarNovo)="novaCategoria()"
-      (editar)="editar($event)"
-      (excluir)="excluir($event)">
+      (criarNovo)="abrirModalParaCriar()"
+      (editar)="editarCategoria($event)"
+      (excluir)="excluirCategoria($event)">
     </app-listagem-dinamica>
   `,
   styleUrls: ['./list-categoria.component.css']
@@ -34,15 +35,17 @@ export class ListCategoriaComponent implements OnInit, OnDestroy {
   colunas = [
     { campo: 'id', titulo: 'ID', tipo: 'texto' as const, ordenavel: true, filtro: true, largura: '80px' },
     { campo: 'nome', titulo: 'Nome', tipo: 'texto' as const, ordenavel: true, filtro: true },
-    { campo: 'dataCriacao', titulo: 'Criado em', tipo: 'data' as const, ordenavel: true },
+    { campo: 'criadoPor', titulo: 'Criado por', tipo: 'texto' as const, filtro: true },
+    { campo: 'dataCriacao', titulo: 'Criado em', tipo: 'dataHora' as const, ordenavel: true },
+    { campo: 'modificadoPor', titulo: 'Modificado por', tipo: 'texto' as const, filtro: true },
     { campo: 'dataModificacao', titulo: 'Atualizado em', tipo: 'dataHora' as const, ordenavel: true }
   ];
 
   constructor(
     private categoriaService: CategoriaService,
-    private router: Router,
     private toast: ToastService,
-    private confirmation: ConfirmationService
+    private confirmation: ConfirmationService,
+    private modalService: ModalService
   ) {}
 
   ngOnInit(): void {
@@ -68,14 +71,27 @@ export class ListCategoriaComponent implements OnInit, OnDestroy {
     this.subscriptions.add(sub);
   }
 
-  editar(id: number): void {
-    this.router.navigate(['/categoria/form', id]);
+  abrirModalParaCriar(): void {
+    this.modalService.open(FormCategoriaComponent).then(result => {
+      if (result === 'salvo') {
+        this.carregarCategorias();
+      }
+    });
   }
 
-  excluir(id: number): void {
+  editarCategoria(id: number): void {
+    this.modalService.open(FormCategoriaComponent, {
+      categoriaIdParaEditar: id
+    }).then(result => {
+      if (result === 'salvo' || result === 'excluido') {
+        this.carregarCategorias();
+      }
+    });
+  }
 
+  excluirCategoria(id: number): void {
     const categoria = this.categorias.find(c => c.id === id);
-   const nome = categoria?.nome || `Serviço ID ${id}`;
+    const nome = categoria?.nome || `Categoria ID ${id}`;
 
     const config: ConfirmationConfig = {
       title: 'Confirmar Exclusão',
@@ -86,10 +102,12 @@ export class ListCategoriaComponent implements OnInit, OnDestroy {
     };
 
     const confirmSub = this.confirmation.confirm(config).subscribe(confirmed => {
+      confirmSub.unsubscribe();
+
       if (!confirmed) return;
 
       this.isLoading = true;
-      const deleteSub = this.categoriaService.remover(id!).subscribe({
+      const deleteSub = this.categoriaService.remover(id).subscribe({
         next: () => {
           this.toast.success(`Categoria "${nome}" excluída com sucesso!`);
           this.carregarCategorias();
@@ -109,9 +127,5 @@ export class ListCategoriaComponent implements OnInit, OnDestroy {
     });
 
     this.subscriptions.add(confirmSub);
-  }
-
-  novaCategoria(): void {
-    this.router.navigate(['/categoria/form']);
   }
 }

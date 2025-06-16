@@ -1,257 +1,242 @@
-// FormPecaComponent adaptado ao padrão com config centralizada
-import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Component, OnInit, OnDestroy, Input, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormularioDinamicoComponent, FormularioDinamicoConfig } from '../../../../shared/components/formulario-dinamico/formulario-dinamico.component';
-import { ModeloService } from '../../../../services/modelo.service';
-import { MarcaService } from '../../../../services/marca.service';
+import { FormLayoutComponent } from '../../../../shared/components/form-layout/form-layout.component';
+import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { Subscription } from 'rxjs';
 import { PecaService } from '../../../../services/peca.service';
+import { MarcaService } from '../../../../services/marca.service';
+import { ModeloService } from '../../../../services/modelo.service';
 import { FornecedorService } from '../../../../services/fornecedor.service';
 import { CategoriaService } from '../../../../services/categoria.service';
 import { ToastService } from '../../../../services/toast.service';
-import { Fornecedor } from '../../../../Models/fornecedor.model';
-import { Peca } from '../../../../Models/peca.model';
+import { Peca, PecaAtualizacaoPayload, PecaCriacaoPayload } from '../../../../Models/peca.model';
 
 @Component({
   selector: 'app-form-peca',
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule, FormLayoutComponent, FormularioDinamicoComponent],
   template: `
-    <app-form-dinamico
-      [config]="config"
-      [data]="dadosIniciais"
+    <app-form-layout
+      [form]="form"
+      [titulo]="config.titulo"
       [isLoading]="isLoading"
-      [isEditando]="isEditando"
-      (salvar)="onSubmit($event)"
-      (cancelar)="onCancelar()"
-      (excluir)="onExcluir()"
-    ></app-form-dinamico>
+      [isEditMode]="isEditando"
+      (save)="onSubmit()"
+      (cancel)="onCancelar()"
+      (delete)="onExcluir()"
+    >
+      <app-formulario-dinamico
+        [form]="form"
+        [config]="config"
+        [data]="dadosIniciais"
+      ></app-formulario-dinamico>
+    </app-form-layout>
   `,
   styleUrls: ['./form-peca.component.css'],
-  standalone: true,
-  imports: [CommonModule, FormularioDinamicoComponent]
 })
-export class FormPecaComponent implements OnInit {
+export class FormPecaComponent implements OnInit, OnDestroy {
+  @Input() pecaIdParaEditar?: number;
+  close!: (result?: any) => void;
+
+  form!: FormGroup;
+  config!: FormularioDinamicoConfig;
+  dadosIniciais: any = {};
   isEditando = false;
   isLoading = false;
-  idPeca?: number;
-  dataUltimaModificacao?: Date;
-  dadosIniciais: any = {};
+  private dataModificacaoOriginal?: Date;
+  private subscriptions = new Subscription();
 
-  opMarcas: any[] = [];
-  opModelos: any[] = [];
-  opFornecedores: any[] = [];
-  opCategorias: any[] = [];
-
-  config: FormularioDinamicoConfig = {
-    titulo: 'Cadastrar Peça',
-    iconeTitulo: 'bi-tools',
-    botoes: {
-      cancelar: true,
-      excluir: false,
-      cancelarTexto: 'Cancelar',
-      salvarTexto: 'Salvar',
-      excluirTexto: 'Excluir'
-    },
-    abas: [
-      {
-        titulo: '',
-        campos: [
-          {
-            nome: 'nome',
-            tipo: 'texto',
-            rotulo: 'Nome da Peça',
-            placeholder: 'Digite o nome da peça',
-            obrigatorio: true,
-            col: 'col-md-6',
-            mensagensErro: {
-              required: 'Nome é obrigatório.'
-            }
-          },
-          {
-            nome: 'precoCusto',
-            tipo: 'moeda',
-            rotulo: 'Preço de Custo',
-            placeholder: 'Digite o preço de custo',
-            obrigatorio: true,
-            col: 'col-md-3'
-          },
-          {
-            nome: 'precoVenda',
-            tipo: 'moeda',
-            rotulo: 'Preço de Venda',
-            placeholder: 'Digite o preço de venda',
-            obrigatorio: true,
-            col: 'col-md-3'
-          },
-          {
-            nome: 'localizacaoFisica',
-            tipo: 'texto',
-            rotulo: 'Localização Física',
-            placeholder: 'Informe a localização',
-            col: 'col-md-4'
-          },
-          {
-            nome: 'quantidadeMinimaEstoque',
-            tipo: 'inteiro',
-            rotulo: 'Qtd. Mínima Estoque',
-            placeholder: 'Informe a quantidade mínima',
-            col: 'col-md-4'
-          },
-          {
-            nome: 'idMarca',
-            tipo: 'select',
-            rotulo: 'Marca',
-            placeholder: 'Selecione a marca',
-            col: 'col-md-6',
-            opcoes: this.opMarcas
-          },
-          {
-            nome: 'idModelo',
-            tipo: 'select',
-            rotulo: 'Modelo',
-            placeholder: 'Selecione o modelo',
-            col: 'col-md-6',
-            opcoes: this.opModelos
-          },
-          {
-            nome: 'idFornecedor',
-            tipo: 'select',
-            rotulo: 'Fornecedor',
-            placeholder: 'Selecione o fornecedor',
-            col: 'col-md-6',
-            opcoes: this.opFornecedores
-          },
-          {
-            nome: 'idCategoria',
-            tipo: 'select',
-            rotulo: 'Categoria',
-            placeholder: 'Selecione a categoria',
-            col: 'col-md-6',
-            opcoes: this.opCategorias
-          }
-        ]
-      }
-    ]
-  };
-
-  constructor(
-    private route: ActivatedRoute,
-    private router: Router,
-    private modeloService: ModeloService,
-    private marcaService: MarcaService,
-    private pecaService: PecaService,
-    private fornecedorService: FornecedorService,
-    private categoriaService: CategoriaService,
-    private toastService: ToastService
-  ) {}
+  private fb = inject(FormBuilder);
+  private pecaService = inject(PecaService);
+  private marcaService = inject(MarcaService);
+  private modeloService = inject(ModeloService);
+  private fornecedorService = inject(FornecedorService);
+  private categoriaService = inject(CategoriaService);
+  private toastService = inject(ToastService);
 
   ngOnInit(): void {
-    this.idPeca = Number(this.route.snapshot.paramMap.get('id'));
-    if (this.idPeca) {
+    this.inicializarConfig();
+
+    if (this.pecaIdParaEditar) {
       this.isEditando = true;
-      this.config.titulo = 'Editar Peça';
-      this.config.botoes = {
-        ...this.config.botoes,
-        salvarTexto: 'Atualizar',
-        excluir: true
-      };
-      this.carregarPeca(this.idPeca);
+      this.carregarPeca(this.pecaIdParaEditar);
     }
-    this.carregarDadosParaSelects();
+
+    this.carregarDropdowns();
+    this.inicializarForm();
   }
 
-  carregarPeca(id: number): void {
-    this.isLoading = true;
-    this.pecaService.obterPorId(id).subscribe({
-      next: (peca: Peca | undefined) => {
-        if (!peca) return;
-        this.dadosIniciais = { ...peca };
-        this.dataUltimaModificacao = peca.dataModificacao;
-        this.isLoading = false;
-      },
-      error: err => {
-        this.toastService.error(err.message || 'Erro ao carregar peça.');
-        this.isLoading = false;
-      }
+  ngOnDestroy(): void {
+    this.subscriptions.unsubscribe();
+  }
+
+  inicializarConfig(): void {
+    this.config = {
+      titulo: this.isEditando ? 'Editar Peça' : 'Cadastrar Peça',
+      iconeTitulo: 'bi-tools',
+      abas: [
+        {
+          titulo: '',
+          campos: [
+            { nome: 'nome', tipo: 'texto', rotulo: 'Nome da Peça', obrigatorio: true, col: 'col-md-6' },
+            { nome: 'precoCusto', tipo: 'moeda', rotulo: 'Preço de Custo', obrigatorio: true, col: 'col-md-3' },
+            { nome: 'precoVenda', tipo: 'moeda', rotulo: 'Preço de Venda', obrigatorio: true, col: 'col-md-3' },
+            { nome: 'localizacaoFisica', tipo: 'texto', rotulo: 'Localização Física', col: 'col-md-6' },
+            { nome: 'quantidadeMinimaEstoque', tipo: 'inteiro', rotulo: 'Qtd. Mínima Estoque', col: 'col-md-3' },
+            { nome: 'idMarca', tipo: 'select', rotulo: 'Marca', col: 'col-md-6', opcoes: [] },
+            { nome: 'idModelo', tipo: 'select', rotulo: 'Modelo', col: 'col-md-6', opcoes: [] },
+            { nome: 'idFornecedor', tipo: 'select', rotulo: 'Fornecedor', col: 'col-md-6', opcoes: [] },
+            { nome: 'idCategoria', tipo: 'select', rotulo: 'Categoria', col: 'col-md-6', opcoes: [] },
+          ],
+        },
+      ],
+    };
+  }
+
+  inicializarForm(): void {
+    const grupo: any = {};
+
+    this.config.abas.forEach((aba) => {
+      aba.campos.forEach((campo) => {
+        grupo[campo.nome] = this.fb.control('');
+      });
     });
+
+    this.form = this.fb.group(grupo);
   }
 
-  carregarDadosParaSelects(): void {
+  carregarDropdowns(): void {
     this.isLoading = true;
     Promise.all([
       this.marcaService.getMarcas().toPromise(),
       this.modeloService.obterTodos().toPromise(),
       this.fornecedorService.obterTodos().toPromise(),
-      this.categoriaService.obterTodos().toPromise()
+      this.categoriaService.obterTodos().toPromise(),
     ])
       .then(([marcas, modelos, fornecedores, categorias]) => {
-        this.opMarcas = (marcas ?? []).map(m => ({ id: m.id, nome: m.nome }));
-        this.opModelos = (modelos ?? []).map(m => ({ id: m.id, nome: m.nome }));
-        this.opFornecedores = (fornecedores ?? []).map((f: Fornecedor) => ({
-          id: f.id!,
-          nome: f.nomeFantasia || f.razaoSocial || 'Sem nome'
-        }));
-        this.opCategorias = (categorias ?? []).map(c => ({ id: c.id, nome: c.nome }));
-
-        // Atualizar opções dos selects na config
-        const campos = this.config.abas[0].campos;
-        campos.find(c => c.nome === 'idMarca')!.opcoes = this.opMarcas;
-        campos.find(c => c.nome === 'idModelo')!.opcoes = this.opModelos;
-        campos.find(c => c.nome === 'idFornecedor')!.opcoes = this.opFornecedores;
-        campos.find(c => c.nome === 'idCategoria')!.opcoes = this.opCategorias;
+        this.config.abas[0].campos.find((c) => c.nome === 'idMarca')!.opcoes =
+          (marcas ?? []).map((m) => ({ id: m.id, nome: m.nome }));
+        this.config.abas[0].campos.find((c) => c.nome === 'idModelo')!.opcoes =
+          (modelos ?? []).map((m) => ({ id: m.id, nome: m.nome }));
+        this.config.abas[0].campos.find((c) => c.nome === 'idFornecedor')!.opcoes =
+          (fornecedores ?? []).map((f) => ({ id: f.id, nome: f.nomeFantasia || f.razaoSocial }));
+        this.config.abas[0].campos.find((c) => c.nome === 'idCategoria')!.opcoes =
+          (categorias ?? []).map((c) => ({ id: c.id, nome: c.nome }));
 
         this.isLoading = false;
       })
       .catch(() => {
-        this.toastService.error('Erro ao carregar listas.');
+        this.toastService.error('Erro ao carregar dropdowns.');
         this.isLoading = false;
       });
   }
 
-  onSubmit(dados: any): void {
+  carregarPeca(id: number): void {
+    this.isLoading = true;
+    this.subscriptions.add(
+      this.pecaService.obterPorId(id).subscribe({
+        next: (peca) => {
+          if (!peca) {
+            this.toastService.error('Peça não encontrada.');
+            this.finalizarModal('cancelado');
+            return;
+          }
+          this.dataModificacaoOriginal = peca.dataModificacao;
+          this.dadosIniciais = { ...peca };
+          this.isLoading = false;
+        },
+        error: (err) => {
+          this.toastService.error(err.message || 'Erro ao carregar peça.');
+          this.isLoading = false;
+        },
+      })
+    );
+  }
+
+  onSubmit(): void {
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
+    }
+
+    const formValue = this.form.value;
+    const payloadBase = {
+      nome: formValue.nome,
+      precoCusto: Number(formValue.precoCusto),
+      precoVenda: Number(formValue.precoVenda),
+      localizacaoFisica: formValue.localizacaoFisica,
+      quantidadeMinimaEstoque: Number(formValue.quantidadeMinimaEstoque || 0),
+      idMarca: Number(formValue.idMarca),
+      idModelo: Number(formValue.idModelo),
+      idFornecedor: Number(formValue.idFornecedor),
+      idCategoria: Number(formValue.idCategoria),
+    };
+
     this.isLoading = true;
 
-    if (this.isEditando && this.idPeca) {
-      const payload = { ...dados, id: this.idPeca, dataUltimaModificacao: this.dataUltimaModificacao };
-      this.pecaService.atualizar(this.idPeca, payload).subscribe({
-        next: () => {
-          this.toastService.success('Peça atualizada com sucesso!');
-          this.router.navigate(['/peca']);
-        },
-        error: err => {
-          this.toastService.error(err.message || 'Erro ao atualizar peça.');
-          this.isLoading = false;
-        }
-      });
+    if (this.isEditando && this.pecaIdParaEditar) {
+      const payload: PecaAtualizacaoPayload = {
+        ...payloadBase,
+        id: this.pecaIdParaEditar,
+        dataUltimaModificacao: this.dataModificacaoOriginal,
+      };
+
+      this.subscriptions.add(
+        this.pecaService.atualizar(this.pecaIdParaEditar, payload).subscribe({
+          next: () => {
+            this.toastService.success('Peça atualizada com sucesso!');
+            this.finalizarModal('salvo');
+          },
+          error: (err) => {
+            this.toastService.error(err.message || 'Erro ao atualizar peça.');
+            this.isLoading = false;
+          },
+        })
+      );
     } else {
-      this.pecaService.criar(dados).subscribe({
-        next: () => {
-          this.toastService.success('Peça criada com sucesso!');
-          this.router.navigate(['/peca']);
-        },
-        error: err => {
-          this.toastService.error(err.message || 'Erro ao criar peça.');
-          this.isLoading = false;
-        }
-      });
+      const payload: PecaCriacaoPayload = payloadBase;
+
+      this.subscriptions.add(
+        this.pecaService.criar(payload).subscribe({
+          next: () => {
+            this.toastService.success('Peça criada com sucesso!');
+            this.finalizarModal('salvo');
+          },
+          error: (err) => {
+            this.toastService.error(err.message || 'Erro ao criar peça.');
+            this.isLoading = false;
+          },
+        })
+      );
     }
   }
 
-  onCancelar(): void {
-    this.router.navigate(['/peca']);
+  onExcluir(): void {
+    if (!this.pecaIdParaEditar) return;
+
+    this.isLoading = true;
+    this.subscriptions.add(
+      this.pecaService.remover(this.pecaIdParaEditar).subscribe({
+        next: () => {
+          this.toastService.success('Peça excluída com sucesso!');
+          this.finalizarModal('excluido');
+        },
+        error: (err) => {
+          this.toastService.error(err.message || 'Erro ao excluir peça.');
+          this.isLoading = false;
+        },
+      })
+    );
   }
 
-  onExcluir(): void {
-    if (!this.idPeca) return;
-    this.isLoading = true;
-    this.pecaService.remover(this.idPeca).subscribe({
-      next: () => {
-        this.toastService.success('Peça excluída com sucesso!');
-        this.router.navigate(['/peca']);
-      },
-      error: err => {
-        this.toastService.error(err.message || 'Erro ao excluir peça.');
-        this.isLoading = false;
-      }
-    });
+  onCancelar(): void {
+    this.finalizarModal('cancelado');
+  }
+
+  private finalizarModal(result?: any): void {
+    if (this.close) {
+      this.close(result);
+    }
   }
 }

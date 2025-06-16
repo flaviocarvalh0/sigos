@@ -1,0 +1,29 @@
+<app-form-layout
+  [form]="form"
+  [titulo]="isEditando ? 'Editar Categoria' : 'Cadastrar Categoria'"
+  [isLoading]="isLoading"
+  [isEditMode]="isEditando"
+  [auditoriaData]="auditoria"
+  (save)="onSubmit()"
+  (cancel)="onCancelar()"
+  (delete)="onExcluir()"
+>
+  <div [formGroup]="form">
+    <div class="mb-3">
+      <label for="nome">
+        Nome da Categoria
+        <span class="text-danger">*</span>
+      </label>
+      <input
+        id="nome"
+        type="text"
+        class="form-control"
+        formControlName="nome"
+        [ngClass]="{ 'is-invalid': isInvalid('nome') }"
+      />
+      <div *ngIf="isInvalid('nome')" class="invalid-feedback">
+        Nome é obrigatório e deve ter pelo menos 2 caracteres.
+      </div>
+    </div>
+  </div>
+</app-form-layout>

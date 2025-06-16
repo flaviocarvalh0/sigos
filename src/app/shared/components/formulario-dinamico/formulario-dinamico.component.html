@@ -1,100 +1,66 @@
-<div class="container mt-4 mb-5">
-  <div class="card shadow-sm">
-    <div class="card-header" [ngClass]="config.classeTituloCard || 'bg-primary text-white'">
-      <h4 class="mb-0">
-        <i *ngIf="config.iconeTitulo" [class]="config.iconeTitulo"></i>
-        {{ config.titulo }}
-      </h4>
-    </div>
+<ng-container *ngFor="let section of config.abas">
+  <hr class="my-4" *ngIf="section.titulo">
+  <h5 *ngIf="section.titulo" class="mb-3 text-primary">{{ section.titulo }}</h5>
 
-    <div class="card-body">
-      <div *ngIf="isLoading" class="text-center my-3">
-        <div class="spinner-border text-primary" role="status">
-          <span class="visually-hidden">Carregando...</span>
-        </div>
-        <p>Processando...</p>
-      </div>
+  <div class="row">
+    <ng-container *ngFor="let campo of section.campos">
+      <div [class]="campo.col || 'col-md-6'" class="mb-3">
+        <label [for]="campo.nome" class="form-label">
+          {{ campo.rotulo }}
+          <span class="text-danger" *ngIf="campo.obrigatorio">*</span>
+        </label>
 
-      <form [formGroup]="form" (ngSubmit)="onSubmit()" *ngIf="!isLoading" novalidate>
-        <ng-container *ngFor="let section of config.abas">
-          <hr class="my-4" *ngIf="section.titulo">
-          <h5 *ngIf="section.titulo" class="mb-3 text-primary">{{ section.titulo }}</h5>
+        <ng-container [ngSwitch]="campo.tipo">
+          <input *ngSwitchCase="'texto'" type="text" [id]="campo.nome" class="form-control"
+                 [formControlName]="campo.nome" [placeholder]="campo.placeholder"
+                 [ngClass]="{'is-invalid': isInvalidControl(campo.nome)}" />
 
-          <div class="row">
-            <ng-container *ngFor="let campo of section.campos">
-              <div [class]="campo.col || 'col-md-6'" class="mb-3">
-                <label [for]="campo.nome" class="form-label">
-                  {{ campo.rotulo }}
-                  <span class="text-danger" *ngIf="campo.obrigatorio">*</span>
-                </label>
+          <input *ngSwitchCase="'email'" type="email" [id]="campo.nome" class="form-control"
+                 [formControlName]="campo.nome" [placeholder]="campo.placeholder"
+                 [ngClass]="{'is-invalid': isInvalidControl(campo.nome)}" />
 
-                <ng-container [ngSwitch]="campo.tipo">
+          <input *ngSwitchCase="'senha'" type="password" [id]="campo.nome" class="form-control"
+                 [formControlName]="campo.nome" [placeholder]="campo.placeholder"
+                 [ngClass]="{'is-invalid': isInvalidControl(campo.nome)}" />
 
-                  <input *ngSwitchCase="'texto'" [id]="campo.nome" type="text" class="form-control"
-                    [formControlName]="campo.nome" [placeholder]="campo.placeholder" [attr.mask]="campo.mask"
-                    [ngClass]="{'is-invalid': isInvalidControl(campo.nome)}">
+          <input *ngSwitchCase="'inteiro'" type="number" step="1" class="form-control"
+                 [formControlName]="campo.nome" [placeholder]="campo.placeholder"
+                 [ngClass]="{'is-invalid': isInvalidControl(campo.nome)}" />
 
-                  <input *ngSwitchCase="'email'" [id]="campo.nome" type="email" class="form-control"
+          <input *ngSwitchCase="'moeda'" currencyMask
+                 [options]="{ prefix: 'R$ ', thousands: '.', decimal: ',', precision: 2 }"
+                 type="text" class="form-control"
+                 [formControlName]="campo.nome" [placeholder]="campo.placeholder"
+                 [ngClass]="{'is-invalid': isInvalidControl(campo.nome)}" />
+
+          <ng-select *ngSwitchCase="'select'" class="custom-ng-select"
+                     [items]="campo.opcoes"
+                     bindLabel="nome" bindValue="id"
+                     [formControlName]="campo.nome"
+                     [placeholder]="campo.placeholder ?? ''"
+                     [searchable]="true" [clearable]="true"
+                     [ngClass]="{'is-invalid': isInvalidControl(campo.nome)}">
+          </ng-select>
+
+          <textarea *ngSwitchCase="'textarea'" class="form-control"
                     [formControlName]="campo.nome" [placeholder]="campo.placeholder"
                     [ngClass]="{'is-invalid': isInvalidControl(campo.nome)}">
+          </textarea>
 
-                  <ng-select class="custom-ng-select" *ngSwitchCase="'select'" [items]="campo.opcoes" bindLabel="nome"
-                    bindValue="id" [placeholder]="campo.placeholder || 'Selecione...'" [formControlName]="campo.nome"
-                    [searchable]="true" [clearable]="true" [ngClass]="{'is-invalid': isInvalidControl(campo.nome)}">
-                  </ng-select>
+          <input *ngSwitchCase="'data'" type="date" class="form-control"
+                 [formControlName]="campo.nome"
+                 [ngClass]="{'is-invalid': isInvalidControl(campo.nome)}" />
 
-
-                  <input *ngSwitchCase="'moeda'" currencyMask
-                    [options]="{ prefix: 'R$ ', thousands: '.', decimal: ',', precision: 2 }" type="text"
-                    class="form-control" [formControlName]="campo.nome" [placeholder]="campo.placeholder || ''"
-                    [ngClass]="{'is-invalid': isInvalidControl(campo.nome)}" />
-
-                  <input *ngSwitchCase="'decimal'" type="number" step="0.01" class="form-control"
-                    [formControlName]="campo.nome" [placeholder]="campo.placeholder || ''"
-                    [ngClass]="{'is-invalid': isInvalidControl(campo.nome)}" />
-
-                  <input *ngSwitchCase="'inteiro'" type="number" step="1" class="form-control"
-                    [formControlName]="campo.nome" [placeholder]="campo.placeholder || ''"
-                    [ngClass]="{'is-invalid': isInvalidControl(campo.nome)}" />
-
-                  <input *ngSwitchCase="'data'" type="date" class="form-control" [id]="campo.nome"
-                    [formControlName]="campo.nome" [placeholder]="campo.placeholder || ''" />
-
-                  <input *ngSwitchCase="'dataHora'" type="datetime-local" class="form-control" [id]="campo.nome"
-                    [formControlName]="campo.nome" [placeholder]="campo.placeholder || ''" />
-
-                  <input *ngSwitchCase="'checkbox'" [id]="campo.nome" type="checkbox" class="form-check-input mt-2"
-                    [formControlName]="campo.nome">
-
-                  <!-- Adicione mais tipos conforme necessário -->
-                </ng-container>
-
-                <div *ngIf="isInvalidControl(campo.nome)" class="text-danger small mt-1">
-                  <ng-container *ngFor="let erro of getControlErrors(campo.nome) | keyvalue : compareKeyValue">
-                    <div>{{ campo.mensagensErro?.[erro.key] || 'Campo inválido.' }}</div>
-                  </ng-container>
-
-                </div>
-              </div>
-            </ng-container>
-          </div>
+          <input *ngSwitchCase="'checkbox'" type="checkbox" class="form-check-input"
+                 [formControlName]="campo.nome" />
         </ng-container>
 
-        <div class="d-flex justify-content-end mt-4">
-          <button *ngIf="config.botoes?.cancelar !== false" type="button" class="btn btn-secondary me-2"
-            (click)="onCancelar()">
-            <i class="bi bi-x-lg me-1"></i> {{ config.botoes?.cancelarTexto || 'Cancelar' }}
-          </button>
-
-          <button *ngIf="config.botoes?.excluir" type="button" class="btn btn-danger me-2" (click)="onExcluir()">
-            <i class="bi bi-trash me-1"></i> {{ config.botoes?.excluirTexto || 'Excluir' }}
-          </button>
-
-          <button type="submit" class="btn btn-success" [disabled]="form.invalid || isLoading">
-            <i class="bi bi-save me-1"></i> {{ config.botoes?.salvarTexto || 'Salvar' }}
-          </button>
+        <div *ngIf="isInvalidControl(campo.nome)" class="text-danger small mt-1">
+          <ng-container *ngFor="let erro of getControlErrors(campo.nome) | keyvalue : compareKeyValue">
+            <div>{{ campo.mensagensErro?.[erro.key] || 'Campo inválido.' }}</div>
+          </ng-container>
         </div>
-      </form>
-    </div>
+      </div>
+    </ng-container>
   </div>
-</div>
+</ng-container>
