@@ -1,21 +1,20 @@
-// src/app/features/servico/pages/list-servico/list-servico.component.ts
-import { Component, OnInit, OnDestroy } from '@angular/core'; // Adicionado OnDestroy
-import { Router, RouterModule } from '@angular/router';
-import { CommonModule } from '@angular/common'; // NgFor, NgIf vêm daqui
-import { FormsModule } from '@angular/forms'; // Para [(ngModel)] dos filtros
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
-// Corrigido para servico.service.ts
+
+import { ServicoService } from '../../../../services/servico.service';
 import { ToastService } from '../../../../services/toast.service';
 import { ConfirmationService } from '../../../../services/confirmation.service';
-import { ConfirmationConfig } from '../../../../Models/confirmation.model'; // Ajuste o path se necessário
-import { CurrencyPipe } from '@angular/common'; // Para formatar preço
+import { ConfirmationConfig } from '../../../../Models/confirmation.model';
 import { Servico } from '../../../../Models/servico.mode';
-import { ServicoService } from '../../../../services/servico.service';
 import { ListagemDinamicaComponent } from '../../../../shared/components/listagem-dinamica/listagem-dinamica.component';
+import { ModalService } from '../../../../services/dialog.service';
+import { FormServicoComponent } from '../form-servico/form-servico.component';
 
 @Component({
   selector: 'app-list-servico',
   standalone: true,
+  imports: [CommonModule, ListagemDinamicaComponent],
   template: `
     <app-listagem-dinamica
       titulo="Lista de Serviços"
@@ -24,40 +23,33 @@ import { ListagemDinamicaComponent } from '../../../../shared/components/listage
       [carregando]="isLoading"
       (editar)="editarServico($event)"
       (excluir)="excluirServico($event)"
-      (criarNovo)="navegarParaNovoServico()">
+      (criarNovo)="novoServico()">
     </app-listagem-dinamica>
-  `,
-  imports: [
-    RouterModule,
-    CommonModule,
-    FormsModule,
-    ListagemDinamicaComponent
-  ]
+  `
 })
 export class ListServicoComponent implements OnInit, OnDestroy {
   servicos: Servico[] = [];
   servicosFiltrados: Servico[] = [];
-  isLoading = false; // Renomeado de 'carregando' para consistência
-
-  // Filtros
-  filtroNome: string = '';
-  filtroDescricao: string = '';
+  isLoading = false;
+  private subscriptions = new Subscription();
 
   colunas = [
     { campo: 'id', titulo: 'ID', tipo: 'texto' as const, ordenavel: true, filtro: true },
     { campo: 'nome', titulo: 'Nome', tipo: 'texto' as const, ordenavel: true, filtro: true },
     { campo: 'descricao', titulo: 'Descrição', tipo: 'texto' as const, filtro: true },
     { campo: 'precoPadrao', titulo: 'Valor', tipo: 'moeda' as const, ordenavel: true, filtro: false },
-    { campo: 'tempoEstimadoMinutos', titulo: 'Tempo (min)', tipo: 'texto' as const, filtro: false }
+    { campo: 'tempoEstimadoMinutos', titulo: 'Tempo (min)', tipo: 'texto' as const, filtro: false },
+    { campo: 'criadoPor', titulo: 'Criado por', tipo: 'texto' as const, ordenavel: true, filtro: true },
+    { campo: 'dataCriacao', titulo: 'Criado em', tipo: 'data' as const, ordenavel: true },
+    { campo: 'modificadoPor', titulo: 'Modificado por', tipo: 'texto' as const, ordenavel: true, filtro: true },
+    { campo: 'dataModificacao', titulo: 'Modificado em', tipo: 'dataHora' as const, ordenavel: true }
   ];
-
-  private subscriptions = new Subscription();
 
   constructor(
     private servicoService: ServicoService,
-    private router: Router,
-    private toastService: ToastService, // Injetado
-    private confirmationService: ConfirmationService // Injetado
+    private toastService: ToastService,
+    private confirmationService: ConfirmationService,
+    private modalService: ModalService
   ) {}
 
   ngOnInit(): void {
@@ -70,94 +62,66 @@ export class ListServicoComponent implements OnInit, OnDestroy {
 
   carregarListaServicos(): void {
     this.isLoading = true;
-    const sub = this.servicoService.obterTodos().subscribe({ // Usando obterTodos()
+    const sub = this.servicoService.obterTodos().subscribe({
       next: (data) => {
-        this.servicos = data.sort((a,b) => a.nome.localeCompare(b.nome)); // Ordena por nome
-        this.aplicarFiltros(); // Mostra todos ou filtrados
+        this.servicos = data.sort((a, b) => a.nome.localeCompare(b.nome));
+        this.servicosFiltrados = [...this.servicos];
         this.isLoading = false;
       },
       error: (err) => {
-        console.error('Erro ao carregar serviços:', err);
-        this.toastService.error(err.message || 'Falha ao carregar lista de serviços.');
+        this.toastService.error(err.message || 'Erro ao carregar serviços.');
         this.isLoading = false;
       }
     });
     this.subscriptions.add(sub);
   }
 
-  aplicarFiltros(): void {
-    let resultadoFiltrado = [...this.servicos];
-
-    if (this.filtroNome.trim()) {
-      const filtro = this.filtroNome.toLowerCase().trim();
-      resultadoFiltrado = resultadoFiltrado.filter(s =>
-        s.nome.toLowerCase().includes(filtro)
-      );
-    }
-
-    if (this.filtroDescricao.trim()) {
-      const filtro = this.filtroDescricao.toLowerCase().trim();
-      resultadoFiltrado = resultadoFiltrado.filter(s =>
-        s.descricao?.toLowerCase().includes(filtro)
-      );
-    }
-    this.servicosFiltrados = resultadoFiltrado;
+  editarServico(id: number): void {
+    this.modalService.open(FormServicoComponent, { servicoIdParaEditar: id }).then(result => {
+      if (result === 'salvo' || result === 'excluido') {
+        this.carregarListaServicos();
+      }
+    });
   }
 
-  limparFiltros(): void {
-    this.filtroNome = '';
-    this.filtroDescricao = '';
-    this.aplicarFiltros();
+  novoServico(): void {
+    this.modalService.open(FormServicoComponent).then(result => {
+      if (result === 'salvo') {
+        this.carregarListaServicos();
+      }
+    });
   }
 
-  editarServico(id: number | undefined): void {
-    if (id === undefined) {
-      this.toastService.warning('ID do serviço inválido para edição.');
-      return;
-    }
-    this.router.navigate(['/servico/form', id]);
-  }
-
-  navegarParaNovoServico(): void { // Nome do método atualizado
-    this.router.navigate(['/servico/form']);
-  }
-
-  excluirServico(id: number | undefined): void { // Assinatura atualizada
-    if (id === undefined) {
-      this.toastService.warning('ID do serviço inválido para exclusão.');
-      return;
-    }
-      const servico = this.servicos.find(s => s.id === id);
-      const nome = servico?.nome || `Serviço ID ${id}`;
+  excluirServico(id: number): void {
+    const servico = this.servicos.find(s => s.id === id);
+    const nome = servico?.nome || `Serviço ID ${id}`;
 
     const config: ConfirmationConfig = {
-      // Adapte os campos conforme a definição da sua interface ConfirmationConfig
       title: 'Confirmar Exclusão de Serviço',
-      message: `Tem certeza que deseja excluir o serviço "${nome}"? Esta ação não pode ser desfeita.`,
+      message: `Tem certeza que deseja excluir o serviço "${nome}"?`,
       acceptButtonText: 'Sim, Excluir',
       acceptButtonClass: 'btn-danger',
-      cancelButtonText: 'Não, Manter'
+      cancelButtonText: 'Cancelar'
     };
 
     const confirmSub = this.confirmationService.confirm(config).subscribe(confirmado => {
+      // ✅ Cancelar a subscription após o clique (para evitar múltiplos listeners acumulando)
+      confirmSub.unsubscribe();
+
       if (confirmado) {
-        this.isLoading = true; // Pode ser um loading específico para a linha, ou global
-        const deleteSub = this.servicoService.remover(id).subscribe({ // Usando remover()
+        this.isLoading = true;
+        const deleteSub = this.servicoService.remover(id).subscribe({
           next: () => {
             this.toastService.success(`Serviço "${nome}" excluído com sucesso!`);
-            // Não precisa mais filtrar localmente, carregarListaServicos vai buscar a lista atualizada
-            this.carregarListaServicos(); // Recarrega a lista do servidor
+            this.carregarListaServicos();
           },
           error: (err) => {
             this.toastService.error(err.message || 'Erro ao excluir serviço.');
-            this.isLoading = false; // Garante que o loading seja desativado em caso de erro
+            this.isLoading = false;
           }
-          // 'complete' não é estritamente necessário aqui se isLoading é resetado em next/error
         });
         this.subscriptions.add(deleteSub);
       }
     });
-    this.subscriptions.add(confirmSub);
   }
-  // O @ViewChild('toast') e o método exibirToast() foram removidos
 }

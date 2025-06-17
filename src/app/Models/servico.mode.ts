@@ -14,7 +14,7 @@ export interface Servico {
   idModificador?: number | null;
   modificadoPor?: string | null;
   dataCriacao?: string | Date | null;
-  dataModificacao?: string | Date | null; // Essencial para controle de concorrência
+  dataModificacao?: Date | null; // Essencial para controle de concorrência
 }
 
 export interface ServicoCriacaoPayload {
@@ -32,5 +32,5 @@ export interface ServicoAtualizacaoPayload {
   precoPadrao?: number | null;
   tempoEstimadoMinutos?: number | null;
   ativo: boolean;
-  dataUltimaModificacao: string | Date | null; // Chave para controle de concorrência
+  dataUltimaModificacao?: Date | null; // Chave para controle de concorrência
 }

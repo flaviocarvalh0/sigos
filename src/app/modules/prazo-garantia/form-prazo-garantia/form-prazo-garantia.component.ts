@@ -1,145 +1,188 @@
-// form-prazo-garantia.component.ts
-import { Component, OnInit } from '@angular/core';
-import {
-  FormBuilder,
-  FormGroup,
-  ReactiveFormsModule,
-  Validators,
-} from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
-import { NgIf } from '@angular/common';
+import { Component, OnInit, OnDestroy, Input, inject } from '@angular/core';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { CommonModule } from '@angular/common';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { Subscription } from 'rxjs';
+
 import { PrazoGarantiaService } from '../../../services/prazo_garantia.service';
-import { PrazoGarantia } from '../../../Models/prazo-garantia.model';
 import { ToastService } from '../../../services/toast.service';
 import { ConfirmationService } from '../../../services/confirmation.service';
+import { ConfirmationConfig } from '../../../Models/confirmation.model';
+import { PrazoGarantia } from '../../../Models/prazo-garantia.model';
+import { FormLayoutComponent } from '../../../shared/components/form-layout/form-layout.component';
+import { AuditoriaData } from '../../../Models/AuditoriaData.model';
 
 @Component({
-  selector: 'app-form-prazo_garantia',
+  selector: 'app-form-prazo-garantia',
   standalone: true,
-  imports: [ReactiveFormsModule, NgIf],
   templateUrl: './form-prazo-garantia.component.html',
   styleUrls: ['./form-prazo-garantia.component.css'],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule, FormLayoutComponent],
 })
-export class FormPrazoGarantiaComponent implements OnInit {
-  form: FormGroup;
-  isEditando = false;
-  prazoId: number | null = null;
+export class FormPrazoGarantiaComponent implements OnInit, OnDestroy {
+  @Input() prazoIdParaEditar?: number;
+  close!: (result?: any) => void;
 
-  constructor(
-    private fb: FormBuilder,
-    private prazoGarantiaService: PrazoGarantiaService,
-    private route: ActivatedRoute,
-    private toastService: ToastService,
-    private confirmationService: ConfirmationService,
-    private router: Router
-  ) {
-    this.form = this.fb.group({
-      prazoEmDias: [0, [Validators.required, Validators.min(1)]],
-      descricao: ['', [Validators.required, Validators.maxLength(100)]],
-      ativo: [true],
-      dataUltimaModificacao: [null],
-    });
-  }
+  private fb = inject(FormBuilder);
+  private service = inject(PrazoGarantiaService);
+  private toast = inject(ToastService);
+  private confirmation = inject(ConfirmationService);
+  private router = inject(Router);
+
+  form!: FormGroup;
+  isEditando = false;
+  isLoading = false;
+  dataUltimaModificacao?: Date;
+  auditoria: AuditoriaData | null = null;
+  private subscriptions = new Subscription();
 
   ngOnInit(): void {
-    const id = this.route.snapshot.paramMap.get('id');
-    if (id) {
-      this.prazoId = +id;
-      this.isEditando = true;
-      this.carregarPrazoGarantia();
-    }
-
-    this.setadescricaoPrazoGarantia();
-  }
-
-  setadescricaoPrazoGarantia(): void {
-    this.form.get('prazoEmDias')?.valueChanges.subscribe((dias: number) => {
-      const descricao = dias && dias > 0 ? `${dias} Dias` : '';
-      this.form.get('descricao')?.setValue(descricao, { emitEvent: false });
+    this.form = this.fb.group({
+      prazoEmDias: [0, [Validators.required, Validators.min(1)]],
+      descricao: ['', Validators.required],
+      ativo: [true],
+      criadoPor: [{ value: '', disabled: true }],
+      dataCriacao: [{ value: '', disabled: true }],
+      modificadoPor: [{ value: '', disabled: true }],
+      dataModificacao: [{ value: '', disabled: true }],
     });
+
+    this.form.get('prazoEmDias')?.valueChanges.subscribe(dias => {
+      this.form.get('descricao')?.setValue(dias && dias > 0 ? `${dias} Dias` : '', { emitEvent: false });
+    });
+
+    if (this.prazoIdParaEditar !== undefined) {
+      this.isEditando = true;
+      this.carregarPrazo(this.prazoIdParaEditar);
+    }
   }
 
-  carregarPrazoGarantia(): void {
-    if (this.prazoId) {
-      this.prazoGarantiaService.obterPorId(this.prazoId).subscribe({
-        next: (prazo) => {
-          if (prazo) {
-            this.form.patchValue({
-              prazoEmDias: prazo.prazoEmDias,
-              descricao: prazo.descricao,
-              ativo: prazo.ativo,
-              dataUltimaModificacao: prazo.dataModificacao,
-            });
-          }
-        },
-        error: () =>
-          this.toastService.error('Erro ao carregar prazo de garantia'),
-      });
-    }
+  ngOnDestroy(): void {
+    this.subscriptions.unsubscribe();
+  }
+
+  carregarPrazo(id: number): void {
+    this.isLoading = true;
+    this.service.obterPorId(id).subscribe({
+      next: (prazo) => {
+        if (!prazo) {
+          this.toast.error('Prazo de garantia não encontrado.');
+          this.finalizarModal('cancelado');
+          return;
+        }
+        this.dataUltimaModificacao = prazo.dataModificacao;
+
+        this.form.patchValue({
+          prazoEmDias: prazo.prazoEmDias,
+          descricao: prazo.descricao,
+          ativo: prazo.ativo,
+          criadoPor: prazo.criadoPor,
+          dataCriacao: prazo.dataCriacao,
+          modificadoPor: prazo.modificadoPor,
+          dataModificacao: prazo.dataModificacao
+        });
+
+        this.auditoria = {
+          criadoPor: prazo.criadoPor ?? undefined,
+          dataCriacao: prazo.dataCriacao,
+          modificadoPor: prazo.modificadoPor ?? undefined,
+          dataModificacao: prazo.dataModificacao,
+        };
+
+        this.isLoading = false;
+      },
+      error: (err) => {
+        this.toast.error(err.message || 'Erro ao carregar o prazo.');
+        this.isLoading = false;
+      }
+    });
   }
 
   onSubmit(): void {
-    if (this.form.valid) {
-      const prazo: PrazoGarantia = {
-        ...this.form.value,
-        id: this.prazoId ?? 0,
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
+    }
+
+    const dados = this.form.getRawValue();
+    this.isLoading = true;
+
+    if (this.isEditando && this.prazoIdParaEditar) {
+      const payload = {
+        id: this.prazoIdParaEditar,
+        prazoEmDias: dados.prazoEmDias,
+        descricao: dados.descricao,
+        ativo: dados.ativo,
+        dataUltimaModificacao: this.dataUltimaModificacao
       };
 
-      const operacao =
-        this.isEditando && this.prazoId
-          ? this.prazoGarantiaService.atualizar(this.prazoId, prazo)
-          : this.prazoGarantiaService.criar(prazo);
-
-      operacao.subscribe({
+      this.service.atualizar(this.prazoIdParaEditar, payload).subscribe({
         next: () => {
-          this.toastService.success(
-            this.isEditando
-              ? 'Prazo de garantia atualizado com sucesso!'
-              : 'Prazo de garantia cadastrado com sucesso!'
-          );
-          this.router.navigate(['/prazo_garantia']);
+          this.toast.success('Prazo de garantia atualizado com sucesso!');
+          this.finalizarModal('salvo');
         },
-        error: () => {
-          this.toastService.error(
-            this.isEditando
-              ? 'Erro ao atualizar prazo de garantia'
-              : 'Erro ao cadastrar prazo de garantia'
-          );
+        error: (err) => {
+          this.toast.error(err.message || 'Erro ao atualizar prazo.');
+          this.isLoading = false;
+        }
+      });
+
+    } else {
+      const payload = {
+        prazoEmDias: dados.prazoEmDias,
+        descricao: dados.descricao,
+        ativo: dados.ativo
+      };
+
+      this.service.criar(payload).subscribe({
+        next: () => {
+          this.toast.success('Prazo de garantia cadastrado com sucesso!');
+          this.finalizarModal('salvo');
         },
+        error: (err) => {
+          this.toast.error(err.message || 'Erro ao cadastrar prazo.');
+          this.isLoading = false;
+        }
       });
     }
   }
 
-  onCancelar(): void {
-    this.router.navigate(['/prazo_garantia']);
-  }
-
   onExcluir(): void {
-    if (this.prazoId) {
-      this.confirmationService
-        .confirm({
-          title: 'Confirmação',
-          message: 'Tem certeza que deseja excluir este prazo de garantia?',
-          acceptButtonText: 'Sim',
-          cancelButtonText: 'Não',
-          acceptButtonClass: 'btn btn-danger',
-          cancelButtonClass: 'btn btn-secondary',
-        })
-        .subscribe((confirmed: boolean) => {
-          if (confirmed) {
-            this.prazoGarantiaService.remover(this.prazoId!).subscribe({
-              next: () => {
-                this.toastService.success(
-                  'Prazo de garantia excluído com sucesso!'
-                );
-                this.router.navigate(['/prazo_garantia']);
-              },
-              error: () => {
-                this.toastService.error('Erro ao excluir prazo de garantia');
-              },
-            });
+    if (!this.prazoIdParaEditar) return;
+
+    const config: ConfirmationConfig = {
+      title: 'Confirmar Exclusão',
+      message: `Deseja excluir o prazo "${this.form.get('descricao')?.value}"?`,
+      acceptButtonText: 'Sim, Excluir',
+      acceptButtonClass: 'btn-danger',
+      cancelButtonText: 'Cancelar'
+    };
+
+    const sub = this.confirmation.confirm(config).subscribe(confirmed => {
+      if (confirmed) {
+        this.isLoading = true;
+        this.service.remover(this.prazoIdParaEditar!).subscribe({
+          next: () => {
+            this.toast.success('Prazo de garantia excluído com sucesso!');
+            this.finalizarModal('excluido');
+          },
+          error: (err) => {
+            this.toast.error(err.message || 'Erro ao excluir prazo.');
+            this.isLoading = false;
           }
         });
+      }
+    });
+    this.subscriptions.add(sub);
+  }
+
+  onCancelar(): void {
+    this.finalizarModal('cancelado');
+  }
+
+  private finalizarModal(result?: any): void {
+    if (this.close) {
+      this.close(result);
     }
   }
 }

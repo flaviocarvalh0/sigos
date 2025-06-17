@@ -1,27 +1,31 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { Subscription } from 'rxjs';
+
 import { PrazoGarantiaService } from '../../../services/prazo_garantia.service';
 import { PrazoGarantia } from '../../../Models/prazo-garantia.model';
-import { ListagemDinamicaComponent } from '../../../shared/components/listagem-dinamica/listagem-dinamica.component';
 import { ToastService } from '../../../services/toast.service';
 import { ConfirmationService } from '../../../services/confirmation.service';
 import { ConfirmationConfig } from '../../../Models/confirmation.model';
-import { Subscription } from 'rxjs';
+import { ListagemDinamicaComponent } from '../../../shared/components/listagem-dinamica/listagem-dinamica.component';
+import { ModalService } from '../../../services/dialog.service';
+import { FormPrazoGarantiaComponent } from '../form-prazo-garantia/form-prazo-garantia.component';
 
 @Component({
   selector: 'app-list-prazo-garantia',
-  template: `<app-listagem-dinamica
-              titulo="Lista de Prazo de Garantia"
-              [dados]="dados"
-              [colunas]="colunas"
-              [carregando]="loading()"
-              (editar)="editar($event)"
-              (excluir)="excluir($event)"
-              (criarNovo)="novo()">
-            </app-listagem-dinamica>`,
   standalone: true,
-  imports: [CommonModule, ListagemDinamicaComponent]
+  imports: [CommonModule, ListagemDinamicaComponent],
+  template: `
+    <app-listagem-dinamica
+      titulo="Lista de Prazo de Garantia"
+      [dados]="dados"
+      [colunas]="colunas"
+      [carregando]="carregando"
+      (criarNovo)="novo()"
+      (editar)="editar($event)"
+      (excluir)="excluir($event)">
+    </app-listagem-dinamica>
+  `
 })
 export class ListPrazoGarantiaComponent implements OnInit, OnDestroy {
   dados: PrazoGarantia[] = [];
@@ -33,21 +37,22 @@ export class ListPrazoGarantiaComponent implements OnInit, OnDestroy {
     { campo: 'descricao', titulo: 'Descrição', ordenavel: true, filtro: true },
     { campo: 'prazoEmDias', titulo: 'Prazo (dias)', ordenavel: true, filtro: false },
     { campo: 'ativo', titulo: 'Ativo', ordenavel: true, filtro: false },
+    // Campos de Auditoria:
+    { campo: 'criadoPor', titulo: 'Criado por', ordenavel: true, filtro: true },
+    { campo: 'dataCriacao', titulo: 'Criado em', tipo: 'dataHora' as const, ordenavel: true },
+    { campo: 'modificadoPor', titulo: 'Modificado por', tipo: 'texto' as const, ordenavel: true, filtro: true },
+    { campo: 'dataModificacao', titulo: 'Modificado em', tipo: 'dataHora' as const, ordenavel: true }
   ];
 
   constructor(
     private prazoGarantiaService: PrazoGarantiaService,
     private toastService: ToastService,
     private confirmationService: ConfirmationService,
-    private router: Router
+    private modalService: ModalService
   ) {}
 
   ngOnInit(): void {
     this.carregarDados();
-  }
-
-  loading(): boolean{
-    return this.carregando;
   }
 
   ngOnDestroy(): void {
@@ -56,21 +61,32 @@ export class ListPrazoGarantiaComponent implements OnInit, OnDestroy {
 
   carregarDados(): void {
     this.carregando = true;
-    this.prazoGarantiaService.obterTodos().subscribe({
+    const sub = this.prazoGarantiaService.obterTodos().subscribe({
       next: (res) => {
         this.dados = res;
         this.carregando = false;
       },
       error: () => this.carregando = false
     });
-  }
-
-  editar(id: number): void {
-    this.router.navigate(['/prazo_garantia/form', id]);
+    this.subscriptions.add(sub);
   }
 
   novo(): void {
-    this.router.navigate(['/prazo_garantia/form']);
+    this.modalService.open(FormPrazoGarantiaComponent).then(result => {
+      if (result === 'salvo') {
+        this.carregarDados();
+      }
+    });
+  }
+
+  editar(id: number): void {
+    this.modalService.open(FormPrazoGarantiaComponent, {
+      prazoIdParaEditar: id
+    }).then(result => {
+      if (result === 'salvo' || result === 'excluido') {
+        this.carregarDados();
+      }
+    });
   }
 
   excluir(id: number): void {
